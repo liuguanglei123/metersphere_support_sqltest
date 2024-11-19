@@ -64,16 +64,12 @@
       </MsButton>
       <MsButton
         v-if="record.result === ExecuteResultEnum.ERROR"
-        v-permission="['SYSTEM_USER:READ+DELETE']"
+        v-permission="getCurrentPermission('STOP')"
         @click="rerunTask(record)"
       >
         {{ t('ms.taskCenter.rerun') }}
       </MsButton>
-      <MsButton
-        v-if="record.status === ExecuteStatusEnum.COMPLETED"
-        v-permission="['SYSTEM_USER:READ+DELETE']"
-        @click="checkReport(record)"
-      >
+      <MsButton v-if="record.status === ExecuteStatusEnum.COMPLETED" @click="checkReport(record)">
         {{ t('ms.taskCenter.checkReport') }}
       </MsButton>
     </template>

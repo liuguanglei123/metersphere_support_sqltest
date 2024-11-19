@@ -1,7 +1,9 @@
 <template>
   <div class="work-bench-content">
     <div class="header-setting pb-[4px]">
-      <div class="setting flex items-center justify-between">
+      <div
+        class="setting sticky top-0 z-[999999] mb-[-16px] flex items-center justify-between bg-[var(--color-bg-3)] pb-[16px]"
+      >
         <div class="flex items-center gap-[8px]">
           <a-radio-group
             v-model:model-value="timeForm.dayNumber"

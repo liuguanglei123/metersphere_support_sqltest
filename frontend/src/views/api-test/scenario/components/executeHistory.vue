@@ -29,35 +29,22 @@
         <ExecStatus :status="record.execStatus" />
       </template>
       <template #operation="{ record }">
-        <div v-if="record.historyDeleted">
-          <a-tooltip
-            v-if="record.execStatus !== ExecuteStatusEnum.PENDING"
-            :content="t('common.executionResultCleaned')"
-            position="top"
-          >
-            <MsButton
-              :disabled="
-                record.historyDeleted ||
-                !hasAnyPermission(['PROJECT_API_SCENARIO:READ+EXECUTE', 'PROJECT_API_REPORT:READ'])
-              "
-              class="!mr-0"
-              @click="showResult(record)"
-              >{{ t('apiScenario.executeHistory.execution.operation') }}
-            </MsButton>
-          </a-tooltip>
-        </div>
-        <div v-else>
+        <a-tooltip
+          v-if="record.execStatus !== ExecuteStatusEnum.PENDING"
+          :content="t('common.executionResultCleaned')"
+          position="top"
+          :disabled="!record.resultDeleted"
+        >
           <MsButton
-            v-if="record.execStatus !== ExecuteStatusEnum.PENDING"
             :disabled="
-              record.historyDeleted ||
+              record.resultDeleted ||
               !hasAnyPermission(['PROJECT_API_SCENARIO:READ+EXECUTE', 'PROJECT_API_REPORT:READ'])
             "
             class="!mr-0"
             @click="showResult(record)"
             >{{ t('apiScenario.executeHistory.execution.operation') }}
           </MsButton>
-        </div>
+        </a-tooltip>
       </template>
     </ms-base-table>
     <!-- 场景报告抽屉 -->

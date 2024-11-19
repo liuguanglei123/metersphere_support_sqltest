@@ -24,10 +24,10 @@
         <a-tooltip
           v-if="record.execStatus !== ExecuteStatusEnum.PENDING"
           :content="t('common.executionResultCleaned')"
-          :disabled="!record.deleted"
+          :disabled="!record.resultDeleted"
         >
           <MsButton
-            :disabled="record.deleted || !hasAnyPermission(['PROJECT_TEST_PLAN_REPORT:READ'])"
+            :disabled="record.resultDeleted || !hasAnyPermission(['PROJECT_TEST_PLAN_REPORT:READ'])"
             class="!mr-0"
             @click="toReport(record)"
             >{{ t('apiScenario.executeHistory.execution.operation') }}

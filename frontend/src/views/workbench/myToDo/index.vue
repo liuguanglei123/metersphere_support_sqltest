@@ -1,7 +1,9 @@
 <template>
   <div class="flex flex-col gap-[16px]">
     <template v-if="appStore.projectList.length > 0">
-      <div class="flex items-center justify-end gap-[12px]">
+      <div
+        class="sticky top-0 z-[999999] mb-[-16px] flex items-center justify-end gap-[12px] bg-[var(--color-bg-3)] pb-[16px]"
+      >
         <MsProjectSelect
           v-model:project="currentProject"
           class="w-[240px]"
