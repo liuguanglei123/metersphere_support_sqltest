@@ -18,7 +18,7 @@ import org.springframework.context.annotation.PropertySource;
 })
 @PropertySource(value = {
         "classpath:commons.properties",
-        "file:/opt/metersphere/conf/metersphere.properties",
+        "file:D:\\myproject\\metersphere_support_sqltest\\backend\\conf\\metersphere.properties",
 }, encoding = "UTF-8", ignoreResourceNotFound = true)
 @ServletComponentScan
 @EnableConfigurationProperties({
