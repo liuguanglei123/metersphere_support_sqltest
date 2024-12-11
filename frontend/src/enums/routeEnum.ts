@@ -9,6 +9,13 @@ export enum ApiTestRouteEnum {
   API_TEST_REPORT_SHARE = 'apiTestReportShare',
 }
 
+export enum SqlTestRouteEnum {
+  SQL_TEST = 'sqlTest',
+  SQL_TEST_DEBUG_MANAGEMENT = 'sqlTestDebug',
+  SQL_TEST_SCENARIO = 'sqlTestScenario',
+  SQL_TEST_SCENARIO_RECYCLE = 'sqlTestScenarioRecycle',
+}
+
 export enum BugManagementRouteEnum {
   BUG_MANAGEMENT = 'bugManagement',
   BUG_MANAGEMENT_INDEX = 'bugManagementIndex',
@@ -136,4 +143,5 @@ export const RouteEnum = {
   ...WorkbenchRouteEnum,
   ...ShareEnum,
   ...FullPageEnum,
+  ...SqlTestRouteEnum,
 };

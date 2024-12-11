@@ -18,6 +18,7 @@ export enum MenuEnum {
   bugManagement = 'bugManagement',
   caseManagement = 'caseManagement',
   apiTest = 'apiTest',
+  sqlTest = 'sqlTest',
   uiTest = 'uiTest',
   taskCenter = 'taskCenter',
 }

@@ -96,6 +96,16 @@
             <version>${embedded.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid-spring-boot-starter</artifactId>
+            <version>1.2.18</version>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.alibaba</groupId>-->
+<!--            <artifactId>druid</artifactId>-->
+<!--            <version>1.2.18</version>-->
+<!--        </dependency>-->
         <!-- end  embedded 配置     -->
     </dependencies>
     <!-- 测试顺序使用字母顺序   -->

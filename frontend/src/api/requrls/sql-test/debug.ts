@@ -1,0 +1,16 @@
+export const SqlExecuteApiDebugUrl = '/sql/debug/debug'; // 执行调试
+export const SqlAddApiDebugUrl = '/sql/debug/add'; // 新增调试
+export const SqlUpdateApiDebugUrl = '/sql/debug/update'; // 更新调试
+export const SqlGetApiDebugDetailUrl = '/sql/debug/get'; // 获取接口调试详情
+export const SqlDeleteDebugUrl = '/sql/debug/delete'; // 删除调试
+export const SqlTestMockUrl = '/sql/test/mock'; // 测试mock
+export const SqlUpdateDebugModuleUrl = '/sql/debug/module/update'; // 更新模块
+export const SqlMoveDebugModuleUrl = '/sql/debug/module/move'; // 移动模块
+export const SqlGetDebugModuleCountUrl = '/sql/debug/module/count'; // 模块统计数量
+export const SqlAddDebugModuleUrl = '/sql/debug/module/add'; // 添加模块
+export const SqlGetDebugModulesUrl = '/sql/debug/module/tree'; // 查询模块树
+export const SqlDeleteDebugModuleUrl = '/sql/debug/module/delete'; // 删除模块
+export const SqlDragDebugUrl = '/sql/debug/edit/pos'; // 拖拽调试节点
+export const SqlUploadTempFileUrl = '/sql/debug/upload/temp/file'; // 上传文件
+export const SqlTransferOptionsUrl = '/sql/debug/transfer/options'; // 文件转存目录
+export const SqlTransferFileUrl = '/sql/debug/transfer'; // 文件转存

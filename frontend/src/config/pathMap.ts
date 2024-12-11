@@ -182,6 +182,38 @@ export const pathMap: PathMapItem[] = [
     ],
   },
   {
+    key: 'SQL_TEST', // 接口测试
+    locale: 'menu.sqlTest',
+    route: RouteEnum.SQL_TEST,
+    permission: [],
+    level: MENU_LEVEL[2],
+    children: [
+      {
+        key: 'SQL_TEST_DEBUG_MANAGEMENT', // 接口测试-接口调试
+        locale: 'menu.sqlTest.debug',
+        route: RouteEnum.SQL_TEST_DEBUG_MANAGEMENT,
+        permission: [],
+        level: MENU_LEVEL[2],
+        children: [
+          {
+            key: 'SQL_TEST_DEBUG_MANAGEMENT_MODULE', // 接口测试-接口调试-模块
+            locale: 'common.module',
+            route: RouteEnum.SQL_TEST_DEBUG_MANAGEMENT,
+            permission: [],
+            level: MENU_LEVEL[2],
+          },
+          {
+            key: 'API_TEST_DEBUG_MANAGEMENT_DEBUG', // 接口测试-接口调试-调试
+            locale: 'menu.sqlTest.debug.debug',
+            route: RouteEnum.SQL_TEST_DEBUG_MANAGEMENT,
+            permission: [],
+            level: MENU_LEVEL[2],
+          },
+        ],
+      },
+    ],
+  },
+  {
     key: 'BUG_MANAGEMENT', // 缺陷管理
     locale: 'menu.bugManagement',
     route: RouteEnum.BUG_MANAGEMENT,

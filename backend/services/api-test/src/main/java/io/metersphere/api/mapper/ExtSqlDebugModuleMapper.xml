@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.metersphere.api.mapper.ExtSqlDebugModuleMapper">
+    <select id="selectBaseByProtocolAndUser" resultType="io.metersphere.system.dto.sdk.BaseTreeNode">
+        SELECT id,
+               NAME,
+               parent_id AS parentId,
+               'MODULE' AS type
+        FROM sql_debug_module
+        WHERE create_user = #{userId}
+        ORDER BY pos
+    </select>
+
+    <select id="selectSqlDebugByProtocolAndUser" resultType="io.metersphere.api.dto.debug.SqlTreeNode">
+        SELECT id,
+               NAME,
+               module_id AS parentId,
+               'API' AS type,
+               method,
+                protocol
+        FROM sql_debug
+        WHERE create_user = #{userId}
+        ORDER BY pos DESC
+    </select>
+
+</mapper>

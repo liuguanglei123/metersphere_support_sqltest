@@ -5,6 +5,7 @@ export default {
   'ms.message.bug': '缺陷管理',
   'ms.message.case': '用例管理',
   'ms.message.api': '接口测试',
+  'ms.message.sql': 'SQL测试',
   'ms.message.list.all': '全部',
   'ms.message.list.me': '{var}我的',
   'ms.message.list.unRead': '未读',
