@@ -28,13 +28,18 @@
               :has-permission="hasPermission"
               :tooltip-text="tooltip"
               :options="legacyOptions"
-              :size="60"
+              :project-id="projectId"
               :value-list="legacyValueList"
             />
           </div>
         </div>
-        <div class="h-[148px]">
-          <MsChart :options="countOptions" />
+        <div class="flex h-[148px]">
+          <LegendPieChart
+            v-model:currentPage="currentPage"
+            :has-permission="hasPermission"
+            :data="statusPercentValue"
+            :options="countOptions"
+          />
         </div>
       </div>
     </div>
@@ -47,9 +52,9 @@
    */
   import { ref } from 'vue';
 
-  import MsChart from '@/components/pure/chart/index.vue';
   import MsSelect from '@/components/business/ms-select';
   import CardSkeleton from './cardSkeleton.vue';
+  import LegendPieChart, { legendDataType } from './legendPieChart.vue';
   import PassRatePie from './passRatePie.vue';
 
   import {
@@ -69,7 +74,7 @@
   } from '@/models/workbench/homePage';
   import { WorkCardEnum } from '@/enums/workbenchEnum';
 
-  import { handlePieData, handleUpdateTabPie } from '../utils';
+  import { colorMapConfig, handlePieData, handleUpdateTabPie, routeNavigationMap } from '../utils';
 
   const appStore = useAppStore();
 
@@ -120,6 +125,7 @@
 
   const hasPermission = ref<boolean>(false);
   const showSkeleton = ref(false);
+  const statusPercentValue = ref<legendDataType[]>([]);
 
   async function initCount() {
     try {
@@ -140,6 +146,13 @@
 
       const { statusStatisticsMap, statusPercentList, errorCode } = detail;
       hasPermission.value = errorCode !== 109001;
+      statusPercentValue.value = (statusPercentList || []).map((item, index) => {
+        return {
+          ...item,
+          selected: true,
+          color: `${colorMapConfig[props.item.key][index]}`,
+        };
+      });
 
       countOptions.value = handlePieData(props.item.key, hasPermission.value, statusPercentList);
       if (props.item.key === WorkCardEnum.PLAN_LEGACY_BUG) {
@@ -156,14 +169,17 @@
       const { options, valueList } = handleUpdateTabPie(legacyData, hasPermission.value, `${props.item.key}-legacy`);
 
       legacyValueList.value = hasPermission.value
-        ? (statusStatisticsMap?.retentionRate || []).slice(1).map((item) => {
+        ? (statusStatisticsMap?.retentionRate || []).slice(1).map((item, i) => {
             return {
               value: item.count,
               label: item.name,
               name: item.name,
+              route: routeNavigationMap[props.item.key].legacy?.route,
+              status: routeNavigationMap[props.item.key].legacy?.status[i],
             };
           })
         : valueList;
+
       legacyOptions.value = options;
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -182,6 +198,8 @@
       emit('change');
     });
   }
+
+  const currentPage = ref(1);
 
   onMounted(() => {
     initCount();

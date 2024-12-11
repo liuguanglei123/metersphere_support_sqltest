@@ -121,6 +121,38 @@ INSERT INTO test_plan(id, num, project_id, group_id, module_id, name, status, ty
     VALUE ('dashboard_test-plan-id', 500, '100001100001', 'NONE', 'case_plan_module', 'test_plan_associate_case_name_three', 'NOT_ARCHIVED', 'TEST_PLAN', null, UNIX_TIMESTAMP() * 1000,'admin',
            UNIX_TIMESTAMP() * 1000,'admin',UNIX_TIMESTAMP() * 1000, UNIX_TIMESTAMP() * 1000, UNIX_TIMESTAMP() * 1000, UNIX_TIMESTAMP() * 1000, null);
 
+INSERT INTO test_plan(id, num, project_id, group_id, module_id, name, status, type, tags, create_time, create_user, update_time, update_user, planned_start_time, planned_end_time, actual_start_time, actual_end_time, description)
+    VALUE ('dashboard_test-plan-id2', 500, '100001100001', 'dashboard_group-plan', 'case_plan_module', 'test_plan_name_three', 'NOT_ARCHIVED', 'TEST_PLAN', null, UNIX_TIMESTAMP() * 1000,'admin',
+           UNIX_TIMESTAMP() * 1000,'admin',UNIX_TIMESTAMP() * 1000, UNIX_TIMESTAMP() * 1000, UNIX_TIMESTAMP() * 1000, UNIX_TIMESTAMP() * 1000, null);
+
+INSERT INTO test_plan(id, num, project_id, group_id, module_id, name, status, type, tags, create_time, create_user, update_time, update_user, planned_start_time, planned_end_time, actual_start_time, actual_end_time, description)
+    VALUE ('dashboard_group-plan', 500, '100001100001', 'NONE', 'case_plan_module', 'test_plan_group_name_three', 'NOT_ARCHIVED', 'GROUP', null, UNIX_TIMESTAMP() * 1000,'admin',
+           UNIX_TIMESTAMP() * 1000,'admin',UNIX_TIMESTAMP() * 1000, UNIX_TIMESTAMP() * 1000, UNIX_TIMESTAMP() * 1000, UNIX_TIMESTAMP() * 1000, null);
+
+INSERT INTO test_plan_functional_case(id, test_plan_id, functional_case_id, create_time, create_user, execute_user, last_exec_time, last_exec_result, pos, test_plan_collection_id)
+VALUES ('test_plan_functional_case_dashboard_id', 'dashboard_test-plan-id', 'dashboard_TEST_FUNCTIONAL_CASE_ID_g', 1669174143999, 'admin', 'admin', 1669174143999, 'SUCCESS', 5000, '123');
+
+INSERT INTO test_plan_api_case(`id`, `test_plan_id`, `api_case_id`, `environment_id`, `last_exec_result`, `last_exec_report_id`, `execute_user`, `create_time`, `create_user`, `pos`, `test_plan_collection_id`) VALUES
+    ('dashboard_plan_api_case_1', 'dashboard_test-plan-id', 'dashboard_ac_4', '1', 'PASSED', NULL, 'admin', 1716370415311, 'admin', 1, '123');
+
+INSERT INTO test_plan_api_scenario (id, test_plan_id, api_scenario_id, environment_id, execute_user, last_exec_result, last_exec_report_id, create_time, create_user, pos, test_plan_collection_id, grouped) VALUES
+    ('dashboard_plan_api_scenario_1', 'dashboard_test-plan-id', 'dashboard_scenario_four', '1', 'admin', 'PASSED', NULL, 1716370415311, 'admin', 1, '123', false);
+
+INSERT INTO test_plan_functional_case(id, test_plan_id, functional_case_id, create_time, create_user, execute_user, last_exec_time, last_exec_result, pos, test_plan_collection_id)
+VALUES ('test_plan_functional_case_dashboard_id1', 'dashboard_group-plan', 'dashboard_TEST_FUNCTIONAL_CASE_ID_g', 1669174143999, 'admin', NULL, 1669174143999, 'SUCCESS', 5000, '123');
+
+INSERT INTO test_plan_api_case(`id`, `test_plan_id`, `api_case_id`, `environment_id`, `last_exec_result`, `last_exec_report_id`, `execute_user`, `create_time`, `create_user`, `pos`, `test_plan_collection_id`) VALUES
+    ('dashboard_plan_api_case_2', 'dashboard_group-plan', 'dashboard_ac_4', '1', 'PASSED', NULL, NULL, 1716370415311, 'admin', 1, '123');
+
+INSERT INTO test_plan_api_scenario (id, test_plan_id, api_scenario_id, environment_id, execute_user, last_exec_result, last_exec_report_id, create_time, create_user, pos, test_plan_collection_id, grouped) VALUES
+    ('dashboard_plan_api_scenario_3', 'dashboard_group-plan', 'dashboard_scenario_four', '1', NULL, 'PASSED', NULL, 1716370415311, 'admin', 1, '123', false);
+
+INSERT INTO `test_plan_config`(`test_plan_id`, `automatic_status_update`, `repeat_case`, `pass_threshold`, `case_run_mode`)
+VALUES ('dashboard_group-plan', b'0', b'0', 100.00, 'PARALLEL');
+
+INSERT INTO `schedule` (`id`, `key`, `type`, `value`, `job`, `resource_type`, `enable`, `resource_id`, `create_user`, `create_time`, `update_time`, `project_id`, `name`, `config`, `num`)
+VALUES ('25', 'key_25', 'cron', '52 27 11 20 05 ?', 'JobClass25', 'TEST_PLAN', b'1', 'dashboard_group-plan', 'admin', 1640778400000, 1640779400000, '100001100001', 'Schedule 25', '{\"param1\": \"value1\", \"param2\": \"value2\"}', 21);
+
 INSERT INTO project_application (project_id, type, type_value) VALUES
                                                                    ('100001100001', 'BUG_SYNC_BUG_PLATFORM_CONFIG', '{"jiraKey":"TES","jiraBugTypeId":"10009"}'),
                                                                    ('100001100001', 'BUG_SYNC_PLATFORM_KEY', 'jira'),

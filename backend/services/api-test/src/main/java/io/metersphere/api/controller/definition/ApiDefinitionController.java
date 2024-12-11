@@ -10,6 +10,7 @@ import io.metersphere.api.dto.definition.*;
 import io.metersphere.api.dto.request.ApiEditPosRequest;
 import io.metersphere.api.dto.request.ApiTransferRequest;
 import io.metersphere.api.dto.request.ImportRequest;
+import io.metersphere.api.dto.scenario.ApiFileCopyRequest;
 import io.metersphere.api.dto.schema.JsonSchemaItem;
 import io.metersphere.api.mapper.ExtApiDefinitionMapper;
 import io.metersphere.api.mapper.ExtApiScenarioStepMapper;
@@ -49,6 +50,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -98,7 +100,7 @@ public class ApiDefinitionController {
     @CheckOwner(resourceId = "#projectId", resourceType = "project")
     public ApiCoverageDTO rage(@PathVariable String projectId) {
         // 筛选出所有 API 的 ID 和 HTTP 类型的 API
-        List<ApiDefinition> apiDefinitions = extApiDefinitionMapper.selectBaseInfoByProjectId(projectId);
+        List<ApiDefinition> apiDefinitions = extApiDefinitionMapper.selectBaseInfoByProjectId(projectId, null, null);
         List<String> apiAllIds = apiDefinitions.stream().map(ApiDefinition::getId).toList();
         List<ApiDefinition> httpApiList = apiDefinitions.stream()
                 .filter(api -> StringUtils.equalsIgnoreCase(api.getProtocol(), "http"))
@@ -111,7 +113,7 @@ public class ApiDefinitionController {
 
         // 如果有场景步骤中的 API 用例 ID，追加相关 API ID
         if (CollectionUtils.isNotEmpty(apiCaseIdInStep)) {
-            List<String> apiCaseIdInScenarioStep = extApiTestCaseMapper.selectApiIdByCaseId(apiCaseIdInStep);
+            List<String> apiCaseIdInScenarioStep = extApiTestCaseMapper.selectApiIdByCaseId(apiCaseIdInStep, null, null);
             apiInScenarioStep.addAll(apiCaseIdInScenarioStep);
         }
 
@@ -149,6 +151,14 @@ public class ApiDefinitionController {
     @CheckOwner(resourceId = "#request.getSelectIds()", resourceType = "api_definition")
     public void batchUpdate(@Validated @RequestBody ApiDefinitionBatchUpdateRequest request) {
         apiDefinitionService.batchUpdate(request, SessionUtils.getUserId());
+    }
+
+    @PostMapping("/file/copy")
+    @Operation(summary = "接口测试-接口管理-复制接口时，复制文件")
+    @RequiresPermissions(value = {PermissionConstants.PROJECT_API_DEFINITION_UPDATE, PermissionConstants.PROJECT_API_DEFINITION_ADD},
+            logical = Logical.OR)
+    public Map<String, String> copyFile(@Validated @RequestBody ApiFileCopyRequest request) {
+        return apiDefinitionService.copyFile(request);
     }
 
     @PostMapping(value = "/copy")
@@ -198,6 +208,7 @@ public class ApiDefinitionController {
     @RequiresPermissions(PermissionConstants.PROJECT_API_DEFINITION_READ)
     @CheckOwner(resourceId = "#request.getProjectId()", resourceType = "project")
     public Pager<List<ApiDefinitionDTO>> getPage(@Validated @RequestBody ApiDefinitionPageRequest request) {
+        apiDefinitionService.initApiSelectIds(request);
         Page<Object> page = PageHelper.startPage(request.getCurrent(), request.getPageSize(),
                 StringUtils.isNotBlank(request.getSortString("id")) ? request.getSortString("id") : request.getDeleted() ? "delete_time desc, id desc" : "pos desc, id desc");
         return PageUtils.setPageInfo(page, apiDefinitionService.getApiDefinitionPage(request, SessionUtils.getUserId()));

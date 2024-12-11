@@ -33,6 +33,9 @@ public class TestPlanStatisticsResponse {
 	@JsonSerialize(using = CustomRateSerializer.class)
 	private Double executeRate;
 
+	@Schema(description = "测试计划是否通过")
+	private boolean isPass = false;
+
 	/**
 	 * 执行进度中的用例数量统计
 	 */
@@ -86,6 +89,11 @@ public class TestPlanStatisticsResponse {
 
 	public void calculateCaseTotal() {
 		this.caseTotal = this.functionalCaseCount + this.apiCaseCount + this.apiScenarioCount;
+	}
+
+	public void calculateTestPlanIsPass() {
+		double passThresholdValue = this.passThreshold == null ? 0d : this.passThreshold;
+		this.isPass = this.passRate >= passThresholdValue;
 	}
 
 	public void calculatePassRate() {

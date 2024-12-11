@@ -90,6 +90,7 @@ public interface ExtApiTestCaseMapper {
      * @param sort    排序
      * @return 通用的列表Case集合
      */
+    @BaseConditionFilter
     List<TestCaseProviderDTO> listUnRelatedCaseWithBug(@Param("request") TestCasePageProviderRequest request, @Param("deleted") boolean deleted, @Param("sort") String sort);
 
     /**
@@ -142,5 +143,7 @@ public interface ExtApiTestCaseMapper {
 
     List<String> selectApiId(String projectId);
 
-    List<String> selectApiIdByCaseId(@Param("ids") List<String> apiCaseIdInStep);
+    List<String> selectApiIdByProjectAndProtocol(@Param("projectId") String projectId, @Param("protocols") List<String> protocols);
+
+    List<String> selectApiIdByCaseId(@Param("ids") List<String> apiCaseIdInStep, @Param("protocols") List<String> apiProtocols, @Param("ignoreApiIds") List<String> ignoreApiIds);
 }

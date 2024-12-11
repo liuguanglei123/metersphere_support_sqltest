@@ -9,6 +9,7 @@ import io.metersphere.bug.service.BugStatusService;
 import io.metersphere.dashboard.constants.DashboardUserLayoutKeys;
 import io.metersphere.dashboard.dto.LayoutDTO;
 import io.metersphere.dashboard.request.DashboardFrontPageRequest;
+import io.metersphere.dashboard.response.CascadeChildrenDTO;
 import io.metersphere.dashboard.response.OverViewCountDTO;
 import io.metersphere.dashboard.response.StatisticsDTO;
 import io.metersphere.dashboard.service.DashboardService;
@@ -85,6 +86,7 @@ public class DashboardFrontPageControllerTests extends BaseTest {
     private static final String CREATE_BY_ME = "/dashboard/create_by_me";
     private static final String PROJECT_VIEW = "/dashboard/project_view";
     private static final String PROJECT_MEMBER_VIEW = "/dashboard/project_member_view";
+    private static final String PROJECT_PLAN_VIEW = "/dashboard/plan_view";
     private static final String CASE_COUNT = "/dashboard/case_count";
     private static final String ASSOCIATE_CASE_COUNT = "/dashboard/associate_case_count";
     private static final String REVIEW_CASE_COUNT = "/dashboard/review_case_count";
@@ -105,6 +107,9 @@ public class DashboardFrontPageControllerTests extends BaseTest {
 
     private static final String PROJECT_MEMBER_USER_LIST = "/dashboard/member/get-project-member/option/";
 
+    private static final String PROJECT_PLAN_LIST = "/dashboard/plan/option/";
+
+
     @Test
     @Order(1)
     @Sql(scripts = {"/dml/init_dashboard.sql"}, config = @SqlConfig(encoding = "utf-8", transactionMode = SqlConfig.TransactionMode.ISOLATED))
@@ -115,6 +120,7 @@ public class DashboardFrontPageControllerTests extends BaseTest {
         dashboardFrontPageRequest.setCurrent(1);
         dashboardFrontPageRequest.setPageSize(5);
         dashboardFrontPageRequest.setProjectIds(List.of(DEFAULT_PROJECT_ID));
+        dashboardFrontPageRequest.setHandleUsers(List.of("admin"));
         MvcResult bugMvcResult = this.requestPostWithOkAndReturn(BUG_HANDLE_USER, dashboardFrontPageRequest);
         String bugContentAsString = bugMvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
         ResultHolder bugResultHolder = JSON.parseObject(bugContentAsString, ResultHolder.class);
@@ -171,6 +177,34 @@ public class DashboardFrontPageControllerTests extends BaseTest {
                         JSON.parseObject(mvcResultAll.getResponse().getContentAsString(StandardCharsets.UTF_8), ResultHolder.class).getData()),
                 OverViewCountDTO.class);
         Assertions.assertNotNull(moduleCountAll);
+
+        mvcResultAll = this.requestPostWithOkAndReturn(PROJECT_PLAN_VIEW, dashboardFrontPageRequest);
+        moduleCountAll = JSON.parseObject(JSON.toJSONString(
+                        JSON.parseObject(mvcResultAll.getResponse().getContentAsString(StandardCharsets.UTF_8), ResultHolder.class).getData()),
+                OverViewCountDTO.class);
+        Assertions.assertNotNull(moduleCountAll);
+
+        dashboardFrontPageRequest.setPlanId("dashboard_test-plan-id");
+        mvcResultAll = this.requestPostWithOkAndReturn(PROJECT_PLAN_VIEW, dashboardFrontPageRequest);
+        moduleCountAll = JSON.parseObject(JSON.toJSONString(
+                        JSON.parseObject(mvcResultAll.getResponse().getContentAsString(StandardCharsets.UTF_8), ResultHolder.class).getData()),
+                OverViewCountDTO.class);
+        Assertions.assertNotNull(moduleCountAll);
+
+        dashboardFrontPageRequest.setPlanId("dashboard_group-plan");
+        mvcResultAll = this.requestPostWithOkAndReturn(PROJECT_PLAN_VIEW, dashboardFrontPageRequest);
+        moduleCountAll = JSON.parseObject(JSON.toJSONString(
+                        JSON.parseObject(mvcResultAll.getResponse().getContentAsString(StandardCharsets.UTF_8), ResultHolder.class).getData()),
+                OverViewCountDTO.class);
+        Assertions.assertNotNull(moduleCountAll);
+
+        dashboardFrontPageRequest.setPlanId("dashboard_test-plan-id2");
+        mvcResultAll = this.requestPostWithOkAndReturn(PROJECT_PLAN_VIEW, dashboardFrontPageRequest);
+        moduleCountAll = JSON.parseObject(JSON.toJSONString(
+                        JSON.parseObject(mvcResultAll.getResponse().getContentAsString(StandardCharsets.UTF_8), ResultHolder.class).getData()),
+                OverViewCountDTO.class);
+        Assertions.assertNotNull(moduleCountAll);
+
         List<SelectOption> headerStatusOption = bugStatusService.getHeaderStatusOption(DEFAULT_PROJECT_ID);
         buildBug(headerStatusOption);
         bugMvcResult = this.requestPostWithOkAndReturn(BUG_HANDLE_USER, dashboardFrontPageRequest);
@@ -212,7 +246,7 @@ public class DashboardFrontPageControllerTests extends BaseTest {
         String defaultString = defaultResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
         ResultHolder defaultHolder = JSON.parseObject(defaultString, ResultHolder.class);
         List<LayoutDTO>defaultDTOS = JSON.parseArray(JSON.toJSONString(defaultHolder.getData()), LayoutDTO.class);
-        Assertions.assertEquals(3, defaultDTOS.size());
+        Assertions.assertEquals(4, defaultDTOS.size());
         ProjectExample projectExample = new ProjectExample();
         projectExample.createCriteria().andOrganizationIdEqualTo(DEFAULT_ORGANIZATION_ID);
         List<Project> projects = projectMapper.selectByExample(projectExample);
@@ -255,6 +289,8 @@ public class DashboardFrontPageControllerTests extends BaseTest {
         layoutDTO.add(layoutDTO9);
         LayoutDTO layoutDTOz = getLayoutDTO(12, DashboardUserLayoutKeys.PLAN_LEGACY_BUG, "计划遗留bug统计");
         layoutDTO.add(layoutDTOz);
+        LayoutDTO layoutDTOg = getLayoutDTO(17, DashboardUserLayoutKeys.PROJECT_PLAN_VIEW, "测试计划概览");
+        layoutDTO.add(layoutDTOg);
         LayoutDTO layoutDTOx = getLayoutDTO(13, DashboardUserLayoutKeys.BUG_COUNT, "缺陷数量统计");
         layoutDTO.add(layoutDTOx);
         LayoutDTO layoutDTOv = getLayoutDTO(14, DashboardUserLayoutKeys.CREATE_BUG_BY_ME, "我创建的缺陷");
@@ -307,6 +343,7 @@ public class DashboardFrontPageControllerTests extends BaseTest {
         layoutDTOb.setProjectIds(projects);
         layoutDTOb.setHandleUsers(new ArrayList<>());
         layoutDTOb.setFullScreen(false);
+        layoutDTOb.setPlanId("");
         return layoutDTOb;
     }
 
@@ -587,6 +624,22 @@ public class DashboardFrontPageControllerTests extends BaseTest {
         returnData = mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
         resultHolder = JSON.parseObject(returnData, ResultHolder.class);
         list = JSON.parseArray(JSON.toJSONString(resultHolder.getData()), UserExtendDTO.class);
+        Assertions.assertNotNull(list);
+    }
+
+    @Test
+    @Order(7)
+    public void testProjectPlanList() throws Exception {
+        MvcResult mvcResult = this.requestGetWithOkAndReturn(PROJECT_PLAN_LIST + DEFAULT_PROJECT_ID);
+        String returnData = mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
+        ResultHolder resultHolder = JSON.parseObject(returnData, ResultHolder.class);
+        List<CascadeChildrenDTO> list = JSON.parseArray(JSON.toJSONString(resultHolder.getData()), CascadeChildrenDTO.class);
+        Assertions.assertNotNull(list);
+
+        mvcResult = this.requestGetWithOkAndReturn(PROJECT_MEMBER_USER_LIST + "id");
+        returnData = mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
+        resultHolder = JSON.parseObject(returnData, ResultHolder.class);
+        list = JSON.parseArray(JSON.toJSONString(resultHolder.getData()), CascadeChildrenDTO.class);
         Assertions.assertNotNull(list);
     }
 

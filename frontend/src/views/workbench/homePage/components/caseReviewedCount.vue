@@ -26,15 +26,20 @@
           <div class="case-count-item">
             <PassRatePie
               :options="options"
+              :project-id="projectId"
               tooltip-text="workbench.homePage.caseReviewCoverRateTooltip"
-              :size="60"
               :value-list="coverValueList"
               :has-permission="hasPermission"
             />
           </div>
         </div>
         <div class="h-[148px]">
-          <MsChart :options="caseReviewCountOptions" />
+          <LegendPieChart
+            v-model:currentPage="currentPage"
+            :has-permission="hasPermission"
+            :data="statusPercentValue"
+            :options="caseReviewCountOptions"
+          />
         </div>
       </div>
     </div>
@@ -47,9 +52,9 @@
    */
   import { ref } from 'vue';
 
-  import MsChart from '@/components/pure/chart/index.vue';
   import MsSelect from '@/components/business/ms-select';
   import CardSkeleton from './cardSkeleton.vue';
+  import LegendPieChart, { legendDataType } from './legendPieChart.vue';
   import PassRatePie from './passRatePie.vue';
 
   import { workCaseReviewDetail } from '@/api/modules/workbench';
@@ -58,7 +63,7 @@
 
   import type { PassRateDataType, SelectedCardItem, TimeFormParams } from '@/models/workbench/homePage';
 
-  import { handlePieData, handleUpdateTabPie } from '../utils';
+  import { colorMapConfig, handlePieData, handleUpdateTabPie } from '../utils';
 
   const { t } = useI18n();
   const appStore = useAppStore();
@@ -75,6 +80,7 @@
   const innerProjectIds = defineModel<string[]>('projectIds', {
     required: true,
   });
+  const currentPage = ref(1);
 
   const projectId = ref<string>(innerProjectIds.value[0]);
 
@@ -106,6 +112,7 @@
 
   const hasPermission = ref<boolean>(false);
   const showSkeleton = ref(false);
+  const statusPercentValue = ref<legendDataType[]>([]);
 
   async function initReviewCount() {
     try {
@@ -126,6 +133,14 @@
       hasPermission.value = detail.errorCode !== 109001;
 
       const { statusStatisticsMap, statusPercentList } = detail;
+      statusPercentValue.value = (statusPercentList || []).map((item, index) => {
+        return {
+          ...item,
+          selected: true,
+          color: `${colorMapConfig[props.item.key][index]}`,
+        };
+      });
+
       caseReviewCountOptions.value = handlePieData(props.item.key, hasPermission.value, statusPercentList);
       const { options: coverOptions, valueList } = handleUpdateTabPie(
         statusStatisticsMap?.cover || [],

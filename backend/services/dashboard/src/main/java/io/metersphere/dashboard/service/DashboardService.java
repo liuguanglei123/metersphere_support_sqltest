@@ -18,11 +18,9 @@ import io.metersphere.bug.mapper.ExtBugMapper;
 import io.metersphere.bug.service.BugCommonService;
 import io.metersphere.bug.service.BugStatusService;
 import io.metersphere.dashboard.constants.DashboardUserLayoutKeys;
-import io.metersphere.dashboard.dto.LayoutDTO;
-import io.metersphere.dashboard.dto.NameArrayDTO;
-import io.metersphere.dashboard.dto.NameCountDTO;
-import io.metersphere.dashboard.dto.StatusPercentDTO;
+import io.metersphere.dashboard.dto.*;
 import io.metersphere.dashboard.request.DashboardFrontPageRequest;
+import io.metersphere.dashboard.response.CascadeChildrenDTO;
 import io.metersphere.dashboard.response.OverViewCountDTO;
 import io.metersphere.dashboard.response.StatisticsDTO;
 import io.metersphere.functional.constants.CaseReviewStatus;
@@ -33,7 +31,12 @@ import io.metersphere.functional.mapper.ExtCaseReviewMapper;
 import io.metersphere.functional.mapper.ExtFunctionalCaseMapper;
 import io.metersphere.functional.request.CaseReviewPageRequest;
 import io.metersphere.functional.service.CaseReviewService;
-import io.metersphere.plan.mapper.ExtTestPlanMapper;
+import io.metersphere.plan.domain.*;
+import io.metersphere.plan.dto.TestPlanAndGroupInfoDTO;
+import io.metersphere.plan.dto.response.TestPlanBugPageResponse;
+import io.metersphere.plan.dto.response.TestPlanStatisticsResponse;
+import io.metersphere.plan.mapper.*;
+import io.metersphere.plan.service.TestPlanStatisticsService;
 import io.metersphere.plugin.platform.dto.SelectOption;
 import io.metersphere.project.domain.Project;
 import io.metersphere.project.dto.ProjectCountDTO;
@@ -45,27 +48,23 @@ import io.metersphere.project.mapper.ProjectMapper;
 import io.metersphere.project.service.PermissionCheckService;
 import io.metersphere.project.service.ProjectApplicationService;
 import io.metersphere.project.service.ProjectService;
-import io.metersphere.sdk.constants.ExecStatus;
-import io.metersphere.sdk.constants.PermissionConstants;
-import io.metersphere.sdk.constants.ResultStatus;
-import io.metersphere.sdk.constants.TestPlanConstants;
+import io.metersphere.sdk.constants.*;
 import io.metersphere.sdk.dto.CombineCondition;
 import io.metersphere.sdk.dto.CombineSearch;
 import io.metersphere.sdk.util.JSON;
 import io.metersphere.sdk.util.LogUtils;
 import io.metersphere.sdk.util.Translator;
-import io.metersphere.system.domain.UserLayout;
-import io.metersphere.system.domain.UserLayoutExample;
+import io.metersphere.system.domain.*;
 import io.metersphere.system.dto.ProtocolDTO;
+import io.metersphere.system.dto.request.schedule.BaseScheduleConfigRequest;
 import io.metersphere.system.dto.sdk.OptionDTO;
 import io.metersphere.system.dto.user.ProjectUserMemberDTO;
 import io.metersphere.system.dto.user.UserExtendDTO;
-import io.metersphere.system.mapper.ExtExecTaskItemMapper;
-import io.metersphere.system.mapper.ExtSystemProjectMapper;
-import io.metersphere.system.mapper.UserLayoutMapper;
+import io.metersphere.system.mapper.*;
 import io.metersphere.system.uid.IDGenerator;
 import io.metersphere.system.utils.PageUtils;
 import io.metersphere.system.utils.Pager;
+import io.metersphere.system.utils.ScheduleUtils;
 import io.metersphere.system.utils.SessionUtils;
 import jakarta.annotation.Resource;
 import org.apache.commons.collections.CollectionUtils;
@@ -120,6 +119,10 @@ public class DashboardService {
     @Resource
     private UserLayoutMapper userLayoutMapper;
     @Resource
+    private TestPlanMapper testPlanMapper;
+    @Resource
+    private ExtUserMapper extUserMapper;
+    @Resource
     private BugCommonService bugCommonService;
     @Resource
     private BugStatusService bugStatusService;
@@ -131,6 +134,20 @@ public class DashboardService {
     private ApiTestService apiTestService;
     @Resource
     private ExtSystemProjectMapper extSystemProjectMapper;
+    @Resource
+    private TestPlanStatisticsService planStatisticsService;
+    @Resource
+    private ExtTestPlanFunctionalCaseMapper extTestPlanFunctionalCaseMapper;
+    @Resource
+    private ExtTestPlanApiCaseMapper extTestPlanApiCaseMapper;
+    @Resource
+    private ExtTestPlanApiScenarioMapper extTestPlanApiScenarioMapper;
+    @Resource
+    private ExtTestPlanBugMapper extTestPlanBugMapper;
+    @Resource
+    private TestPlanConfigMapper testPlanConfigMapper;
+    @Resource
+    private ScheduleMapper scheduleMapper;
 
 
     public static final String FUNCTIONAL = "FUNCTIONAL"; // 功能用例
@@ -145,6 +162,8 @@ public class DashboardService {
     public static final String TEST_PLAN_MODULE = "testPlan";
     public static final String FUNCTIONAL_CASE_MODULE = "caseManagement";
     public static final String BUG_MODULE = "bugManagement";
+    
+    public static final String NONE = "NONE";
 
 
     public OverViewCountDTO createByMeCount(DashboardFrontPageRequest request, String userId) {
@@ -165,7 +184,7 @@ public class DashboardService {
     @Nullable
     private static OverViewCountDTO getNoProjectData(DashboardFrontPageRequest request) {
         if (!request.isSelectAll() && CollectionUtils.isEmpty(request.getProjectIds())) {
-            Map<String, Integer> map = new HashMap<>();
+            Map<String, Object> map = new HashMap<>();
             map.put(FUNCTIONAL, 0);
             map.put(CASE_REVIEW, 0);
             map.put(API, 0);
@@ -181,7 +200,7 @@ public class DashboardService {
     @NotNull
     private OverViewCountDTO getModuleCountMap(Map<String, Set<String>> permissionModuleProjectIdMap, List<Project> projects, Long toStartTime, Long toEndTime, String userId) {
         Map<String, String> projectNameMap = projects.stream().collect(Collectors.toMap(Project::getId, Project::getName));
-        Map<String, Integer> map = new HashMap<>();
+        Map<String, Object> map = new HashMap<>();
         Map<String, Integer> projectCaseCountMap;
         Map<String, Integer> projectReviewCountMap;
         Map<String, Integer> projectApiCountMap;
@@ -258,7 +277,7 @@ public class DashboardService {
             map.put(BUG_COUNT, bugCount);
             projectBugCountMap = projectBugCount.stream().collect(Collectors.toMap(ProjectCountDTO::getProjectId, ProjectCountDTO::getCount));
 
-        }else {
+        } else {
             projectBugCountMap = new HashMap<>();
         }
 
@@ -404,8 +423,10 @@ public class DashboardService {
         if (CollectionUtils.isEmpty(allPermissionProjects)) {
             return new ArrayList<>();
         }
+        List<ProjectUserMemberDTO> orgProjectMemberList = extProjectMemberMapper.getOrgProjectMemberList(organizationId, null);
         if (CollectionUtils.isEmpty(userLayouts)) {
-            return getDefaultLayoutDTOS(allPermissionProjects.getFirst().getId());
+            List<String> userIds = orgProjectMemberList.stream().map(ProjectUserMemberDTO::getId).distinct().toList();
+            return getDefaultLayoutDTOS(allPermissionProjects.getFirst().getId(), userIds);
         }
         UserLayout userLayout = userLayouts.getFirst();
         byte[] configuration = userLayout.getConfiguration();
@@ -415,7 +436,6 @@ public class DashboardService {
         }
         List<LayoutDTO> layoutDTOS = JSON.parseArray(layoutDTOStr, LayoutDTO.class);
         Map<String, Set<String>> permissionModuleProjectIdMap = dashboardProjectService.getPermissionModuleProjectIds(allPermissionProjects, userId);
-        List<ProjectUserMemberDTO> orgProjectMemberList = extProjectMemberMapper.getOrgProjectMemberList(organizationId, null);
         rebuildLayouts(layoutDTOS, allPermissionProjects, orgProjectMemberList, permissionModuleProjectIdMap);
         return layoutDTOS.stream().sorted(Comparator.comparing(LayoutDTO::getPos)).collect(Collectors.toList());
     }
@@ -468,15 +488,33 @@ public class DashboardService {
                 Set<String> hasReadProjectIds = permissionModuleProjectIdMap.get(PermissionConstants.PROJECT_API_SCENARIO_READ);
                 checkHasPermissionProject(layoutDTO, hasReadProjectIds);
             } else if (StringUtils.equalsIgnoreCase(layoutDTO.getKey(), DashboardUserLayoutKeys.TEST_PLAN_COUNT.toString())
-                    || StringUtils.equalsIgnoreCase(layoutDTO.getKey(), DashboardUserLayoutKeys.PLAN_LEGACY_BUG.toString())) {
+                    || StringUtils.equalsIgnoreCase(layoutDTO.getKey(), DashboardUserLayoutKeys.PLAN_LEGACY_BUG.toString())
+                    || StringUtils.equalsIgnoreCase(layoutDTO.getKey(), DashboardUserLayoutKeys.PROJECT_PLAN_VIEW.toString())) {
                 Set<String> hasReadProjectIds = permissionModuleProjectIdMap.get(PermissionConstants.TEST_PLAN_READ);
                 checkHasPermissionProject(layoutDTO, hasReadProjectIds);
+                if (StringUtils.equalsIgnoreCase(layoutDTO.getKey(), DashboardUserLayoutKeys.PROJECT_PLAN_VIEW.toString())) {
+                    setPlanId(layoutDTO);
+                }
             } else if (StringUtils.equalsIgnoreCase(layoutDTO.getKey(), DashboardUserLayoutKeys.BUG_COUNT.toString())
                     || StringUtils.equalsIgnoreCase(layoutDTO.getKey(), DashboardUserLayoutKeys.CREATE_BUG_BY_ME.toString())
                     || StringUtils.equalsIgnoreCase(layoutDTO.getKey(), DashboardUserLayoutKeys.HANDLE_BUG_BY_ME.toString())
                     || StringUtils.equalsIgnoreCase(layoutDTO.getKey(), DashboardUserLayoutKeys.BUG_HANDLE_USER.toString())) {
                 Set<String> hasReadProjectIds = permissionModuleProjectIdMap.get(PermissionConstants.PROJECT_BUG_READ);
                 checkHasPermissionProject(layoutDTO, hasReadProjectIds);
+                if (StringUtils.equalsIgnoreCase(layoutDTO.getKey(), DashboardUserLayoutKeys.BUG_HANDLE_USER.toString())) {
+                    List<ProjectUserMemberDTO> list = orgProjectMemberList.stream().filter(t -> layoutDTO.getHandleUsers().contains(t.getId())).toList();
+                    layoutDTO.setHandleUsers(list.stream().map(ProjectUserMemberDTO::getId).distinct().toList());
+                }
+            }
+        }
+    }
+
+    private void setPlanId(LayoutDTO layoutDTO) {
+        TestPlan testPlan = testPlanMapper.selectByPrimaryKey(layoutDTO.getPlanId());
+        if (testPlan == null || StringUtils.equalsIgnoreCase(testPlan.getStatus(), TestPlanConstants.TEST_PLAN_STATUS_ARCHIVED)) {
+            TestPlan latestPlan = extTestPlanMapper.getLatestPlan(layoutDTO.getProjectIds().getFirst());
+            if (latestPlan != null) {
+                layoutDTO.setPlanId(latestPlan.getId());
             }
         }
     }
@@ -496,17 +534,20 @@ public class DashboardService {
     /**
      * 获取默认布局
      *
-     * @param organizationId 组织ID
+     * @param projectId 项目ID
      * @return List<LayoutDTO>
      */
-    private static List<LayoutDTO> getDefaultLayoutDTOS(String organizationId) {
+    private List<LayoutDTO> getDefaultLayoutDTOS(String projectId, List<String> userIds) {
         List<LayoutDTO> layoutDTOS = new ArrayList<>();
-        LayoutDTO projectLayoutDTO = buildDefaultLayoutDTO(DashboardUserLayoutKeys.PROJECT_VIEW, "workbench.homePage.projectOverview", 0, new ArrayList<>());
+        LayoutDTO projectLayoutDTO = buildDefaultLayoutDTO(DashboardUserLayoutKeys.PROJECT_VIEW, "workbench.homePage.projectOverview", 0, new ArrayList<>(), new ArrayList<>());
         layoutDTOS.add(projectLayoutDTO);
-        LayoutDTO createByMeLayoutDTO = buildDefaultLayoutDTO(DashboardUserLayoutKeys.CREATE_BY_ME, "workbench.homePage.createdByMe", 1, new ArrayList<>());
+        LayoutDTO createByMeLayoutDTO = buildDefaultLayoutDTO(DashboardUserLayoutKeys.CREATE_BY_ME, "workbench.homePage.createdByMe", 1, new ArrayList<>(), new ArrayList<>());
         layoutDTOS.add(createByMeLayoutDTO);
-        LayoutDTO projectMemberLayoutDTO = buildDefaultLayoutDTO(DashboardUserLayoutKeys.PROJECT_MEMBER_VIEW, "workbench.homePage.staffOverview", 2, List.of(organizationId));
+        LayoutDTO projectMemberLayoutDTO = buildDefaultLayoutDTO(DashboardUserLayoutKeys.PROJECT_MEMBER_VIEW, "workbench.homePage.staffOverview", 2, List.of(projectId), userIds);
         layoutDTOS.add(projectMemberLayoutDTO);
+        LayoutDTO planLayoutDTO = buildDefaultLayoutDTO(DashboardUserLayoutKeys.PROJECT_PLAN_VIEW, "workbench.homePage.testPlanOverview", 3, List.of(projectId), userIds);
+        setPlanId(planLayoutDTO);
+        layoutDTOS.add(planLayoutDTO);
         return layoutDTOS;
     }
 
@@ -519,7 +560,7 @@ public class DashboardService {
      * @param projectIds 布局卡片所选的项目ids
      * @return LayoutDTO
      */
-    private static LayoutDTO buildDefaultLayoutDTO(DashboardUserLayoutKeys layoutKey, String label, int pos, List<String> projectIds) {
+    private static LayoutDTO buildDefaultLayoutDTO(DashboardUserLayoutKeys layoutKey, String label, int pos, List<String> projectIds, List<String> users) {
         LayoutDTO layoutDTO = new LayoutDTO();
         layoutDTO.setId(UUID.randomUUID().toString());
         layoutDTO.setKey(layoutKey.toString());
@@ -528,7 +569,7 @@ public class DashboardService {
         layoutDTO.setSelectAll(true);
         layoutDTO.setFullScreen(true);
         layoutDTO.setProjectIds(projectIds);
-        layoutDTO.setHandleUsers(new ArrayList<>());
+        layoutDTO.setHandleUsers(users);
         return layoutDTO;
     }
 
@@ -676,6 +717,235 @@ public class DashboardService {
         return overViewCountDTO;
     }
 
+    @NotNull
+    private TestPlanStatisticsResponse buildStatisticsResponse(String planId, List<TestPlanFunctionalCase> functionalCases, List<TestPlanApiCase> apiCases, List<TestPlanApiScenario> apiScenarios) {
+        //查出计划
+        TestPlan testPlan = testPlanMapper.selectByPrimaryKey(planId);
+        // 计划的更多配置
+        TestPlanConfig planConfig = this.selectConfig(planId);
+        //查询定时任务
+        Schedule schedule = this.selectSchedule(planId);
+        //构建TestPlanStatisticsResponse
+        TestPlanStatisticsResponse statisticsResponse = new TestPlanStatisticsResponse();
+        statisticsResponse.setId(planId);
+        statisticsResponse.setStatus(testPlan.getStatus());
+        // 测试计划组没有测试计划配置。同理，也不用参与用例等数据的计算
+        if (planConfig != null) {
+            statisticsResponse.setPassThreshold(planConfig.getPassThreshold());
+            // 功能用例分组统计开始 (为空时, 默认为未执行)
+            Map<String, Long> functionalCaseResultCountMap = planStatisticsService.countFunctionalCaseExecResultMap(functionalCases);
+            // 接口用例分组统计开始 (为空时, 默认为未执行)
+            Map<String, Long> apiCaseResultCountMap = planStatisticsService.countApiTestCaseExecResultMap(apiCases);
+            // 接口场景用例分组统计开始 (为空时, 默认为未执行)
+            Map<String, Long> apiScenarioResultCountMap = planStatisticsService.countApiScenarioExecResultMap(apiScenarios);
+
+            // 用例数据汇总
+            statisticsResponse.setFunctionalCaseCount(CollectionUtils.isNotEmpty(functionalCases) ? functionalCases.size() : 0);
+            statisticsResponse.setApiCaseCount(CollectionUtils.isNotEmpty(apiCases) ? apiCases.size() : 0);
+            statisticsResponse.setApiScenarioCount(CollectionUtils.isNotEmpty(apiScenarios) ? apiScenarios.size() : 0);
+            statisticsResponse.setSuccessCount(planStatisticsService.countCaseMap(functionalCaseResultCountMap, apiCaseResultCountMap, apiScenarioResultCountMap, ResultStatus.SUCCESS.name()));
+            statisticsResponse.setErrorCount(planStatisticsService.countCaseMap(functionalCaseResultCountMap, apiCaseResultCountMap, apiScenarioResultCountMap, ResultStatus.ERROR.name()));
+            statisticsResponse.setFakeErrorCount(planStatisticsService.countCaseMap(functionalCaseResultCountMap, apiCaseResultCountMap, apiScenarioResultCountMap, ResultStatus.FAKE_ERROR.name()));
+            statisticsResponse.setBlockCount(planStatisticsService.countCaseMap(functionalCaseResultCountMap, apiCaseResultCountMap, apiScenarioResultCountMap, ResultStatus.BLOCKED.name()));
+            statisticsResponse.setPendingCount(planStatisticsService.countCaseMap(functionalCaseResultCountMap, apiCaseResultCountMap, apiScenarioResultCountMap, ExecStatus.PENDING.name()));
+            statisticsResponse.calculateCaseTotal();
+            statisticsResponse.calculatePassRate();
+            statisticsResponse.calculateExecuteRate();
+            statisticsResponse.calculateTestPlanIsPass();
+        }
+        //定时任务
+        if (schedule != null) {
+            BaseScheduleConfigRequest request = new BaseScheduleConfigRequest();
+            request.setEnable(schedule.getEnable());
+            request.setCron(schedule.getValue());
+            request.setResourceId(planId);
+            if (schedule.getConfig() != null) {
+                request.setRunConfig(JSON.parseObject(schedule.getConfig(), Map.class));
+            }
+            statisticsResponse.setScheduleConfig(request);
+            if (schedule.getEnable()) {
+                statisticsResponse.setNextTriggerTime(ScheduleUtils.getNextTriggerTime(schedule.getValue()));
+            }
+        }
+        statisticsResponse.calculateCaseTotal();
+        statisticsResponse.calculatePassRate();
+        statisticsResponse.calculateExecuteRate();
+        statisticsResponse.calculateStatus();
+        statisticsResponse.calculateTestPlanIsPass();
+        return statisticsResponse;
+    }
+
+    private Schedule selectSchedule(String testPlanId) {
+        ScheduleExample scheduleExample = new ScheduleExample();
+        scheduleExample.createCriteria().andResourceIdEqualTo(testPlanId).andResourceTypeEqualTo(ScheduleResourceType.TEST_PLAN.name());
+        List<Schedule> schedules = scheduleMapper.selectByExample(scheduleExample);
+        return CollectionUtils.isNotEmpty(schedules) ? schedules.getFirst() : null;
+    }
+
+    private TestPlanConfig selectConfig(String testPlanId) {
+        return testPlanConfigMapper.selectByPrimaryKey(testPlanId);
+    }
+
+
+    public OverViewCountDTO projectPlanViewCount(DashboardFrontPageRequest request, String currentUserId) {
+        OverViewCountDTO overViewCountDTO = new OverViewCountDTO();
+        String projectId = request.getProjectIds().getFirst();
+        String planId = request.getPlanId();
+        if (Boolean.FALSE.equals(permissionCheckService.checkModule(projectId, TEST_PLAN_MODULE, currentUserId, PermissionConstants.TEST_PLAN_READ))) {
+            overViewCountDTO.setErrorCode(NO_PROJECT_PERMISSION.getCode());
+        }
+        if (StringUtils.isBlank(planId)) {
+            return new OverViewCountDTO(new HashMap<>(), new ArrayList<>(), new ArrayList<>(), 0);
+        }
+
+        // 关联的用例数据
+        List<TestPlanFunctionalCase> planFunctionalCases = extTestPlanFunctionalCaseMapper.selectByTestPlanIdAndNotDeleted(planId);
+        List<TestPlanApiCase> planApiCases = extTestPlanApiCaseMapper.selectByTestPlanIdAndNotDeleted(planId);
+        List<TestPlanApiScenario> planApiScenarios = extTestPlanApiScenarioMapper.selectByTestPlanIdAndNotDeleted(planId);
+        TestPlanStatisticsResponse statisticsResponse = buildStatisticsResponse(planId, planFunctionalCases, planApiCases, planApiScenarios);
+        // 计划-缺陷的关联数据
+        List<TestPlanBugPageResponse> planBugs = extTestPlanBugMapper.selectBugCountByPlanId(planId);
+        //获取卡片数据
+        buildCountMap(statisticsResponse, planBugs, overViewCountDTO);
+        Map<String, List<TestPlanFunctionalCase>> caseUserMap = planFunctionalCases.stream().collect(Collectors.groupingBy(t -> StringUtils.isEmpty(t.getExecuteUser()) ? NONE : t.getExecuteUser()));
+        Map<String, List<TestPlanApiCase>> apiCaseUserMap = planApiCases.stream().collect(Collectors.groupingBy(t -> StringUtils.isEmpty(t.getExecuteUser()) ? NONE : t.getExecuteUser()));
+        Map<String, List<TestPlanApiScenario>> apiScenarioUserMap = planApiScenarios.stream().collect(Collectors.groupingBy(t -> StringUtils.isEmpty(t.getExecuteUser()) ? NONE : t.getExecuteUser()));
+        Map<String, List<TestPlanBugPageResponse>> bugUserMap = planBugs.stream().collect(Collectors.groupingBy(TestPlanBugPageResponse::getCreateUser));
+        int totalCount = planFunctionalCases.size() + planApiCases.size() + planApiScenarios.size() + planBugs.size();
+        List<User> users = getUsers(caseUserMap, apiCaseUserMap, apiScenarioUserMap, bugUserMap, totalCount);
+        List<String> nameList =users.stream().map(User::getName).toList();
+        overViewCountDTO.setXAxis(nameList);
+        //获取柱状图数据
+        List<NameArrayDTO> nameArrayDTOList = getNameArrayDTOS(projectId, users, caseUserMap, apiCaseUserMap, apiScenarioUserMap, bugUserMap);
+        overViewCountDTO.setProjectCountList(nameArrayDTOList);
+        return overViewCountDTO;
+
+    }
+
+    @NotNull
+    private List<NameArrayDTO> getNameArrayDTOS(String projectId, List<User> users, Map<String, List<TestPlanFunctionalCase>> caseUserMap, Map<String, List<TestPlanApiCase>> apiCaseUserMap, Map<String, List<TestPlanApiScenario>> apiScenarioUserMap, Map<String, List<TestPlanBugPageResponse>> bugUserMap) {
+        List<Integer> totalCaseCount = new ArrayList<>();
+        List<Integer> finishCaseCount = new ArrayList<>();
+        List<Integer> createBugCount = new ArrayList<>();
+        List<Integer> closeBugCount = new ArrayList<>();
+
+        String platformName = projectApplicationService.getPlatformName(projectId);
+        List<String> statusList = getBugEndStatus(projectId, platformName);
+        users.forEach(user -> {
+            String userId = user.getId();
+            int count = 0;
+            int finishCount = 0;
+            List<TestPlanFunctionalCase> testPlanFunctionalCases = caseUserMap.get(userId);
+            if (CollectionUtils.isNotEmpty(testPlanFunctionalCases)) {
+                count += testPlanFunctionalCases.size();
+                List<TestPlanFunctionalCase> list = testPlanFunctionalCases.stream().filter(t -> !StringUtils.equalsIgnoreCase(t.getLastExecResult(), ExecStatus.PENDING.name())).toList();
+                finishCount += list.size();
+            }
+            List<TestPlanApiCase> testPlanApiCases = apiCaseUserMap.get(userId);
+            if (CollectionUtils.isNotEmpty(testPlanApiCases)) {
+                count += testPlanApiCases.size();
+                List<TestPlanApiCase> list = testPlanApiCases.stream().filter(t -> !StringUtils.equalsIgnoreCase(t.getLastExecResult(), ExecStatus.PENDING.name())).toList();
+                finishCount += list.size();
+            }
+            List<TestPlanApiScenario> testPlanApiScenarios = apiScenarioUserMap.get(userId);
+            if (CollectionUtils.isNotEmpty(testPlanApiScenarios)) {
+                count += testPlanApiScenarios.size();
+                List<TestPlanApiScenario> list = testPlanApiScenarios.stream().filter(t -> !StringUtils.equalsIgnoreCase(t.getLastExecResult(), ExecStatus.PENDING.name())).toList();
+                finishCount += list.size();
+            }
+            List<TestPlanBugPageResponse> testPlanBugPageResponses = bugUserMap.get(userId);
+            if (CollectionUtils.isNotEmpty(testPlanBugPageResponses)) {
+                createBugCount.add(testPlanBugPageResponses.size());
+                if (CollectionUtils.isNotEmpty(statusList)) {
+                    List<TestPlanBugPageResponse> list = testPlanBugPageResponses.stream().filter(t -> statusList.contains(t.getStatus())).toList();
+                    closeBugCount.add(list.size());
+                } else {
+                    closeBugCount.add(testPlanBugPageResponses.size());
+                }
+
+            } else {
+                createBugCount.add(0);
+                closeBugCount.add(0);
+            }
+            totalCaseCount.add(count);
+            finishCaseCount.add(finishCount);
+        });
+
+        List<NameArrayDTO> nameArrayDTOList = new ArrayList<>();
+        NameArrayDTO userCaseCountArray = new NameArrayDTO();
+        userCaseCountArray.setCount(totalCaseCount);
+        nameArrayDTOList.add(userCaseCountArray);
+
+        NameArrayDTO userFinishCountArray = new NameArrayDTO();
+        userFinishCountArray.setCount(finishCaseCount);
+        nameArrayDTOList.add(userFinishCountArray);
+
+        NameArrayDTO userCreateBugArray = new NameArrayDTO();
+        userCreateBugArray.setCount(createBugCount);
+        nameArrayDTOList.add(userCreateBugArray);
+
+        NameArrayDTO userCloseBugArray = new NameArrayDTO();
+        userCloseBugArray.setCount(closeBugCount);
+        nameArrayDTOList.add(userCloseBugArray);
+        return nameArrayDTOList;
+    }
+
+    private List<User> getUsers(Map<String, List<TestPlanFunctionalCase>> caseUserMap, Map<String, List<TestPlanApiCase>> apiCaseUserMap, Map<String, List<TestPlanApiScenario>> apiScenarioUserMap, Map<String, List<TestPlanBugPageResponse>> bugUserMap, int totalCount) {
+        Set<String> caseUserIds = caseUserMap.keySet();
+        boolean addDefaultUser = caseUserIds.contains(NONE);
+        Set<String> userSet = new HashSet<>(caseUserIds);
+        Set<String> apiCaseIds = apiCaseUserMap.keySet();
+        userSet.addAll(apiCaseIds);
+        if (apiCaseIds.contains(NONE)) {
+            addDefaultUser = true;
+        }
+        Set<String> apiScenarioIds = apiScenarioUserMap.keySet();
+        userSet.addAll(apiScenarioIds);
+        if (apiScenarioIds.contains(NONE)) {
+            addDefaultUser = true;
+        }
+        userSet.addAll(bugUserMap.keySet());
+        List<User> users = new ArrayList<>();
+        if (CollectionUtils.isEmpty(userSet)) {
+            if (totalCount>0) {
+                addDefaultUser(users);
+            }
+        } else {
+            users = extUserMapper.selectSimpleUser(userSet);
+            if (addDefaultUser) {
+                addDefaultUser(users);
+            }
+        }
+        return users;
+    }
+
+    private static void addDefaultUser(List<User> users) {
+        User user = new User();
+        user.setId(NONE);
+        user.setName(Translator.get("plan_executor"));
+        users.add(user);
+    }
+
+    private void buildCountMap(TestPlanStatisticsResponse planCount, List<TestPlanBugPageResponse> planBugs, OverViewCountDTO overViewCountDTO) {
+        Map<String, Object> caseCountMap = new HashMap<>();
+        caseCountMap.put(FUNCTIONAL, (int) planCount.getFunctionalCaseCount());
+        caseCountMap.put(API_CASE, (int) planCount.getApiCaseCount());
+        caseCountMap.put(API_SCENARIO, (int) planCount.getApiScenarioCount());
+        Double passThreshold = planCount.getPassThreshold();
+        int passThresholdValue = passThreshold == null ? 0 : passThreshold.intValue();
+        caseCountMap.put("passThreshold", passThresholdValue);
+        Double executeRate = planCount.getExecuteRate();
+        int executeRateValue = executeRate == null ? 0 : executeRate.intValue();
+        caseCountMap.put("executeRate", executeRateValue);
+        caseCountMap.put("totalCount", planCount.getCaseTotal());
+        caseCountMap.put("executeCount", planCount.getCaseTotal() - planCount.getPendingCount());
+        caseCountMap.put(BUG_COUNT, planBugs.size());
+        List<TestPlan> testPlans = extTestPlanMapper.selectBaseInfoByIds(List.of(planCount.getId()));
+        caseCountMap.put("testPlanName", testPlans.getFirst().getName());
+        caseCountMap.put("status", planCount.getStatus());
+        caseCountMap.put("passRate", planCount.getPassRate());
+        overViewCountDTO.setCaseCountMap(caseCountMap);
+    }
 
     public StatisticsDTO projectCaseCount(DashboardFrontPageRequest request, String userId) {
         String projectId = request.getProjectIds().getFirst();
@@ -729,25 +999,33 @@ public class DashboardService {
     private static List<NameCountDTO> getReviewList(Map<String, List<FunctionalCaseStatisticDTO>> reviewStatusMap, List<FunctionalCaseStatisticDTO> statisticListByProjectId) {
         List<NameCountDTO> reviewList = new ArrayList<>();
         List<FunctionalCaseStatisticDTO> unReviewList = reviewStatusMap.get(FunctionalCaseReviewStatus.UN_REVIEWED.toString());
+        List<FunctionalCaseStatisticDTO> underReviewList = reviewStatusMap.get(FunctionalCaseReviewStatus.UNDER_REVIEWED.toString());
+        List<FunctionalCaseStatisticDTO> reReviewedList = reviewStatusMap.get(FunctionalCaseReviewStatus.RE_REVIEWED.toString());
         if (CollectionUtils.isEmpty(unReviewList)) {
             unReviewList = new ArrayList<>();
+        }
+        if (CollectionUtils.isEmpty(underReviewList)) {
+            underReviewList = new ArrayList<>();
+        }
+        if (CollectionUtils.isEmpty(reReviewedList)) {
+            reReviewedList = new ArrayList<>();
         }
         NameCountDTO reviewRate = new NameCountDTO();
         reviewRate.setName(Translator.get("functional_case.reviewRate"));
         if (CollectionUtils.isEmpty(statisticListByProjectId)) {
             reviewRate.setCount(0);
         } else {
-            BigDecimal divide = BigDecimal.valueOf(statisticListByProjectId.size() - unReviewList.size()).divide(BigDecimal.valueOf(statisticListByProjectId.size()), 2, RoundingMode.HALF_UP);
+            BigDecimal divide = BigDecimal.valueOf(statisticListByProjectId.size() - unReviewList.size() - underReviewList.size() - reReviewedList.size()).divide(BigDecimal.valueOf(statisticListByProjectId.size()), 2, RoundingMode.HALF_UP);
             reviewRate.setCount(getTurnCount(divide));
         }
         reviewList.add(reviewRate);
         NameCountDTO hasReview = new NameCountDTO();
         hasReview.setName(Translator.get("functional_case.hasReview"));
-        hasReview.setCount(statisticListByProjectId.size() - unReviewList.size());
+        hasReview.setCount(statisticListByProjectId.size() - unReviewList.size() - underReviewList.size() - reReviewedList.size());
         reviewList.add(hasReview);
         NameCountDTO unReview = new NameCountDTO();
         unReview.setName(Translator.get("functional_case.unReview"));
-        unReview.setCount(unReviewList.size());
+        unReview.setCount(unReviewList.size() + underReviewList.size() + reReviewedList.size());
         reviewList.add(unReview);
         return reviewList;
     }
@@ -791,7 +1069,7 @@ public class DashboardService {
         }
         long caseTestCount = extFunctionalCaseMapper.caseTestCount(projectId, null, null);
         long simpleCaseCount = extFunctionalCaseMapper.simpleCaseCount(projectId, null, null);
-        List<NameCountDTO> coverList = getCoverList((int) simpleCaseCount, (int) caseTestCount, (int) (simpleCaseCount - caseTestCount));
+        List<NameCountDTO> coverList = getCoverList((int) simpleCaseCount, Translator.get("functional_case.associateRate"), (int) caseTestCount, Translator.get("functional_case.hasAssociate"), (int) (simpleCaseCount - caseTestCount), Translator.get("functional_case.unAssociate"));
         Map<String, List<NameCountDTO>> statusStatisticsMap = new HashMap<>();
         statusStatisticsMap.put("cover", coverList);
         statisticsDTO.setStatusStatisticsMap(statusStatisticsMap);
@@ -826,13 +1104,22 @@ public class DashboardService {
     @NotNull
     private List<SelectOption> getStatusOption(String projectId, String platformName) {
         List<SelectOption> allLocalStatusOptions = bugStatusService.getAllLocalStatusOptions(projectId);
+        rebuildStatusName(BugPlatform.LOCAL.getName(), allLocalStatusOptions);
         List<SelectOption> headerStatusOption = new ArrayList<>(allLocalStatusOptions);
         if (!StringUtils.equals(platformName, BugPlatform.LOCAL.getName())) {
             List<SelectOption> thirdStatusOptions = bugStatusService.getHeaderStatusOption(projectId);
+            rebuildStatusName(platformName, thirdStatusOptions);
             headerStatusOption.addAll(new ArrayList<>(thirdStatusOptions));
         }
         headerStatusOption = headerStatusOption.stream().distinct().toList();
         return headerStatusOption;
+    }
+
+    private static void rebuildStatusName(String platformName, List<SelectOption> thirdStatusOptions) {
+        for (SelectOption thirdStatusOption : thirdStatusOptions) {
+            String newName = platformName + "_" + thirdStatusOption.getText();
+            thirdStatusOption.setText(newName);
+        }
     }
 
     @NotNull
@@ -941,7 +1228,9 @@ public class DashboardService {
         } else {
             if (!StringUtils.equals(platformName, BugPlatform.LOCAL.getName())) {
                 List<SelectOption> headerHandlerOptionList = bugCommonService.getHeaderHandlerOption(projectId);
-                headerHandlerOption.addAll(new ArrayList<>(headerHandlerOptionList));
+                if (CollectionUtils.isNotEmpty(headerHandlerOptionList)) {
+                    headerHandlerOption.addAll(new ArrayList<>(headerHandlerOptionList));
+                }
             }
             headerHandlerOption = headerHandlerOption.stream().filter(t -> handleUsers.contains(t.getValue())).toList();
         }
@@ -972,7 +1261,7 @@ public class DashboardService {
         List<FunctionalCaseStatisticDTO> statisticListByProjectId = extFunctionalCaseMapper.getStatisticListByProjectId(projectId, null, null);
         List<FunctionalCaseStatisticDTO> unReviewCaseList = statisticListByProjectId.stream().filter(t -> StringUtils.equalsIgnoreCase(t.getReviewStatus(), FunctionalCaseReviewStatus.UN_REVIEWED.toString())).toList();
         int reviewCount = statisticListByProjectId.size() - unReviewCaseList.size();
-        List<NameCountDTO> coverList = getCoverList(statisticListByProjectId.size(), reviewCount, unReviewCaseList.size());
+        List<NameCountDTO> coverList = getCoverList(statisticListByProjectId.size(), Translator.get("functional_case.reviewRate"), reviewCount, Translator.get("functional_case.hasReview"), unReviewCaseList.size(), Translator.get("functional_case.unReview"));
         Map<String, List<NameCountDTO>> statusStatisticsMap = new HashMap<>();
         statusStatisticsMap.put("cover", coverList);
         statisticsDTO.setStatusStatisticsMap(statusStatisticsMap);
@@ -1056,10 +1345,10 @@ public class DashboardService {
     @NotNull
     private List<StatusPercentDTO> getStatusPercentList(List<FunctionalCaseStatisticDTO> statisticListByProjectId) {
         List<StatusPercentDTO> statusPercentList = new ArrayList<>();
-        List<OptionDTO>statusNameList = buildStatusNameMap();
+        List<OptionDTO> statusNameList = buildStatusNameMap();
         int totalCount = CollectionUtils.isEmpty(statisticListByProjectId) ? 0 : statisticListByProjectId.size();
         Map<String, List<FunctionalCaseStatisticDTO>> reviewStatusMap = statisticListByProjectId.stream().collect(Collectors.groupingBy(FunctionalCaseStatisticDTO::getReviewStatus));
-        statusNameList.forEach(t->{
+        statusNameList.forEach(t -> {
             StatusPercentDTO statusPercentDTO = new StatusPercentDTO();
             List<FunctionalCaseStatisticDTO> functionalCaseStatisticDTOS = reviewStatusMap.get(t.getId());
             int count = CollectionUtils.isEmpty(functionalCaseStatisticDTOS) ? 0 : functionalCaseStatisticDTOS.size();
@@ -1077,28 +1366,28 @@ public class DashboardService {
     }
 
     @NotNull
-    private static List<NameCountDTO> getCoverList(int totalCount, int coverCount, int unCoverCount) {
+    private static List<NameCountDTO> getCoverList(int totalCount, String rateName, int coverCount, String coverName, int unCoverCount, String unCoverName) {
         List<NameCountDTO> coverList = new ArrayList<>();
         NameCountDTO coverRate = new NameCountDTO();
         if (totalCount > 0) {
             BigDecimal divide = BigDecimal.valueOf(coverCount).divide(BigDecimal.valueOf(totalCount), 2, RoundingMode.HALF_UP);
             coverRate.setCount(getTurnCount(divide));
         }
-        coverRate.setName(Translator.get("functional_case.coverRate"));
+        coverRate.setName(rateName);
         coverList.add(coverRate);
         NameCountDTO hasCover = new NameCountDTO();
         hasCover.setCount(coverCount);
-        hasCover.setName(Translator.get("functional_case.hasCover"));
+        hasCover.setName(coverName);
         coverList.add(hasCover);
         NameCountDTO unCover = new NameCountDTO();
         unCover.setCount(unCoverCount);
-        unCover.setName(Translator.get("functional_case.unCover"));
+        unCover.setName(unCoverName);
         coverList.add(unCover);
         return coverList;
     }
 
     private static List<OptionDTO> buildStatusNameMap() {
-        List<OptionDTO>optionDTOList = new ArrayList<>();
+        List<OptionDTO> optionDTOList = new ArrayList<>();
         optionDTOList.add(new OptionDTO(FunctionalCaseReviewStatus.UN_REVIEWED.toString(), Translator.get("case.review.status.un_reviewed")));
         optionDTOList.add(new OptionDTO(FunctionalCaseReviewStatus.UNDER_REVIEWED.toString(), Translator.get("case.review.status.under_reviewed")));
         optionDTOList.add(new OptionDTO(FunctionalCaseReviewStatus.PASS.toString(), Translator.get("case.review.status.pass")));
@@ -1303,7 +1592,7 @@ public class DashboardService {
         if (CollectionUtils.isNotEmpty(simpleAllApiScenarioList)) {
             simpleAllApiScenarioSize = simpleAllApiScenarioList.size();
         }
-        List<String> lastReportStatuList  = new ArrayList<>();
+        List<String> lastReportStatuList = new ArrayList<>();
         lastReportStatuList.add(StringUtils.EMPTY);
         lastReportStatuList.add(ExecStatus.PENDING.toString());
         List<ApiScenario> unExecList = simpleAllApiScenarioList.stream().filter(t -> lastReportStatuList.contains(t.getLastReportStatus())).toList();
@@ -1336,7 +1625,7 @@ public class DashboardService {
             statisticsDTO.setErrorCode(NO_PROJECT_PERMISSION.getCode());
             return statisticsDTO;
         }
-        Set<String>handleUsers = new HashSet<>();
+        Set<String> handleUsers = new HashSet<>();
         String localHandleUser = hasHandleUser ? userId : null;
         if (StringUtils.isNotBlank(localHandleUser)) {
             handleUsers.add(localHandleUser);
@@ -1352,7 +1641,7 @@ public class DashboardService {
         if (hasHandleUser) {
             allSimpleList = extBugMapper.getByHandleUser(projectId, null, null, localHandleUser, createUser, handleUser, platformName);
         } else {
-            allSimpleList= extBugMapper.getSimpleList(projectId, null, null, handleUsers, createUser, platforms);
+            allSimpleList = extBugMapper.getSimpleList(projectId, null, null, handleUsers, createUser, platforms);
         }
         List<String> localLastStepStatus = getBugEndStatus(projectId, platformName);
         List<Bug> statusList = allSimpleList.stream().filter(t -> !localLastStepStatus.contains(t.getStatus())).toList();
@@ -1489,14 +1778,16 @@ public class DashboardService {
     @NotNull
     private List<SelectOption> getHeaderStatusOption(String projectId, String platformName, List<String> endStatus) {
         List<SelectOption> allLocalStatusOptions = bugStatusService.getAllLocalStatusOptions(projectId);
+        rebuildStatusName(BugPlatform.LOCAL.getName(), allLocalStatusOptions);
         List<SelectOption> headerStatusOption = new ArrayList<>(allLocalStatusOptions);
         if (!StringUtils.equals(platformName, BugPlatform.LOCAL.getName())) {
             List<SelectOption> thirdStatusOptions = bugStatusService.getHeaderStatusOption(projectId);
+            rebuildStatusName(platformName, thirdStatusOptions);
             if (CollectionUtils.isNotEmpty(thirdStatusOptions)) {
                 headerStatusOption.addAll(thirdStatusOptions);
             }
         }
-        headerStatusOption = headerStatusOption.stream().filter(t->!endStatus.contains(t.getValue())).distinct().toList();
+        headerStatusOption = headerStatusOption.stream().filter(t -> !endStatus.contains(t.getValue())).distinct().toList();
         return headerStatusOption;
     }
 
@@ -1506,6 +1797,41 @@ public class DashboardService {
             return new ArrayList<>();
         }
         return extSystemProjectMapper.getMemberByProjectId(projectId, keyword);
+    }
+
+    public List<CascadeChildrenDTO> getPlanOption(String projectId) {
+        List<CascadeChildrenDTO> cascadeDTOList = new ArrayList<>();
+        List<TestPlanAndGroupInfoDTO> groupAndPlanInfo = extTestPlanMapper.getGroupAndPlanInfo(projectId);
+        TestPlanExample testPlanExample = new TestPlanExample();
+        testPlanExample.createCriteria().andProjectIdEqualTo(projectId).andTypeEqualTo(TestPlanConstants.TEST_PLAN_TYPE_PLAN).andGroupIdEqualTo(NONE);
+        testPlanExample.setOrderByClause(" create_time DESC ");
+        List<TestPlan> testPlans = testPlanMapper.selectByExample(testPlanExample);
+        Map<String, List<TestPlanAndGroupInfoDTO>> groupMap = groupAndPlanInfo.stream().sorted(Comparator.comparing(TestPlanAndGroupInfoDTO::getGroupCreateTime).reversed()).collect(Collectors.groupingBy(TestPlanAndGroupInfoDTO::getGroupId));
+        groupMap.forEach((t, list) -> {
+            CascadeChildrenDTO father = new CascadeChildrenDTO();
+            father.setValue(t);
+            father.setLabel(list.getFirst().getGroupName());
+            father.setCreateTime(list.getFirst().getCreateTime());
+            List<CascadeDTO> children = new ArrayList<>();
+            List<TestPlanAndGroupInfoDTO> sortList = list.stream().sorted(Comparator.comparing(TestPlanAndGroupInfoDTO::getCreateTime).reversed()).toList();
+            for (TestPlanAndGroupInfoDTO testPlanAndGroupInfoDTO : sortList) {
+                CascadeDTO cascadeChildrenDTO = new CascadeDTO();
+                cascadeChildrenDTO.setValue(testPlanAndGroupInfoDTO.getId());
+                cascadeChildrenDTO.setLabel(testPlanAndGroupInfoDTO.getName());
+                children.add(cascadeChildrenDTO);
+            }
+            father.setChildren(children);
+            cascadeDTOList.add(father);
+        });
+        for (TestPlan testPlan : testPlans) {
+            CascadeChildrenDTO father = new CascadeChildrenDTO();
+            father.setValue(testPlan.getId());
+            father.setLabel(testPlan.getName());
+            father.setCreateTime(testPlan.getCreateTime());
+            cascadeDTOList.add(father);
+        }
+        return cascadeDTOList.stream().sorted(Comparator.comparing(CascadeChildrenDTO::getCreateTime).reversed()).toList();
+
     }
 }
 

@@ -99,6 +99,20 @@ export interface TestPlanDetail extends AddTestPlanParams {
   apiCaseCount?: number;
   apiScenarioCount?: number;
 }
+// 计划列表（不分页）
+export interface TestPlanWithoutPageItem {
+  id: string;
+  num: number;
+  groupId: string;
+  projectId: string;
+  moduleId: string;
+  name: string;
+  status: planStatusType;
+  type: keyof typeof testPlanTypeEnum;
+  tags: string[] | { id: string; name: string }[];
+  createUser: string;
+  createTime: string;
+}
 
 // 计划分页
 export interface TestPlanItem {
@@ -262,6 +276,7 @@ export interface PassRateCountDetail {
   };
   nextTriggerTime: number;
   status: planStatusType;
+  pass: boolean; // 是否通过
 }
 
 // 执行历史

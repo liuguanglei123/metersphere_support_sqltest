@@ -153,7 +153,7 @@
   import router from '@/router';
   import useAppStore from '@/store/modules/app';
   import useCacheStore from '@/store/modules/cache/cache';
-  import { filterTree, getGenerateId, mapTree } from '@/utils';
+  import { filterTree, getGenerateId, mapTree, traverseTree } from '@/utils';
   import { hasAnyPermission } from '@/utils/permission';
 
   import { RequestResult } from '@/models/apiTest/common';
@@ -425,6 +425,7 @@
       if (isCopy) {
         // 场景被复制，递归处理节点，增加copyFromStepId
         copySteps = mapTree(defaultScenarioInfo.steps, (node) => {
+          node.isNew = true;
           node.copyFromStepId = node.id;
           if (
             node.parent &&
@@ -677,6 +678,10 @@
           }),
         });
       }
+      traverseTree(activeScenarioTab.value.steps, (node) => {
+        node.isNew = false;
+      });
+      activeScenarioTab.value.stepFileParam = {};
       refreshTree(tempTableQueryParams.value);
       Message.success(activeScenarioTab.value.isNew ? t('common.createSuccess') : t('common.saveSuccess'));
       activeScenarioTab.value.unSaved = false;
@@ -773,7 +778,7 @@
   .pageWrap {
     height: calc(100% - 50px);
     border-radius: var(--border-radius-large);
-    @apply bg-white;
+    background-color: var(--color-text-fff);
   }
   .case {
     padding: 8px 4px;
@@ -814,12 +819,16 @@
     }
   }
   .recycle {
-    @apply absolute bottom-0 bg-white  pb-4;
+    @apply absolute bottom-0  pb-4;
+
+    background-color: var(--color-text-fff);
     :deep(.arco-divider-horizontal) {
       margin: 8px 0;
     }
     .recycle-bin {
-      @apply bottom-0 flex items-center bg-white;
+      @apply bottom-0 flex items-center;
+
+      background-color: var(--color-text-fff);
       .recycle-count {
         margin-left: 4px;
         color: var(--color-text-4);

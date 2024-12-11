@@ -1,6 +1,8 @@
+import type { MsTableColumn } from '@/components/pure/ms-table/type';
+
 import { defaultCount } from '@/config/testPlan';
 
-import { ApiOrScenarioCaseItem, FeatureCaseItem, ReportBugItem } from '@/models/testPlan/report';
+import { ApiOrScenarioCaseItem, ReportBugItem } from '@/models/testPlan/report';
 import type { configItem } from '@/models/testPlan/testPlanReport';
 import { PlanReportDetail } from '@/models/testPlan/testPlanReport';
 import { FieldTypeEnum, ReportCardTypeEnum } from '@/enums/testPlanReportEnum';
@@ -128,14 +130,14 @@ const subPlanList: PlanReportDetail = {
 };
 
 // 功能用例明细
-const functionalList: FeatureCaseItem = {
+const functionalList: ApiOrScenarioCaseItem = {
   id: 'Example_738373617320062',
   num: 1,
   name: '用例明细_示例数据',
   moduleName: '/未规划模块',
   priority: 'P1',
   executeResult: 'SUCCESS',
-  executeUserName: '',
+  executeUser: 'admin',
   bugCount: 0,
   reportId: '',
   projectId: '',
@@ -158,6 +160,7 @@ const apiCaseList: ApiOrScenarioCaseItem = {
   priority: 'P0',
   executeResult: 'SUCCESS',
   executeUser: 'admin',
+  requestTime: 0,
   bugCount: 0,
   reportId: '718255970852864',
   projectId: '718255970852864',
@@ -170,6 +173,7 @@ const scenarioCaseList: ApiOrScenarioCaseItem = {
   moduleName: '/未规划模块',
   priority: 'P2',
   executeResult: 'SUCCESS',
+  requestTime: 0,
   executeUser: '社恐程序员',
   bugCount: 0,
   reportId: '718255970852864',
@@ -178,7 +182,7 @@ const scenarioCaseList: ApiOrScenarioCaseItem = {
 
 export const detailTableExample: Record<string, any> = {
   [ReportCardTypeEnum.SUB_PLAN_DETAIL]: createData<PlanReportDetail>(subPlanList),
-  [ReportCardTypeEnum.FUNCTIONAL_DETAIL]: createData<FeatureCaseItem>(functionalList),
+  [ReportCardTypeEnum.FUNCTIONAL_DETAIL]: createData<ApiOrScenarioCaseItem>(functionalList),
   [ReportCardTypeEnum.BUG_DETAIL]: createData<ReportBugItem>(bugList),
   [ReportCardTypeEnum.API_CASE_DETAIL]: createData<ApiOrScenarioCaseItem>(apiCaseList),
   [ReportCardTypeEnum.SCENARIO_CASE_DETAIL]: createData<ApiOrScenarioCaseItem>(scenarioCaseList),
@@ -198,3 +202,52 @@ export const iconTypeStatus: Record<string, any> = {
     color: '!text-[var(--color-text-input-border)]',
   },
 };
+
+export const testPlanNameColumn: MsTableColumn = [
+  {
+    title: 'report.plan.name',
+    dataIndex: 'planName',
+    sortIndex: 0,
+    showTooltip: true,
+    width: 200,
+    showInTable: true,
+    showDrag: false,
+    columnSelectorDisabled: true,
+  },
+];
+export const lastStaticColumns: MsTableColumn = [
+  {
+    title: 'common.belongModule',
+    dataIndex: 'moduleName',
+    showTooltip: true,
+    width: 200,
+    showInTable: true,
+    showDrag: true,
+  },
+  {
+    title: 'testPlan.featureCase.executor',
+    dataIndex: 'executeUser',
+    showTooltip: true,
+    showInTable: true,
+    showDrag: true,
+    width: 150,
+  },
+  {
+    title: 'testPlan.featureCase.bugCount',
+    dataIndex: 'bugCount',
+    showInTable: true,
+    showDrag: true,
+    width: 100,
+  },
+];
+export const collectionNameColumn: MsTableColumn = [
+  {
+    title: 'ms.case.associate.testSet',
+    dataIndex: 'collectionName',
+    sortIndex: 0,
+    showInTable: true,
+    showDrag: false,
+    width: 200,
+    columnSelectorDisabled: true,
+  },
+];

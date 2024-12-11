@@ -28,5 +28,9 @@ public interface ExtApiScenarioStepMapper {
 
     List<String> selectResourceId(@Param("projectId") String projectId, @Param("stepType") String stepType);
 
+    List<String> selectApiResourceId(@Param("projectId") String projectId, @Param("stepType") String stepType, List<String> protocols);
+
+    List<String> selectApiCaseResourceId(@Param("projectId") String projectId, @Param("stepType") String stepType, List<String> protocols);
+
     List<String> selectCustomRequestConfigByProjectId(String projectId);
 }

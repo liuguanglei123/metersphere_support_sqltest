@@ -513,7 +513,7 @@
     </select>
 
     <select id="getPlanApiScenarioByIds" resultType="io.metersphere.plan.domain.TestPlanApiScenario">
-        select tpas.test_plan_id testPlanId, tpas.api_scenario_id apiScenarioId, tpas.last_exec_result lastExecResult
+        select tpas.test_plan_id testPlanId, tpas.api_scenario_id apiScenarioId, tpas.last_exec_result lastExecResult, tpas.execute_user executeUser
         from test_plan_api_scenario tpas join api_scenario asce on asce.id = tpas.api_scenario_id
         <where>
             asce.deleted = false
@@ -680,6 +680,7 @@
     <select id="selectLastExecResultByTestPlanIds"
             resultType="io.metersphere.plan.dto.TestPlanResourceExecResultDTO">
         select resource.test_plan_id AS testPlanId,
+        test_plan.group_id AS testPlanGroupId,
         CASE
         WHEN resource.last_exec_result is null
         THEN 'PENDING'
@@ -690,9 +691,24 @@
         ELSE resource.last_exec_result
         END AS execResult
         from test_plan_api_scenario resource
+        INNER JOIN test_plan ON test_plan.id = resource.test_plan_id
+        INNER JOIN api_scenario scenario ON resource.api_scenario_id = scenario.id
         where resource.test_plan_id IN
         <foreach collection="testPlanIds" item="testPlanId" separator="," open="(" close=")">
             #{testPlanId}
         </foreach>
+        AND scenario.deleted IS FALSE
+    </select>
+    <select id="selectLastExecResultByProjectId"
+            resultType="io.metersphere.plan.dto.TestPlanResourceExecResultDTO">
+        select resource.test_plan_id     AS testPlanId,
+               resource.last_exec_result AS execResult,
+               test_plan.group_id        AS testPlanGroupId
+        from test_plan_api_scenario resource
+                 INNER JOIN test_plan ON test_plan.id = resource.test_plan_id
+                 INNER JOIN api_scenario ON resource.api_scenario_id = api_scenario.id
+        where test_plan.project_id = #{projectId}
+          AND api_scenario.deleted is false
+          AND test_plan.status != 'ARCHIVED'
     </select>
 </mapper>

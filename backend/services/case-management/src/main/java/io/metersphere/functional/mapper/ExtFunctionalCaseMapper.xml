@@ -261,19 +261,38 @@
                             )
                         </when>
                         <!-- 更新人 -->
-                        <when test="key=='updateUserName'">
+                        <when test="key=='updateUser'">
                             and functional_case.update_user in
                             <include refid="io.metersphere.system.mapper.BaseMapper.filterInWrapper"/>
                         </when>
                         <!-- 创建人 -->
-                        <when test="key=='createUserName'">
+                        <when test="key=='createUser'">
                             and functional_case.create_user in
                             <include refid="io.metersphere.system.mapper.BaseMapper.filterInWrapper"/>
                         </when>
                         <!-- 删除人 -->
-                        <when test="key=='deleteUserName'">
+                        <when test="key=='deleteUser'">
                             and functional_case.delete_user in
                             <include refid="io.metersphere.system.mapper.BaseMapper.filterInWrapper"/>
+                        </when>
+                        <!-- 关联用例的 -->
+                        <when test="key=='associateCase'">
+                            <if test="values.contains('true')">
+                                and functional_case.id in (
+                                select
+                                distinct fct.case_id
+                                from functional_case_test fct
+                                LEFT JOIN functional_case fc ON fc.id = fct.case_id
+                                where fc.deleted = false )
+                            </if>
+                            <if test="values.contains('false')">
+                                and functional_case.id not in (
+                                select
+                                distinct fct.case_id
+                                from functional_case_test fct
+                                LEFT JOIN functional_case fc ON fc.id = fct.case_id
+                                where fc.deleted = false )
+                            </if>
                         </when>
                     </choose>
                 </if>
@@ -333,6 +352,12 @@
                                 <property name="searchColumn" value="demand_name"/>
                                 <property name="condition" value="condition"/>
                             </include>
+                        </if>
+                        <if test="condition.name == 'belongTestPlan' and condition.operator == 'EQUALS'">
+                            functional_case.id in (
+                            select functional_case_id from test_plan_functional_case where test_plan_id
+                            = #{condition.value}
+                            )
                         </if>
                         <!-- 关联附件 -->
                         <if test="condition.name == 'attachment'">
@@ -581,30 +606,30 @@
 
     <select id="listUnRelatedCaseWithBug" resultMap="TestCaseProviderDTO">
         select
-        fc.id,
-        fc.num,
-        fc.name,
-        fc.project_id,
-        fc.tags,
+        functional_case.id,
+        functional_case.num,
+        functional_case.name,
+        functional_case.project_id,
+        functional_case.tags,
         pv.name as versionName,
-        fc.create_user,
+        functional_case.create_user,
         u.name as createUserName,
-        fc.create_time
-        from functional_case fc left join project_version pv ON fc.version_id = pv.id
-        left join user u ON fc.create_user = u.id
-        where fc.deleted = #{deleted}
-            and fc.project_id = #{request.projectId}
-            and fc.id not in
+        functional_case.create_time
+        from functional_case left join project_version pv ON functional_case.version_id = pv.id
+        left join user u ON functional_case.create_user = u.id
+        where functional_case.deleted = #{deleted}
+            and functional_case.project_id = #{request.projectId}
+            and functional_case.id not in
             (
                 select brc.case_id from bug_relation_case brc where brc.bug_id = #{request.sourceId} and brc.case_type = #{request.sourceType}
             )
-            <include refid="queryByTestCaseProviderParam"/>
+        <include refid="queryWhereCondition"/>
         order by
             <if test="sort != null and sort != ''">
-                fc.${sort}
+                functional_case.${sort}
             </if>
             <if test="sort == null or sort == ''">
-                fc.create_time desc
+                functional_case.create_time desc
             </if>
     </select>
 

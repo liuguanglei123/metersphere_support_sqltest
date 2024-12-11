@@ -18,7 +18,7 @@
     @loaded="loadedCase"
   >
     <template #titleName>
-      <div :class="`case-title flex items-center gap-[8px] ${isEditTitle ? 'w-full' : ''}`">
+      <div :class="`case-title flex flex-1 items-center gap-[8px] overflow-hidden ${isEditTitle ? 'w-full' : ''}`">
         <a-select
           v-if="!isEditTitle"
           v-model:model-value="caseLevels"
@@ -48,12 +48,12 @@
           @blur="handleEditName"
           @keydown.enter="handleEditName"
         />
-        <div v-else class="flex items-center">
+        <div v-else class="flex items-center overflow-hidden">
           <div> [ {{ detailInfo?.num }} ] </div>
           <div
             :class="`${
               hasAnyPermission(['FUNCTIONAL_CASE:READ+UPDATE']) ? 'hover-title-name' : ''
-            } one-line-text max-w-[200px] cursor-pointer`"
+            } one-line-text flex-1 cursor-pointer`"
             @click="clickTitleHandler"
             >{{ detailInfo.name }}
           </div>
@@ -136,8 +136,8 @@
       </div>
     </template>
     <template #default="{ detail, loading }">
-      <div ref="wrapperRef" class="bg-white">
-        <div class="header relative h-[48px] border-b pl-2">
+      <div ref="wrapperRef" class="bg-[var(--color-text-fff)]">
+        <div class="header relative h-[48px] border-b border-[var(--color-text-n8)] pl-2">
           <div class="max-w-[calc(100%-100px)]">
             <MsTab
               v-model:active-key="activeTab"

@@ -38,9 +38,10 @@
         <!-- ID、用例名称、所属模块、用例等级、执行人、执行结果、缺陷数、接口报告ID -->
         select tprac.api_case_id as id, tprac.api_case_num as num, tprac.api_case_name as name, tprac.test_plan_name as planName, tprac.test_plan_collection_id collectionId, tpc.name collectionName,
         tprac.api_case_module as moduleName, tprac.api_case_priority as priority, tprac.api_case_execute_report_id reportId, ifnull(tprac.api_case_bug_count, 0) as bugCount,
-        ifnull(tprac.api_case_execute_result, 'PENDING') as executeResult, tprac.api_case_execute_user as executeUser, atc.project_id projectId
+        ifnull(tprac.api_case_execute_result, 'PENDING') as executeResult, tprac.api_case_execute_user as executeUser, atc.project_id projectId, ar.request_duration as requestDuration
         from test_plan_report_api_case tprac left join api_test_case atc on tprac.api_case_id = atc.id
         left join test_plan_collection tpc on tprac.test_plan_collection_id = tpc.id
+        left join api_report ar on tprac.api_case_execute_report_id = ar.id
         where tprac.test_plan_report_id in
         <foreach collection="request.detailReportIds" item="id" open="(" close=")" separator=",">
             #{id}
@@ -54,10 +55,18 @@
             and tprac.test_plan_collection_id = #{request.collectionId}
         </if>
         <include refid="filter"/>
+        <choose>
+            <when test="sort != null and sort != ''">
+                order by ${sort}
+            </when>
+            <otherwise>
+                order by tprac.pos desc
+            </otherwise>
+        </choose>
     </select>
 
     <select id="listCollection" resultType="io.metersphere.plan.dto.response.TestPlanReportDetailCollectionResponse">
-        select tpc.id as id, tpc.name as name, tp.name as planName, tpc.pos as pos, count(tprac.id) as count
+        select tpc.id as id, tpc.name as collectionName, tp.name as planName, tpc.pos as pos, count(tprac.id) as count
         from test_plan_report_api_case tprac
                  right join test_plan_collection tpc on tprac.test_plan_collection_id = tpc.id and tpc.type = 'API'
                  join test_plan tp on tpc.test_plan_id = tp.id

@@ -1,6 +1,8 @@
 package io.metersphere.plan.mapper;
 
 import io.metersphere.plan.domain.TestPlan;
+import io.metersphere.plan.domain.TestPlanConfig;
+import io.metersphere.plan.dto.TestPlanAndGroupInfoDTO;
 import io.metersphere.plan.dto.TestPlanExecuteHisDTO;
 import io.metersphere.plan.dto.TestPlanGroupCountDTO;
 import io.metersphere.plan.dto.TestPlanQueryConditions;
@@ -97,4 +99,17 @@ public interface ExtTestPlanMapper {
     List<SelectOption> getPlanBugList(@Param("projectId") String projectId, @Param("type") String type, @Param("platforms") List<String> platform, @Param("statusList") List<String> statusList);
 
     List<TestPlan> selectIdAndStatusByProjectIdAndCreateTimeRangeAndType(@Param("projectId") String projectId, @Param("startTime") Long startTime, @Param("endTime") Long endTime, @Param("type") String testPlanTypePlan);
+
+    /**
+     * @param projectId 项目
+     * 获取项目下计划组和计划的名称
+     */
+    List<TestPlanAndGroupInfoDTO> getGroupAndPlanInfo(@Param("projectId") String projectId);
+
+    TestPlan getLatestPlan(@Param("projectId") String projectId);
+
+
+    List<TestPlanConfig> selectTestPlanConfigByTestPlanIds(@Param("testPlanIds") List<String> testPlanIds);
+
+    List<TestPlan> selectIdAndGroupIdByProjectId(String projectId);
 }

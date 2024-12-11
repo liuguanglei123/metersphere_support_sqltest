@@ -24,10 +24,10 @@
         <div class="case-count-wrapper">
           <div class="case-count-item">
             <PassRatePie
+              :project-id="projectId"
               :options="relatedOptions"
               :has-permission="hasPermission"
               tooltip-text="workbench.homePage.associateCaseCoverRateTooltip"
-              :size="60"
               :value-list="coverRateValueList"
             />
           </div>

@@ -26,7 +26,7 @@ export default {
   'report.completed': '已完成',
   'report.detail.reportSummary': '报告总结',
   'report.detail.bugDetails': '缺陷明细',
-  'report.detail.caseDetailSearchPlaceholder': '通过ID/名称/模块名称搜索',
+  'report.detail.caseDetailSearchPlaceholder': '通过 ID/名称/模块名称搜索',
   'report.detail.featureCaseDetails': '用例明细',
   'report.detail.executionAnalysis': '执行分析',
   'report.detail.threshold': '通过阈值',
@@ -54,7 +54,7 @@ export default {
   'report.detail.subPlanDetails': '子计划报告明细',
   'report.detail.customTitlePlaceHolder': '请输入自定义标题',
   'report.detail.baseField': '基础字段',
-  'report.detail.customMaxNumber': '最多可添加10个',
+  'report.detail.customMaxNumber': '最多可添加 10 个',
   'report.detail.enterReportNamePlaceHolder': '请输入报告名称',
   'report.detail.systemInternalTooltip': '系统内置，不可编辑',
   'report.detail.reportNameNotEmpty': '报告名称不能为空',
@@ -64,4 +64,5 @@ export default {
   'report.detail.exportPdfSuccess': '{name} 报告导出成功',
   'report.detail.batchExportPdfSuccess': '批量导出 PDF 报告已完成',
   'report.detail.batchExportingPdf': '导出进度：{current}/{total}',
+  'report.requestTime': '耗时(s)',
 };
