@@ -27,7 +27,6 @@
     :is-preview="props.isPreview"
     :enabled-test-set="enabledTestSet"
     :table-key="tableKey"
-    @page-size-change="pageSizeChange"
     @init-column="handleInitColumn"
   />
   <!-- 功能用例明细 -->
@@ -162,11 +161,6 @@
     testPlanReportStore.setTestStatus(isGroup.value, value, props.activeType);
   }
 
-  // 页码改变
-  async function pageSizeChange(pageSize: number) {
-    await tableStore.setPageSize(tableKey.value, pageSize);
-  }
-
   // 列配置改变
   async function handleInitColumn() {
     if (enabledTestSet.value) {
@@ -179,13 +173,8 @@
   .test-set-wrapper {
     padding-bottom: 16px;
     border-radius: 12px;
-    @apply overflow-y-auto bg-white;
+    background-color: var(--color-text-fff);
+    @apply overflow-y-auto;
     .ms-scroll-bar();
-  }
-  :deep(.selected-row-class.arco-table-tr) {
-    background: var(--color-fill-1) !important;
-    .arco-table-td {
-      background: var(--color-fill-1) !important;
-    }
   }
 </style>

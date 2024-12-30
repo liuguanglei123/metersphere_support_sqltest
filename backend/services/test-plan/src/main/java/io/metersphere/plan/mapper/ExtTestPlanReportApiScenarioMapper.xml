@@ -37,9 +37,10 @@
         <!-- ID、用例名称、所属模块、用例等级、执行人、执行结果、缺陷数、报告ID -->
         select distinct tpras.api_scenario_id as id, tpras.api_scenario_num as num, tpras.api_scenario_name as name, tpras.test_plan_name as planName, tpras.test_plan_collection_id collectionId, tpc.name collectionName,
         tpras.api_scenario_module as moduleName, tpras.api_scenario_priority as priority, tpras.api_scenario_execute_report_id reportId, ifnull(tpras.api_scenario_bug_count, 0) as bugCount,
-        ifnull(tpras.api_scenario_execute_result, 'PENDING') as executeResult, tpras.api_scenario_execute_user as executeUser, aso.project_id projectId
+        ifnull(tpras.api_scenario_execute_result, 'PENDING') as executeResult, tpras.api_scenario_execute_user as executeUser, aso.project_id projectId, asr.request_duration as requestDuration
         from test_plan_report_api_scenario tpras left join api_scenario aso on tpras.api_scenario_id = aso.id
         left join test_plan_collection tpc on tpras.test_plan_collection_id = tpc.id
+        left join api_scenario_report asr on tpras.api_scenario_execute_report_id = asr.id
         where tpras.test_plan_report_id in
         <foreach collection="request.detailReportIds" item="id" open="(" close=")" separator=",">
             #{id}
@@ -53,10 +54,18 @@
             and tpras.test_plan_collection_id = #{request.collectionId}
         </if>
         <include refid="filter"/>
+        <choose>
+            <when test="sort != null and sort != ''">
+                order by ${sort}
+            </when>
+            <otherwise>
+                order by tpras.pos desc
+            </otherwise>
+        </choose>
     </select>
 
     <select id="listCollection" resultType="io.metersphere.plan.dto.response.TestPlanReportDetailCollectionResponse">
-        select tpc.id as id, tpc.name as name, tp.name as planName, tpc.pos as pos, count(tpras.id) as count
+        select tpc.id as id, tpc.name as collectionName, tp.name as planName, tpc.pos as pos, count(tpras.id) as count
         from test_plan_report_api_scenario tpras
                  right join test_plan_collection tpc on tpras.test_plan_collection_id = tpc.id and tpc.type = 'SCENARIO'
                  join test_plan tp on tpc.test_plan_id = tp.id

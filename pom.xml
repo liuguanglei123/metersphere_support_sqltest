@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.6</version>
+        <version>3.4.0</version>
         <relativePath/>
     </parent>
 
@@ -21,7 +21,7 @@
         <revision>3.x</revision>
         <java.version>21</java.version>
         <platform-plugin-sdk.version>1.5.0</platform-plugin-sdk.version>
-        <shiro.version>2.0.1</shiro.version>
+        <shiro.version>2.0.2</shiro.version>
         <java-websocket.version>1.5.4</java-websocket.version>
         <easyexcel.version>3.3.3</easyexcel.version>
         <dom4j.version>2.1.4</dom4j.version>
@@ -39,7 +39,7 @@
         <xmlbeans.version>5.1.1</xmlbeans.version>
         <swagger-parser.version>2.1.21</swagger-parser.version>
         <swagger.version>2.2.21</swagger.version>
-        <springdoc-openapi-ui.version>2.4.0</springdoc-openapi-ui.version>
+        <springdoc-openapi-ui.version>2.7.0</springdoc-openapi-ui.version>
         <commonmark.version>0.19.0</commonmark.version>
         <commons-compress.version>1.26.0</commons-compress.version>
         <htmlcleaner.version>2.29</htmlcleaner.version>

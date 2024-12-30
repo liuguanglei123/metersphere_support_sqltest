@@ -113,7 +113,7 @@
 
     <sql id="queryByTableRequest">
         <if test="request.myTodo">
-            <!-- 待办: 查询创建人为我的所有的计划 -->
+            <!-- 待办参数: 查询创建人为我的所有的独立计划或子计划(doneExcludeIds: 通过率达到阈值需排除) -->
             and t.type = 'TEST_PLAN'
             and t.create_user = #{request.myTodoUserId}
             <if test="request.doneExcludeIds != null and request.doneExcludeIds.size() > 0">
@@ -122,31 +122,8 @@
                     #{id}
                 </foreach>
             </if>
-            <if test="(request.innerIds != null and request.innerIds.size() > 0) or (request.extraIncludeChildIds != null and request.extraIncludeChildIds.size() > 0)">
-                and (
-                    false
-                    <if test="request.innerIds != null and request.innerIds.size() > 0">
-                        or t.id in
-                        <foreach collection="request.innerIds" item="id" open="(" separator="," close=")">
-                            #{id}
-                        </foreach>
-                        or t.group_id in
-                        <foreach collection="request.innerIds" item="id" open="(" separator="," close=")">
-                            #{id}
-                        </foreach>
-                    </if>
-                    <if test="request.extraIncludeChildIds != null and request.extraIncludeChildIds.size() > 0">
-                        or t.id in
-                        <foreach collection="request.extraIncludeChildIds" item="id" open="(" separator="," close=")">
-                            #{id}
-                        </foreach>
-                    </if>
-                )
-            </if>
         </if>
-        <if test="!request.myTodo">
-            <include refid="baseConditionQuery"/>
-        </if>
+        <include refid="baseConditionQuery"/>
 
         <if test="request.keyword != null and request.keyword != ''">
             and (
@@ -161,7 +138,7 @@
             </if>
             )
         </if>
-        <if test="request.innerIds != null and request.innerIds.size() > 0 and !request.myTodo">
+        <if test="request.innerIds != null and request.innerIds.size() > 0">
             and t.id in
             <foreach collection="request.innerIds" item="id" open="(" separator="," close=")">
                 #{id}
@@ -939,7 +916,48 @@
             </foreach>
         </if>
     </select>
+    <select id="getGroupAndPlanInfo" resultType="io.metersphere.plan.dto.TestPlanAndGroupInfoDTO">
+        select  son.id, son.name, son.group_id, son.project_id, father.name as groupName, son.create_time, father.create_time as groupCreateTime
+        from test_plan son
+                 left join test_plan father on father.id = son.group_id
+        where son.type = 'TEST_PLAN' and son.status='NOT_ARCHIVED'
+          and father.type = 'GROUP' and son.project_id = #{projectId};
+    </select>
+    <select id="getLatestPlan" resultType="io.metersphere.plan.domain.TestPlan">
+        select id, name, group_id
+        from test_plan
+        where type = 'TEST_PLAN' and status='NOT_ARCHIVED' and project_id = #{projectId} order by create_time desc limit 1;
+    </select>
 
+    <select id="getLatestPlanByProjectIds" resultType="io.metersphere.plan.domain.TestPlan">
+        select id, name, group_id, project_id
+        from test_plan
+        where type = 'TEST_PLAN' and status='NOT_ARCHIVED' and project_id  IN
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+        order by create_time desc limit 1;
+    </select>
+
+    <select id="selectTestPlanConfigByTestPlanIds" resultType="io.metersphere.plan.domain.TestPlanConfig">
+        SELECT *
+        from test_plan_config test_plan_id
+        WHERE test_plan_id IN
+        <foreach collection="testPlanIds" item="testPlanId" open="(" separator="," close=")">
+            #{testPlanId}
+        </foreach>
+    </select>
+    <select id="selectIdAndGroupIdByProjectId" resultType="io.metersphere.plan.domain.TestPlan">
+        SELECT id, group_id, type
+        FROM test_plan
+        WHERE project_id = #{projectId}
+        <if test="selectArchived == false">
+            AND status != 'ARCHIVED'
+        </if>
+        <if test="selectArchived == true">
+            AND status = 'ARCHIVED'
+        </if>
+    </select>
 
     <sql id="queryMyFollowGroupByTableRequest">
         <include refid="baseConditionQuery"/>

@@ -317,7 +317,6 @@
         sortDirections: ['ascend', 'descend'],
         sorter: true,
       },
-      fixed: 'left',
       width: 100,
       showTooltip: true,
       columnSelectorDisabled: true,
@@ -436,7 +435,6 @@
           projectId: appStore.currentProjectId,
         },
         remoteMethod: FilterRemoteMethodsEnum.EXECUTE_USER,
-        placeholderText: t('caseManagement.featureCase.PleaseSelect'),
       },
     },
     {

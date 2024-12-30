@@ -40,6 +40,8 @@
 </template>
 
 <script setup lang="ts">
+  import { type SelectOptionData } from '@arco-design/web-vue';
+
   import { FilterFormItem, FilterResult } from '@/components/pure/ms-advance-filter/type';
   import MsButton from '@/components/pure/ms-button/index.vue';
   import MsBaseTable from '@/components/pure/ms-table/base-table.vue';
@@ -89,6 +91,7 @@
     protocols: string[];
     moduleTree: MsTreeNodeData[];
     modulesCount: Record<string, any>;
+    testPlanList: SelectOptionData[];
   }>();
 
   const emit = defineEmits<{
@@ -112,89 +115,89 @@
     });
   });
 
-  const columns: MsTableColumn = [
-    {
-      title: 'ID',
-      dataIndex: 'num',
-      slotName: 'num',
-      sortIndex: 1,
-      sortable: {
-        sortDirections: ['ascend', 'descend'],
-        sorter: true,
-      },
-      fixed: 'left',
-      width: 100,
-      columnSelectorDisabled: true,
-    },
-    {
-      title: 'apiTestManagement.apiName',
-      dataIndex: 'name',
-      showTooltip: true,
-      sortable: {
-        sortDirections: ['ascend', 'descend'],
-        sorter: true,
-      },
-      width: 200,
-      columnSelectorDisabled: true,
-    },
-    {
-      title: 'apiTestManagement.apiType',
-      dataIndex: 'method',
-      slotName: 'method',
-      width: 140,
-      showDrag: true,
-      filterConfig: {
-        options: requestMethodsOptions.value,
-        filterSlotName: FilterSlotNameEnum.API_TEST_API_REQUEST_METHODS,
-      },
-    },
-    {
-      title: 'apiTestManagement.path',
-      dataIndex: 'path',
-      showTooltip: true,
-      width: 200,
-      showDrag: true,
-    },
-    {
-      title: 'common.tag',
-      dataIndex: 'tags',
-      isTag: true,
-      isStringTag: true,
-      showDrag: true,
-    },
-    {
-      title: 'apiTestManagement.caseTotal',
-      dataIndex: 'caseTotal',
-      showTooltip: true,
-      width: 100,
-      showDrag: true,
-      slotName: 'caseTotal',
-    },
-    {
-      title: 'common.creator',
-      slotName: 'createUserName',
-      dataIndex: 'createUser',
-      filterConfig: {
-        mode: 'remote',
-        loadOptionParams: {
-          projectId: appStore.currentProjectId,
+  const columns = computed<MsTableColumn>(() => {
+    return [
+      {
+        title: 'ID',
+        dataIndex: 'num',
+        slotName: 'num',
+        sortIndex: 1,
+        sortable: {
+          sortDirections: ['ascend', 'descend'],
+          sorter: true,
         },
-        remoteMethod: FilterRemoteMethodsEnum.PROJECT_PERMISSION_MEMBER,
-        placeholderText: t('caseManagement.featureCase.PleaseSelect'),
+        width: 100,
+        columnSelectorDisabled: true,
       },
-      showInTable: true,
-      width: 200,
-      showDrag: true,
-    },
-    {
-      title: '',
-      dataIndex: 'action',
-      width: 24,
-      slotName: SpecialColumnEnum.ACTION,
-      fixed: 'right',
-      cellClass: 'operator-class',
-    },
-  ];
+      {
+        title: 'apiTestManagement.apiName',
+        dataIndex: 'name',
+        showTooltip: true,
+        sortable: {
+          sortDirections: ['ascend', 'descend'],
+          sorter: true,
+        },
+        width: 200,
+        columnSelectorDisabled: true,
+      },
+      {
+        title: 'apiTestManagement.apiType',
+        dataIndex: 'method',
+        slotName: 'method',
+        width: 140,
+        showDrag: true,
+        filterConfig: {
+          options: requestMethodsOptions.value,
+          filterSlotName: FilterSlotNameEnum.API_TEST_API_REQUEST_METHODS,
+        },
+      },
+      {
+        title: 'apiTestManagement.path',
+        dataIndex: 'path',
+        showTooltip: true,
+        width: 200,
+        showDrag: true,
+      },
+      {
+        title: 'common.tag',
+        dataIndex: 'tags',
+        isTag: true,
+        isStringTag: true,
+        showDrag: true,
+      },
+      {
+        title: 'apiTestManagement.caseTotal',
+        dataIndex: 'caseTotal',
+        showTooltip: true,
+        width: 100,
+        showDrag: true,
+        slotName: 'caseTotal',
+      },
+      {
+        title: 'common.creator',
+        slotName: 'createUserName',
+        dataIndex: 'createUser',
+        filterConfig: {
+          mode: 'remote',
+          loadOptionParams: {
+            projectId: appStore.currentProjectId,
+          },
+          remoteMethod: FilterRemoteMethodsEnum.PROJECT_PERMISSION_MEMBER,
+        },
+        showInTable: true,
+        width: 200,
+        showDrag: true,
+      },
+      {
+        title: '',
+        dataIndex: 'action',
+        width: 24,
+        slotName: SpecialColumnEnum.ACTION,
+        fixed: 'right',
+        cellClass: 'operator-class',
+      },
+    ];
+  });
 
   const {
     propsRes,
@@ -336,6 +339,15 @@
       },
     },
     {
+      title: 'ms.taskCenter.taskBelongTestPlan',
+      dataIndex: 'belongTestPlan',
+      type: FilterType.SELECT_EQUAL,
+      selectProps: {
+        options: props.testPlanList,
+        optionTooltipPosition: 'tr',
+      },
+    },
+    {
       title: 'common.tag',
       dataIndex: 'tags',
       type: FilterType.TAGS_INPUT,
@@ -363,6 +375,7 @@
   function setCaseAdvanceFilter(filter: FilterResult, id: string) {
     setAdvanceFilter(filter, id);
   }
+  const apiTableRef = ref<InstanceType<typeof MsBaseTable>>();
 
   watch(
     [() => props.currentProject, () => props.protocols],
@@ -370,6 +383,7 @@
       setPagination({
         current: 1,
       });
+      apiTableRef.value?.initColumn(columns.value);
       resetFilterParams();
       loadApiList();
     },
@@ -466,7 +480,7 @@
     setCaseAdvanceFilter,
   });
 
-  await tableStore.initColumn(TableKeyEnum.ASSOCIATE_CASE_API, columns, 'drawer');
+  await tableStore.initColumn(TableKeyEnum.ASSOCIATE_CASE_API, columns.value, 'drawer');
 </script>
 
 <style lang="less" scoped>

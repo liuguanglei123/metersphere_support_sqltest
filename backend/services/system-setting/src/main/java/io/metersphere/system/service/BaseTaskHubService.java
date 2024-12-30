@@ -8,7 +8,10 @@ import io.metersphere.api.mapper.ApiReportRelateTaskMapper;
 import io.metersphere.engine.EngineFactory;
 import io.metersphere.engine.MsHttpClient;
 import io.metersphere.project.domain.Project;
+import io.metersphere.project.domain.ProjectApplication;
+import io.metersphere.project.domain.ProjectApplicationExample;
 import io.metersphere.project.domain.ProjectExample;
+import io.metersphere.project.mapper.ProjectApplicationMapper;
 import io.metersphere.project.mapper.ProjectMapper;
 import io.metersphere.sdk.constants.*;
 import io.metersphere.sdk.exception.MSException;
@@ -122,6 +125,8 @@ public class BaseTaskHubService {
     ApiScheduleNoticeService apiScheduleNoticeService;
     @Resource
     private UserToolService userToolService;
+    @Resource
+    private ProjectApplicationMapper projectApplicationMapper;
 
 
     /**
@@ -349,7 +354,7 @@ public class BaseTaskHubService {
      */
     public Pager<List<TaskHubItemDTO>> getCaseTaskItemList(TaskHubItemRequest request, String orgId, String projectId) {
         Page<Object> page = PageMethod.startPage(request.getCurrent(), request.getPageSize(),
-                StringUtils.isNotBlank(request.getSortString()) ? request.getSortString() : "id desc");
+                StringUtils.isNotBlank(request.getSortString()) ? request.getSortString() : "create_time desc");
         return PageUtils.setPageInfo(page, getCaseTaskItemPage(request, orgId, projectId));
     }
 
@@ -937,12 +942,36 @@ public class BaseTaskHubService {
         schedule.setValue(request.getCron());
         scheduleService.editSchedule(schedule);
         try {
+            handleThirdSchedule(schedule, request.getCron());
             scheduleService.addOrUpdateCronJob(schedule, new JobKey(schedule.getKey(), schedule.getJob()),
                     new TriggerKey(schedule.getKey(), schedule.getJob()), Class.forName(schedule.getJob()));
             saveLog(List.of(schedule), userId, path, HttpMethodConstants.GET.name(), module, OperationLogType.UPDATE.name());
         } catch (ClassNotFoundException e) {
             LogUtils.error(e);
             throw new RuntimeException(e);
+        }
+    }
+
+
+    /**
+     * 处理三方同步任务
+     *
+     * @param schedule
+     */
+    private void handleThirdSchedule(Schedule schedule, String cron) {
+        if (StringUtils.equalsAnyIgnoreCase(schedule.getResourceType(), ScheduleResourceType.BUG_SYNC.name(), ScheduleResourceType.DEMAND_SYNC.name())) {
+            ProjectApplicationExample example = new ProjectApplicationExample();
+            ProjectApplicationExample.Criteria criteria = example.createCriteria();
+            criteria.andProjectIdEqualTo(schedule.getProjectId());
+            if (StringUtils.equalsIgnoreCase(schedule.getResourceType(), ScheduleResourceType.BUG_SYNC.name())) {
+                criteria.andTypeEqualTo(ProjectApplicationType.BUG.BUG_SYNC.name() + "_" + ProjectApplicationType.BUG_SYNC_CONFIG.CRON_EXPRESSION.name());
+            }
+            if (StringUtils.equalsIgnoreCase(schedule.getResourceType(), ScheduleResourceType.DEMAND_SYNC.name())) {
+                criteria.andTypeEqualTo(ProjectApplicationType.CASE_RELATED_CONFIG.CASE_RELATED.name() + "_" + ProjectApplicationType.CASE_RELATED_CONFIG.CRON_EXPRESSION.name());
+            }
+            ProjectApplication projectApplication = new ProjectApplication();
+            projectApplication.setTypeValue(cron);
+            projectApplicationMapper.updateByExampleSelective(projectApplication, example);
         }
     }
 

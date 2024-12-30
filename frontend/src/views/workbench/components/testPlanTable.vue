@@ -1,7 +1,11 @@
 <template>
   <MsCard auto-height simple>
     <div class="flex items-center justify-between">
-      <div class="cursor-pointer font-medium text-[var(--color-text-1)]" @click="goTestPlan">
+      <div
+        class="font-medium text-[var(--color-text-1)]"
+        :class="props.type !== 'my_todo' ? 'cursor-pointer' : ''"
+        @click="goTestPlan"
+      >
         {{ t('ms.workbench.myFollowed.feature.TEST_PLAN') }}
       </div>
       <a-radio-group
@@ -278,6 +282,9 @@
   }
 
   function goTestPlan() {
+    if (props.type === 'my_todo') {
+      return;
+    }
     openNewPage(TestPlanRouteEnum.TEST_PLAN_INDEX, {
       showType: showType.value,
       view: props.type,

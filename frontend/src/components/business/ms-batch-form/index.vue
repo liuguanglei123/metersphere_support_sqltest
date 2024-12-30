@@ -194,15 +194,16 @@
               class="minus"
               :class="[
                 'flex',
-                'h-full',
+                'h-[32px]',
                 'w-[32px]',
                 'cursor-pointer',
                 'items-center',
                 'justify-center',
                 'text-[var(--color-text-4)]',
-                'mt-[8px]',
+                'hover:bg-[var(--color-text-n9)]',
+                'rounded',
               ]"
-              :style="{ 'margin-top': index === 0 && !props.isShowDrag ? '36px' : '' }"
+              :style="{ 'margin-top': index === 0 && !props.isShowDrag ? '30px' : '' }"
               @click="removeField(index)"
             >
               <icon-minus-circle />
@@ -399,7 +400,7 @@
     @apply rounded;
   }
   .dragChosenClass {
-    background: white;
+    background: var(--color-text-fff);
     opacity: 1 !important;
     @apply rounded;
     .minus {

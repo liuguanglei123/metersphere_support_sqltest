@@ -77,6 +77,7 @@
   import { getPublicLinkCaseListMap } from './utils/page';
   import { casePriorityOptions } from '@/views/api-test/components/config';
   import { scenarioStatusOptions } from '@/views/api-test/scenario/components/config';
+  import type { SelectOptionData } from '@arco-design/web-vue';
 
   const { t } = useI18n();
   const { openNewPage } = useOpenNewPage();
@@ -94,6 +95,7 @@
     moduleTree: MsTreeNodeData[];
     modulesCount: Record<string, any>;
     isAdvancedSearchMode?: boolean;
+    testPlanList: SelectOptionData[];
   }>();
 
   const emit = defineEmits<{
@@ -119,96 +121,97 @@
     });
   });
 
-  const columns: MsTableColumn = [
-    {
-      title: 'ID',
-      dataIndex: 'num',
-      slotName: 'num',
-      sortIndex: 1,
-      sortable: {
-        sortDirections: ['ascend', 'descend'],
-        sorter: true,
-      },
-      fixed: 'left',
-      width: 160,
-      showTooltip: false,
-      columnSelectorDisabled: true,
-    },
-    {
-      title: 'apiScenario.table.columns.name',
-      dataIndex: 'name',
-      slotName: 'name',
-      sortable: {
-        sortDirections: ['ascend', 'descend'],
-        sorter: true,
-      },
-      width: 134,
-      showTooltip: true,
-      columnSelectorDisabled: true,
-    },
-    {
-      title: 'apiScenario.table.columns.level',
-      dataIndex: 'priority',
-      slotName: 'priority',
-      showDrag: true,
-      sortable: {
-        sortDirections: ['ascend', 'descend'],
-        sorter: true,
-      },
-      filterConfig: {
-        options: casePriorityOptions,
-        filterSlotName: FilterSlotNameEnum.CASE_MANAGEMENT_CASE_LEVEL,
-      },
-      width: 140,
-    },
-    {
-      title: 'apiScenario.table.columns.runResult',
-      dataIndex: 'lastReportStatus',
-      slotName: 'lastReportStatus',
-      showTooltip: false,
-      showDrag: true,
-      filterConfig: {
-        options: statusList.value,
-        filterSlotName: FilterSlotNameEnum.API_TEST_CASE_API_REPORT_EXECUTE_RESULT,
-      },
-      width: 200,
-    },
-    {
-      title: 'apiScenario.table.columns.passRate',
-      dataIndex: 'requestPassRate',
-      showDrag: true,
-      width: 100,
-    },
-    {
-      title: 'apiScenario.table.columns.tags',
-      dataIndex: 'tags',
-      isTag: true,
-      isStringTag: true,
-      showDrag: true,
-    },
-    {
-      title: 'apiScenario.table.columns.createUser',
-      dataIndex: 'createUser',
-      slotName: 'createUserName',
-      width: 109,
-      filterConfig: {
-        mode: 'remote',
-        loadOptionParams: {
-          projectId: appStore.currentProjectId,
+  const columns = computed<MsTableColumn>(() => {
+    return [
+      {
+        title: 'ID',
+        dataIndex: 'num',
+        slotName: 'num',
+        sortIndex: 1,
+        sortable: {
+          sortDirections: ['ascend', 'descend'],
+          sorter: true,
         },
-        remoteMethod: FilterRemoteMethodsEnum.PROJECT_PERMISSION_MEMBER,
-        placeholderText: t('caseManagement.featureCase.PleaseSelect'),
+        width: 160,
+        showTooltip: false,
+        columnSelectorDisabled: true,
       },
-    },
-    {
-      title: '',
-      dataIndex: 'action',
-      width: 24,
-      slotName: SpecialColumnEnum.ACTION,
-      fixed: 'right',
-      cellClass: 'operator-class',
-    },
-  ];
+      {
+        title: 'apiScenario.table.columns.name',
+        dataIndex: 'name',
+        slotName: 'name',
+        sortable: {
+          sortDirections: ['ascend', 'descend'],
+          sorter: true,
+        },
+        width: 134,
+        showTooltip: true,
+        columnSelectorDisabled: true,
+      },
+      {
+        title: 'apiScenario.table.columns.level',
+        dataIndex: 'priority',
+        slotName: 'priority',
+        showDrag: true,
+        sortable: {
+          sortDirections: ['ascend', 'descend'],
+          sorter: true,
+        },
+        filterConfig: {
+          options: casePriorityOptions,
+          filterSlotName: FilterSlotNameEnum.CASE_MANAGEMENT_CASE_LEVEL,
+        },
+        width: 140,
+      },
+      {
+        title: 'apiScenario.table.columns.runResult',
+        dataIndex: 'lastReportStatus',
+        slotName: 'lastReportStatus',
+        showTooltip: false,
+        showDrag: true,
+        filterConfig: {
+          options: statusList.value,
+          filterSlotName: FilterSlotNameEnum.API_TEST_CASE_API_REPORT_EXECUTE_RESULT,
+        },
+        width: 200,
+      },
+      {
+        title: 'apiScenario.table.columns.passRate',
+        dataIndex: 'requestPassRate',
+        showDrag: true,
+        width: 100,
+      },
+      {
+        title: 'apiScenario.table.columns.tags',
+        dataIndex: 'tags',
+        isTag: true,
+        isStringTag: true,
+        showDrag: true,
+      },
+      {
+        title: 'apiScenario.table.columns.createUser',
+        dataIndex: 'createUser',
+        slotName: 'createUserName',
+        width: 109,
+        filterConfig: {
+          mode: 'remote',
+          loadOptionParams: {
+            projectId: props.currentProject,
+          },
+          remoteMethod: FilterRemoteMethodsEnum.PROJECT_PERMISSION_MEMBER,
+        },
+      },
+      {
+        title: '',
+        dataIndex: 'action',
+        width: 24,
+        slotName: SpecialColumnEnum.ACTION,
+        fixed: 'right',
+        cellClass: 'operator-class',
+      },
+    ];
+  });
+
   const getPageList = computed(() => {
     return getPublicLinkCaseListMap[props.getPageApiType][props.activeSourceType];
   });
@@ -363,6 +366,15 @@
         },
       },
       {
+        title: 'ms.taskCenter.taskBelongTestPlan',
+        dataIndex: 'belongTestPlan',
+        type: FilterType.SELECT_EQUAL,
+        selectProps: {
+          options: props.testPlanList,
+          optionTooltipPosition: 'tr',
+        },
+      },
+      {
         title: 'common.creator',
         dataIndex: 'createUser',
         type: FilterType.MEMBER,
@@ -457,6 +469,7 @@
   watch(
     () => props.currentProject,
     () => {
+      tableRef.value?.initColumn(columns.value);
       resetFilterParams();
       loadScenarioList();
     }
@@ -483,7 +496,7 @@
     loadScenarioList,
   });
 
-  await tableStore.initColumn(TableKeyEnum.ASSOCIATE_CASE_API_SCENARIO, columns, 'drawer');
+  await tableStore.initColumn(TableKeyEnum.ASSOCIATE_CASE_API_SCENARIO, columns.value, 'drawer');
 </script>
 
 <style lang="less" scoped>

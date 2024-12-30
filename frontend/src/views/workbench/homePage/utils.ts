@@ -1,11 +1,16 @@
 import { cloneDeep } from 'lodash-es';
 
+import getVisualThemeColor from '@/config/chartTheme';
 import { toolTipConfig } from '@/config/testPlan';
-import { commonRatePieOptions, contentTabList, defaultValueMap } from '@/config/workbench';
+import { commonRatePieOptions, defaultValueMap } from '@/config/workbench';
 import { useI18n } from '@/hooks/useI18n';
 import { addCommasToNumber } from '@/utils';
 
-import { WorkCardEnum } from '@/enums/workbenchEnum';
+import type { ModuleCardItem, OverViewOfProject } from '@/models/workbench/homePage';
+import { RouteEnum } from '@/enums/routeEnum';
+import { WorkCardEnum, WorkNavValueEnum } from '@/enums/workbenchEnum';
+
+import VCharts from 'vue-echarts';
 
 const { t } = useI18n();
 // TODO 通用颜色配置注: 目前柱状图只用到了7种色阶，其他色阶暂时保留
@@ -64,20 +69,25 @@ export function getColorScheme(dataLength: number): string[] {
 
 // 饼图颜色配置
 export const colorMapConfig: Record<string, string[]> = {
-  [WorkCardEnum.CASE_COUNT]: ['#ED0303', '#FFA200', '#3370FF', '#D4D4D8'],
+  [WorkCardEnum.CASE_COUNT]: ['#ED0303', '#FFA200', '#3370FF', 'initItemStyleColor'],
   [WorkCardEnum.ASSOCIATE_CASE_COUNT]: ['#00C261', '#3370FF'],
-  [WorkCardEnum.REVIEW_CASE_COUNT]: ['#D4D4D8', '#3370FF', '#00C261', '#ED0303', '#FFA200'],
-  [WorkCardEnum.TEST_PLAN_COUNT]: ['#9441B1', '#3370FF', '#00C261', '#D4D4D8'],
-  [WorkCardEnum.PLAN_LEGACY_BUG]: ['#FFA200', '#3370FF', '#D4D4D8', '#00C261', ...getColorScheme(13)],
-  [WorkCardEnum.BUG_COUNT]: ['#FFA200', '#3370FF', '#D4D4D8', '#00C261', ...getColorScheme(13)],
-  [WorkCardEnum.HANDLE_BUG_BY_ME]: ['#FFA200', '#3370FF', '#D4D4D8', '#00C261', ...getColorScheme(13)],
-  [WorkCardEnum.CREATE_BY_ME]: ['#9441B1', '#3370FF', '#00C261', '#D4D4D8'],
+  [WorkCardEnum.REVIEW_CASE_COUNT]: ['initItemStyleColor', '#3370FF', '#00C261', '#ED0303', '#FFA200'],
+  [WorkCardEnum.TEST_PLAN_COUNT]: ['initItemStyleColor', '#3370FF', '#00C261', '#FF9964'],
+  [WorkCardEnum.PLAN_LEGACY_BUG]: ['#FFA200', '#3370FF', 'initItemStyleColor', '#00C261', ...getColorScheme(13)],
+  [WorkCardEnum.BUG_COUNT]: ['#FFA200', '#3370FF', 'initItemStyleColor', '#00C261', ...getColorScheme(13)],
+  [WorkCardEnum.HANDLE_BUG_BY_ME]: ['#FFA200', '#3370FF', 'initItemStyleColor', '#00C261', ...getColorScheme(13)],
+  [WorkCardEnum.CREATE_BY_ME]: ['#9441B1', '#3370FF', '#00C261', 'initItemStyleColor'],
   [WorkCardEnum.API_COUNT]: ['#811FA3', '#00C261', '#3370FF', '#FFA1FF', '#EE50A3', '#FF9964', '#F9F871', '#C3DD40'],
-  [WorkCardEnum.CREATE_BUG_BY_ME]: ['#FFA200', '#3370FF', '#D4D4D8', '#00C261', ...getColorScheme(13)],
+  [WorkCardEnum.CREATE_BUG_BY_ME]: ['#FFA200', '#3370FF', 'initItemStyleColor', '#00C261', ...getColorScheme(13)],
 };
 
 // 柱状图
-export function getCommonBarOptions(hasRoom: boolean, color: string[]): Record<string, any> {
+export function getCommonBarOptions(
+  hasRoom: boolean,
+  color: string[],
+  isTestPlan = false,
+  fullScreen = true
+): Record<string, any> {
   return {
     tooltip: [
       {
@@ -97,18 +107,44 @@ export function getCommonBarOptions(hasRoom: boolean, color: string[]): Record<s
           type: 'shadow',
           axis: 'auto',
         },
+        backgroundColor: 'transparent',
         formatter(params: any) {
+          let testPlanHtml = '';
+          // 如果是测试计划未分配
+          let paramsList = [];
+          if (isTestPlan) {
+            const unAssign = params[0].axisValueLabel === t('workbench.homePage.planUnExecutor');
+            paramsList = unAssign ? params.slice(0, 1) : params;
+            testPlanHtml = unAssign
+              ? ``
+              : `<div class="flex items-center justify-between">
+                              <div class="flex items-center gap-[8px] text-[var(--color-text-2)]">
+                                <div style="background:#00C261;" class="flex items-center justify-center w-[11px] h-[11px] rounded-full text-[10px]">
+                                  <span class="text-[var(--color-text-fff)] text-center">✓</span>
+                                </div>
+                                   ${t('workbench.homePage.completeRate')}
+                              </div>
+                             
+                              <div class="text-[rgb(var(--success-6))] font-semibold">${params[0].data.passRate}</div>
+                            </div>`;
+          } else {
+            paramsList = params;
+          }
           const html = `
-        <div class="w-[186px] ms-scroll-bar max-h-[206px] overflow-y-auto p-[16px] gap-[8px] flex flex-col">
-        ${params
+        <div class="w-[186px] rounded ms-scroll-bar max-h-[236px] overflow-y-auto p-[16px] gap-[8px] flex flex-col bg-[var(--color-bg-5)]">
+        <div class="font-medium max-w-[150px] text-[var(--color-text-1)] one-line-text">
+        ${params[0].axisValueLabel}
+        </div>
+        ${testPlanHtml}
+        ${paramsList
           .map(
             (item: any) => `
           <div class="flex h-[18px] items-center justify-between">
             <div class="flex items-center">
               <div class="mb-[2px] mr-[8px] h-[8px] w-[8px] rounded-sm" style="background:${item.color}"></div>
-              <div class="one-line-text max-w-[100px]" style="color:#959598">${item.seriesName}</div>
+              <div class="one-line-text max-w-[100px] text-[var(--color-text-2)]">${item.seriesName}</div>
             </div>
-            <div class="text-[#323233] font-medium">${addCommasToNumber(item.data.originValue || 0)}</div>
+            <div class="text-[var(--color-text-1)] font-semibold">${addCommasToNumber(item.data.originValue || 0)}</div>
           </div>
         `
           )
@@ -133,16 +169,30 @@ export function getCommonBarOptions(hasRoom: boolean, color: string[]): Record<s
       boundaryGap: true,
       type: 'category',
       data: [],
+      triggerEvent: true,
       axisLabel: {
         show: true,
-        color: '#646466',
+        color: getVisualThemeColor('xLabelColor'),
+        width: 100,
+        overflow: 'truncate',
+        ellipsis: '...',
+        showMinLabel: true,
+        showMaxLabel: true,
+        interval: 0,
+      },
+      axisPointer: {
+        type: 'shadow',
       },
       axisTick: {
-        show: false, // 隐藏刻度线
+        show: true,
+        alignWithLabel: true,
+        lineStyle: {
+          color: 'transparent',
+        },
       },
       axisLine: {
         lineStyle: {
-          color: '#EDEDF1',
+          color: getVisualThemeColor('splitLineColor'),
         },
       },
     },
@@ -150,11 +200,13 @@ export function getCommonBarOptions(hasRoom: boolean, color: string[]): Record<s
       {
         type: 'value',
         alignTicks: true,
-        name: t('workbench.homePage.unit'), // 设置单位
         position: 'left',
         axisLine: {
           show: false,
           onZero: false, // 禁止 Y 轴强制显示在 0 位置
+        },
+        axisLabel: {
+          color: getVisualThemeColor('yLabelColor'),
         },
         offset: 0, // 第一个 Y 轴默认位置
         nameTextStyle: {
@@ -166,7 +218,7 @@ export function getCommonBarOptions(hasRoom: boolean, color: string[]): Record<s
         splitLine: {
           show: true, // 控制是否显示水平线
           lineStyle: {
-            color: '#EDEDF1', // 水平线颜色
+            color: getVisualThemeColor('splitLineColor'), // 水平线颜色
             width: 1, // 水平线宽度
             type: 'dashed', // 水平线线型，可选 'solid'、'dashed'、'dotted'
           },
@@ -182,8 +234,8 @@ export function getCommonBarOptions(hasRoom: boolean, color: string[]): Record<s
       style: {
         text: '',
         fontSize: 14,
-        fill: '#959598',
-        backgroundColor: '#F9F9FE',
+        fill: getVisualThemeColor('graphicFillColor'),
+        backgroundColor: getVisualThemeColor('graphicBackgroundColor'),
         padding: [6, 16, 6, 16],
         borderRadius: 4,
       },
@@ -201,15 +253,16 @@ export function getCommonBarOptions(hasRoom: boolean, color: string[]): Record<s
       left: 'center',
       pageButtonItemGap: 5,
       pageButtonGap: 5,
-      pageIconColor: '#00000099',
-      pageIconInactiveColor: '#00000042',
+      pageIconColor: getVisualThemeColor('pageIconColor'),
+      pageIconInactiveColor: getVisualThemeColor('pageIconInactiveColor'),
       pageIconSize: [10, 8],
       pageTextStyle: {
-        color: '#00000099',
+        color: getVisualThemeColor('pageTextStyleColor'),
         fontSize: 12,
       },
       textStyle: {
         width: 150,
+        color: getVisualThemeColor('legendColor'),
         overflow: 'truncate',
         ellipsis: '...',
       },
@@ -218,9 +271,15 @@ export function getCommonBarOptions(hasRoom: boolean, color: string[]): Record<s
       },
       tooltip: {
         show: true,
-        padding: 16,
+        padding: 0,
         position(point: any) {
           return [point[0], '10%'];
+        },
+        backgroundColor: 'transparent',
+        formatter(params: any) {
+          return `
+            <div class="p-[8px] rounded bg-[var(--color-bg-5)] text-[var(--color-text-1)]">${params.name}</div>
+          `;
         },
         extraCssText: 'max-width: 300px; white-space: normal; word-wrap: break-word; word-break: break-all;',
         textStyle: {
@@ -236,12 +295,16 @@ export function getCommonBarOptions(hasRoom: boolean, color: string[]): Record<s
             type: 'slider',
             height: 24,
             bottom: 10,
-            // 按照坐标值显示起始位置
+            realtime: true,
+            minSpan: 1,
+            maxValueSpan: fullScreen ? 12 : 6,
             startValue: 0,
-            rangeMode: ['value', 'percent'], // 起点按实际值，终点按百分比动态计算
+            end: 30,
+            endValue: fullScreen ? 12 : 6,
+            rangeMode: ['percent', 'percent'], // 起点按实际值，终点按百分比动态计算
             showDataShadow: 'auto',
             showDetail: false,
-            filterMode: 'filter',
+            filterMode: 'none',
             moveOnMouseMove: true,
             handleSize: 30, // 手柄的大小
             moveHandleSize: 0,
@@ -274,7 +337,7 @@ export function getCommonBarOptions(hasRoom: boolean, color: string[]): Record<s
 }
 
 // 下方饼图配置
-export function getPieCharOptions(key: WorkCardEnum, hasPermission: boolean) {
+export function getPieCharOptions() {
   return {
     title: {
       show: true,
@@ -289,113 +352,24 @@ export function getPieCharOptions(key: WorkCardEnum, hasPermission: boolean) {
       subtext: '100111',
       subtextStyle: {
         fontSize: 20,
-        color: '#323233',
+        color: getVisualThemeColor('subtextStyleColor'),
         fontWeight: 'bold',
         align: 'center',
       },
       textAlign: 'center', // 确保副标题居中
     },
-    color: colorMapConfig[key],
+
     tooltip: { show: true },
     legend: {
-      width: '100%',
-      height: 128,
-      type: 'scroll',
-      orient: 'vertical',
-      pageButtonItemGap: 5,
-      pageButtonGap: 5,
-      pageIconColor: '#00000099',
-      pageIconInactiveColor: '#00000042',
-      pageIconSize: [7, 5],
-      pageTextStyle: {
-        color: '#00000099',
-        fontSize: 12,
-      },
-      pageButtonPosition: 'end',
-      itemGap: 16,
-      itemWidth: 8,
-      itemHeight: 8,
-      icon: 'circle',
-      bottom: 'center',
-      left: 180,
-      tooltip: {
-        show: false, // 禁用图例的 tooltip
-      },
-      textStyle: {
-        color: '#333',
-        fontSize: 14, // 字体大小
-        textBorderType: 'solid',
-        rich: {
-          a: {
-            width: 50,
-            color: '#959598',
-            fontSize: 12,
-            align: 'left',
-          },
-          b: {
-            width: 50,
-            color: '#323233',
-            fontSize: 12,
-            fontWeight: 'bold',
-            align: 'right',
-          },
-          c: {
-            width: 50,
-            color: '#323233',
-            fontSize: 12,
-            fontWeight: 'bold',
-            align: 'right',
-          },
-        },
-      },
+      show: false,
     },
-    media: [
-      {
-        query: { maxWidth: 600 },
-        option: {
-          legend: {
-            textStyle: {
-              width: 200,
-            },
-          },
-        },
-      },
-      {
-        query: { minWidth: 601, maxWidth: 800 },
-        option: {
-          legend: {
-            textStyle: {
-              width: 450,
-            },
-          },
-        },
-      },
-      {
-        query: { minWidth: 801, maxWidth: 1200 },
-        option: {
-          legend: {
-            textStyle: {
-              width: 600,
-            },
-          },
-        },
-      },
-      {
-        query: { minWidth: 1201 },
-        option: {
-          legend: {
-            textStyle: {
-              width: 1000,
-            },
-          },
-        },
-      },
-    ],
     series: {
       name: '',
       type: 'pie',
       radius: ['75%', '90%'],
       center: [90, '48%'],
+      minAngle: 5, // 设置扇区的最小角度
+      minShowLabelAngle: 10, // 设置标签显示的最小角度
       avoidLabelOverlap: false,
       label: {
         show: false,
@@ -412,20 +386,6 @@ export function getPieCharOptions(key: WorkCardEnum, hasPermission: boolean) {
         show: false,
       },
       data: [],
-    },
-    graphic: {
-      type: 'text',
-      left: 'center',
-      top: 'middle',
-      style: {
-        text: t('workbench.homePage.notHasResPermission'),
-        fontSize: 14,
-        fill: '#959598',
-        backgroundColor: '#F9F9FE',
-        padding: [6, 16, 6, 16],
-        borderRadius: 4,
-      },
-      invisible: !!hasPermission,
     },
   };
 }
@@ -463,17 +423,48 @@ export function handlePieData(
       }[]
     | null = []
 ) {
-  const options: Record<string, any> = getPieCharOptions(key, hasPermission);
+  const options: Record<string, any> = getPieCharOptions();
   const lastStatusPercentList = statusPercentList ?? [];
-  options.series.data = lastStatusPercentList.map((item) => ({
-    name: item.status,
-    value: item.count,
-    tooltip: {
-      ...toolTipConfig,
-      position: 'right',
-      show: !!hasPermission,
-    },
-  }));
+  const hasDataLength = lastStatusPercentList.filter((e) => Number(e.count) > 0).length;
+  const pieBorderWidth = hasDataLength === 1 ? 0 : 2;
+
+  const lastData = lastStatusPercentList
+    .map((item, color) => {
+      return {
+        name: item.status,
+        value: item.count,
+        tooltip: {
+          ...toolTipConfig,
+          position: 'right',
+          show: !!hasPermission,
+        },
+        itemStyle: {
+          color:
+            colorMapConfig[key][color] === 'initItemStyleColor'
+              ? getVisualThemeColor('initItemStyleColor')
+              : colorMapConfig[key][color],
+          borderWidth: pieBorderWidth,
+          borderColor: getVisualThemeColor('itemStyleBorderColor'),
+        },
+      };
+    })
+    .filter((e) => e.value !== 0);
+
+  options.series.data =
+    hasDataLength > 0
+      ? lastData
+      : [
+          {
+            name: '',
+            value: 1,
+            tooltip: {
+              show: false,
+            },
+            itemStyle: {
+              color: getVisualThemeColor('initItemStyleColor'),
+            },
+          },
+        ];
 
   // 计算总数和图例格式
   const tempObject: Record<string, any> = {};
@@ -487,18 +478,157 @@ export function handlePieData(
   options.title.subtext = addCommasToNumber(totalCount);
   if (!hasPermission) {
     options.title.subtext = '-';
-    options.series.data = [];
+    options.series.data = [
+      {
+        name: '',
+        value: 1,
+        tooltip: {
+          show: false,
+        },
+        itemStyle: {
+          color: getVisualThemeColor('initItemStyleColor'),
+        },
+      },
+    ];
   }
-
-  // 设置图例的格式化函数，显示百分比
-  options.legend.formatter = (name: string) => {
-    return `{a|${tempObject[name].status}}  {b|${addCommasToNumber(tempObject[name].count)}} {c|${
-      tempObject[name].percentValue
-    }}`;
-  };
 
   return options;
 }
+
+export const routeNavigationMap: Record<string, any> = {
+  // 功能用例数
+  [WorkCardEnum.CASE_COUNT]: {
+    review: {
+      status: [WorkNavValueEnum.CASE_REVIEWED, WorkNavValueEnum.CASE_UN_REVIEWED],
+      route: RouteEnum.CASE_MANAGEMENT,
+    },
+    pass: {
+      status: [WorkNavValueEnum.CASE_REVIEWED_PASS, WorkNavValueEnum.CASE_REVIEWED_UN_PASS],
+      route: RouteEnum.CASE_MANAGEMENT,
+    },
+  },
+  // 用例评审数
+  [WorkCardEnum.REVIEW_CASE_COUNT]: {
+    cover: {
+      status: [WorkNavValueEnum.CASE_REVIEWED, WorkNavValueEnum.CASE_UN_REVIEWED],
+      route: RouteEnum.CASE_MANAGEMENT,
+    },
+  },
+  // 关联用例数
+  [WorkCardEnum.ASSOCIATE_CASE_COUNT]: {
+    cover: {
+      status: [WorkNavValueEnum.CASE_ASSOCIATED, WorkNavValueEnum.CASE_NOT_ASSOCIATED],
+      route: RouteEnum.CASE_MANAGEMENT,
+    },
+  },
+  // 接口数量
+  [WorkCardEnum.API_COUNT]: {
+    cover: {
+      status: [
+        WorkNavValueEnum.API_COUNT_COVER, // 已覆盖
+        WorkNavValueEnum.API_COUNT_UN_COVER, // 未覆盖
+      ],
+      route: RouteEnum.API_TEST_MANAGEMENT,
+    },
+    complete: {
+      status: [
+        WorkNavValueEnum.API_COUNT_DONE, // 已完成
+        WorkNavValueEnum.API_COUNT_PROCESSING, // 进行中
+        WorkNavValueEnum.API_COUNT_DEBUGGING, // 联调中
+        WorkNavValueEnum.API_COUNT_DEPRECATED, // 已废弃
+      ],
+      route: RouteEnum.API_TEST_MANAGEMENT,
+    },
+  },
+  // 接口用例
+  [WorkCardEnum.API_CASE_COUNT]: {
+    cover: {
+      status: [
+        WorkNavValueEnum.API_CASE_COUNT_UN_COVER, // 未覆盖
+        WorkNavValueEnum.API_CASE_COUNT_COVER, // 已覆盖
+      ],
+      route: RouteEnum.API_TEST_MANAGEMENT,
+    },
+    passRate: {
+      status: [
+        WorkNavValueEnum.API_COUNT_EXECUTE_ERROR, // 执行结果-未通过
+        WorkNavValueEnum.API_COUNT_EXECUTE_SUCCESS, // 执行结果-已通过
+      ],
+      route: RouteEnum.API_TEST_MANAGEMENT,
+    },
+    executeRate: {
+      status: [
+        WorkNavValueEnum.API_COUNT_EXECUTED_NOT_RESULT, //  接口用例-无执行结果
+        WorkNavValueEnum.API_COUNT_EXECUTED_RESULT, // 接口用例-有执行结果
+      ],
+      route: RouteEnum.API_TEST_MANAGEMENT,
+    },
+  },
+  // 场景用例
+  [WorkCardEnum.SCENARIO_COUNT]: {
+    cover: {
+      status: [
+        WorkNavValueEnum.SCENARIO_UN_COVER, // 未覆盖
+        WorkNavValueEnum.SCENARIO_COVER, // 已覆盖
+      ],
+      route: RouteEnum.API_TEST_MANAGEMENT,
+    },
+    passRate: {
+      status: [
+        WorkNavValueEnum.SCENARIO_COUNT_EXECUTE_ERROR, // 场景用例-执行结果-未通过
+        WorkNavValueEnum.SCENARIO_COUNT_EXECUTE_SUCCESS, // 场景用例-执行结果-已通过
+      ],
+      route: RouteEnum.API_TEST_SCENARIO,
+    },
+    executeRate: {
+      status: [
+        WorkNavValueEnum.SCENARIO_COUNT_EXECUTED_NOT_RESULT, //  场景用例-无执行结果
+        WorkNavValueEnum.SCENARIO_COUNT_EXECUTED_RESULT, // 场景用例-有执行结果
+      ],
+      route: RouteEnum.API_TEST_SCENARIO,
+    },
+  },
+  // 测试计划数量
+  [WorkCardEnum.TEST_PLAN_COUNT]: {
+    pass: {
+      status: [WorkNavValueEnum.TEST_PLAN_PASSED, WorkNavValueEnum.TEST_PLAN_NOT_PASS],
+      route: RouteEnum.TEST_PLAN_INDEX,
+    },
+    complete: {
+      status: [
+        WorkNavValueEnum.TEST_PLAN_PREPARED, // 测试计划-未开始
+        WorkNavValueEnum.TEST_PLAN_UNDERWAY, // 测试计划-进行中
+        WorkNavValueEnum.TEST_PLAN_COMPLETED, //   测试计划-已完成
+        WorkNavValueEnum.TEST_PLAN_ARCHIVED, // 测试计划-已归档
+      ],
+      route: RouteEnum.TEST_PLAN_INDEX,
+    },
+  },
+  [WorkCardEnum.PLAN_LEGACY_BUG]: {
+    legacy: {
+      status: [WorkNavValueEnum.TEST_PLAN_LEGACY, WorkNavValueEnum.TEST_PLAN_BUG],
+      route: RouteEnum.BUG_MANAGEMENT_INDEX,
+    },
+  },
+  [WorkCardEnum.BUG_COUNT]: {
+    legacy: {
+      status: [WorkNavValueEnum.BUG_COUNT, WorkNavValueEnum.BUG_COUNT_LEGACY],
+      route: RouteEnum.BUG_MANAGEMENT_INDEX,
+    },
+  },
+  [WorkCardEnum.CREATE_BUG_BY_ME]: {
+    legacy: {
+      status: [WorkNavValueEnum.BUG_COUNT_BY_ME, WorkNavValueEnum.BUG_COUNT_BY_ME_LEGACY],
+      route: RouteEnum.BUG_MANAGEMENT_INDEX,
+    },
+  },
+  [WorkCardEnum.HANDLE_BUG_BY_ME]: {
+    legacy: {
+      status: [WorkNavValueEnum.BUG_HANDLE_BY_ME, WorkNavValueEnum.BUG_HANDLE_BY_ME_LEGACY],
+      route: RouteEnum.BUG_MANAGEMENT_INDEX,
+    },
+  },
+};
 
 // 更新options
 export function handleUpdateTabPie(
@@ -514,66 +644,131 @@ export function handleUpdateTabPie(
   const valueKey = key.split('-')[1];
   const countList = list || [];
   let lastCountList: { value: number | string; label: string; name: string }[] = [];
+  const defaultValueMapConfig = defaultValueMap();
+
+  const emptyData = {
+    name: '',
+    value: 1,
+    tooltip: {
+      show: false,
+    },
+    itemStyle: {
+      color: getVisualThemeColor('initItemStyleColor'),
+    },
+  };
   if (hasPermission) {
-    lastCountList = countList.slice(1).map((item) => {
+    const pieBorderWidth = countList.slice(1).filter((e) => Number(e.count) > 0).length === 1 ? 0 : 1;
+
+    lastCountList = countList.slice(1).map((item, i) => {
       return {
+        ...item,
         value: item.count,
         label: item.name,
         name: item.name,
+        itemStyle: {
+          color: defaultValueMapConfig[typeKey][valueKey].color[i],
+          borderWidth: pieBorderWidth,
+          borderColor: getVisualThemeColor('itemStyleBorderColor'),
+        },
       };
     });
-    options.series.data = lastCountList.every((e) => e.value === 0) ? [] : lastCountList;
+
+    options.series.data = lastCountList.every((e) => e.value === 0)
+      ? [emptyData]
+      : lastCountList.filter((e) => e.value !== 0);
 
     options.title.text = countList[0].name ?? '';
     options.title.subtext = `${countList[0].count ?? 0}%`;
   } else {
-    options.series.data = [];
-    lastCountList = defaultValueMap[typeKey][valueKey].defaultList.map((e: any) => {
+    options.series.data = [emptyData];
+
+    lastCountList = defaultValueMapConfig[typeKey][valueKey].defaultList.map((e: any) => {
       return {
         ...e,
         label: t(e.label),
       };
     });
-    options.title.text = t(defaultValueMap[typeKey][valueKey].defaultName);
+    options.title.text = t(defaultValueMapConfig[typeKey][valueKey].defaultName);
     options.title.subtext = '-%';
   }
 
-  options.series.color = defaultValueMap[typeKey][valueKey].color;
+  const lastValueList = lastCountList.map((item, index) => {
+    return {
+      ...item,
+      route: routeNavigationMap[typeKey][valueKey].route,
+      status: routeNavigationMap[typeKey][valueKey].status[index],
+    };
+  });
 
   return {
-    valueList: lastCountList,
+    valueList: lastValueList,
     options,
   };
 }
 
 export function getSeriesData(
-  projectCountList: {
-    id: string;
-    name: string;
-    count: number[];
-  }[]
+  contentTabList: ModuleCardItem[],
+  detail: OverViewOfProject,
+  colorConfig: string[],
+  isTestPlan = false,
+  isStack = false,
+  fullScreen = true
 ) {
+  let options: Record<string, any> = {};
+
+  const { projectCountList, xaxis, errorCode } = detail;
+  const hasPermission = errorCode !== 109001;
+
+  options = getCommonBarOptions(xaxis.length >= 7, colorConfig, isTestPlan, fullScreen);
+  options.xAxis.data = xaxis;
+  const { invisible, text } = handleNoDataDisplay(xaxis, hasPermission);
+  options.graphic.invisible = invisible;
+  options.graphic.style.text = text;
+
   let maxAxis = 5;
+
+  let result: number[][];
+
+  // 计算通过率
+  if (isTestPlan) {
+    const columnCount = projectCountList[0]?.count.length || 0;
+    result = Array.from({ length: columnCount }, () => []);
+    projectCountList.forEach((item) => {
+      item.count.forEach((value, index) => {
+        result[index].push(value);
+      });
+    });
+  }
+
   const seriesData = projectCountList.map((item, sid) => {
-    const countData: Record<string, any>[] = item.count.map((e) => {
+    const countData: Record<string, any>[] = item.count.map((e, i) => {
+      let passRate: string = '0.00%';
+      if (isTestPlan) {
+        const testPlanPassParams = result[i];
+        const [assigning, complete] = testPlanPassParams;
+        passRate = assigning > 0 ? `${((complete / assigning) * 100).toFixed(2)}%` : '0.00%';
+      }
+
       return {
-        name: t(contentTabList[sid].label),
+        name: t(contentTabList[sid]?.label ?? ''),
         value: e,
         originValue: e,
+        passRate,
         tooltip: {
           show: true,
           trigger: 'item',
           enterable: true,
+          backgroundColor: 'transparent',
           formatter(params: any) {
             const html = `
-                <div class="w-[186px] h-[50px] p-[16px] flex items-center justify-between">
+                <div class="w-[186px] rounded h-[50px] p-[16px] flex items-center justify-between bg-[var(--color-bg-5)]">
                 <div class=" flex items-center">
                 <div class="mb-[2px] mr-[8px] h-[8px] w-[8px] rounded-sm bg-[${params.color}]" style="background:${
               params.color
             }"></div>
-                <div class="one-line-text max-w-[100px]"" style="color:#959598">${params.name}</div>
+                <div class="one-line-text max-w-[100px] text-[var(--color-text-2)]">${params.name}</div>
                 </div>
-                <div class="text-[#323233] font-medium">${addCommasToNumber(params.value)}</div>
+                <div class="text-[var(--color-text-1)] font-semibold">${addCommasToNumber(params.value)}</div>
                 </div>
                 `;
             return html;
@@ -586,8 +781,8 @@ export function getSeriesData(
 
     maxAxis = Math.max(itemMax, maxAxis);
 
-    return {
-      name: t(contentTabList[sid].label),
+    const itemSeries: Record<string, any> = {
+      name: t(contentTabList[sid]?.label ?? ''),
       type: 'bar',
       barWidth: 12,
       legendHoverLink: true,
@@ -610,10 +805,64 @@ export function getSeriesData(
         return hasZero ? 0 : 5;
       })(countData),
     };
+
+    if (isStack) {
+      itemSeries.stack = 'stack';
+    }
+
+    return itemSeries;
   });
 
-  return {
-    data: seriesData,
-    maxAxis: maxAxis < 100 ? 100 : maxAxis + 50,
+  // 动态步长调整函数
+  const calculateStep = (num: number) => {
+    const magnitude = 10 ** Math.floor(Math.log10(num));
+    const step = num > 2 * magnitude ? magnitude * 2 : magnitude;
+    return step;
   };
+
+  const roundUpToNearest = (num: number, step: number) => Math.ceil(num / step) * step;
+
+  maxAxis = roundUpToNearest(maxAxis, calculateStep(maxAxis));
+
+  options.series = hasPermission ? seriesData : [];
+  options.yAxis[0].max = maxAxis;
+
+  options.yAxis[0].nameTextStyle.padding = maxAxis < 10 ? [0, 0, 0, 20] : [0, 0, 0, 0];
+
+  return options;
+}
+
+export function createCustomTooltip(chartDom: InstanceType<typeof VCharts>) {
+  if (chartDom && chartDom.chart) {
+    const customTooltip = document.createElement('div');
+    customTooltip.style.position = 'absolute';
+
+    customTooltip.style.maxWidth = '300px';
+    customTooltip.style.padding = '5px';
+    customTooltip.style.background = 'var(--color-text-2)';
+    customTooltip.style.color = 'var(--color-text-fff)';
+    customTooltip.style.borderRadius = '4px';
+
+    customTooltip.style.display = 'none';
+    document.body.appendChild(customTooltip);
+
+    // 针对x轴 监听鼠标悬浮事件
+    chartDom.chart.on('mouseover', 'xAxis', (params) => {
+      const event = params.event?.event as unknown as MouseEvent;
+      if (params.componentType === 'xAxis') {
+        const { clientX, clientY } = event;
+
+        customTooltip.textContent = `${params.value}`;
+        customTooltip.style.display = 'block';
+
+        customTooltip.style.left = `${clientX}px`;
+        customTooltip.style.top = `${clientY + 10}px`;
+      }
+    });
+
+    // 针对x轴 监听鼠标离开事件
+    chartDom.chart.on('mouseout', 'xAxis', () => {
+      customTooltip.style.display = 'none';
+    });
+  }
 }

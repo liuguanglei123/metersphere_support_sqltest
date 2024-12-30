@@ -16,6 +16,7 @@ import io.metersphere.system.mapper.ScheduleMapper;
 import io.metersphere.system.utils.ScheduleUtils;
 import jakarta.annotation.Resource;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -140,8 +142,12 @@ public class TestPlanStatisticsService {
 			List<TestPlanStatisticsResponse> childrenResponse = new ArrayList<>();
 			if (!CollectionUtils.isEmpty(children)) {
 				List<String> childStatus = new ArrayList<>();
+				AtomicBoolean hasNotPassedChild = new AtomicBoolean(false);
 				children.forEach(child -> {
 					TestPlanStatisticsResponse childResponse = this.genTestPlanStatisticsResponse(child, planConfigMap, planFunctionalCaseMap, planApiCaseMap, planApiScenarioMap, scheduleMap);
+					if (BooleanUtils.isFalse(childResponse.isPass())) {
+						hasNotPassedChild.set(true);
+					}
 					childResponse.setStatus(child.getStatus());
 					
 					childResponse.calculateStatus();
@@ -156,11 +162,15 @@ public class TestPlanStatisticsService {
 				if (!StringUtils.equalsIgnoreCase(rootResponse.getStatus(), TestPlanConstants.TEST_PLAN_STATUS_ARCHIVED)) {
 					rootResponse.setStatus(testPlanBaseUtilsService.calculateStatusByChildren(childStatus));
 				}
+				if (!hasNotPassedChild.get()) {
+					rootResponse.setPass(true);
+				}
 			} else {
 				rootResponse.calculateCaseTotal();
 				rootResponse.calculatePassRate();
 				rootResponse.calculateExecuteRate();
 				rootResponse.calculateStatus();
+				rootResponse.calculateTestPlanIsPass();
 			}
 			returnResponse.add(rootResponse);
 			returnResponse.addAll(childrenResponse);
@@ -168,17 +178,17 @@ public class TestPlanStatisticsService {
 		return returnResponse;
 	}
 
-	private Map<String, Long> countApiScenarioExecResultMap(List<TestPlanApiScenario> apiScenarios) {
+	public Map<String, Long> countApiScenarioExecResultMap(List<TestPlanApiScenario> apiScenarios) {
 		return CollectionUtils.isEmpty(apiScenarios) ? new HashMap<>(16) : apiScenarios.stream().collect(
 				Collectors.groupingBy(apiScenario -> StringUtils.isEmpty(apiScenario.getLastExecResult()) ? ExecStatus.PENDING.name() : apiScenario.getLastExecResult(), Collectors.counting()));
 	}
 
-	private Map<String, Long> countApiTestCaseExecResultMap(List<TestPlanApiCase> apiCases) {
+	public Map<String, Long> countApiTestCaseExecResultMap(List<TestPlanApiCase> apiCases) {
 		return CollectionUtils.isEmpty(apiCases) ? new HashMap<>(16) : apiCases.stream().collect(
 				Collectors.groupingBy(apiCase -> StringUtils.isEmpty(apiCase.getLastExecResult()) ? ExecStatus.PENDING.name() : apiCase.getLastExecResult(), Collectors.counting()));
 	}
 
-	private Map<String, Long> countFunctionalCaseExecResultMap(List<TestPlanFunctionalCase> functionalCases) {
+	public Map<String, Long> countFunctionalCaseExecResultMap(List<TestPlanFunctionalCase> functionalCases) {
 		return CollectionUtils.isEmpty(functionalCases) ? new HashMap<>(16) : functionalCases.stream().collect(
 				Collectors.groupingBy(functionalCase -> StringUtils.isEmpty(functionalCase.getLastExecResult()) ? ExecStatus.PENDING.name() : functionalCase.getLastExecResult(), Collectors.counting()));
 	}
@@ -220,6 +230,7 @@ public class TestPlanStatisticsService {
 			statisticsResponse.calculateCaseTotal();
 			statisticsResponse.calculatePassRate();
 			statisticsResponse.calculateExecuteRate();
+			statisticsResponse.calculateTestPlanIsPass();
 		}
 		//定时任务
 		if (scheduleMap.containsKey(planId)) {
@@ -266,7 +277,7 @@ public class TestPlanStatisticsService {
 	 * @param countKey 汇总的key
 	 * @return 总数
 	 */
-	private Integer countCaseMap(Map<String, Long> functionalCaseMap, Map<String, Long> apiCaseMap, Map<String, Long> apiScenarioMap, String countKey) {
+	public Integer countCaseMap(Map<String, Long> functionalCaseMap, Map<String, Long> apiCaseMap, Map<String, Long> apiScenarioMap, String countKey) {
 		return (functionalCaseMap.containsKey(countKey) ? functionalCaseMap.get(countKey).intValue() : 0) +
 				(apiCaseMap.containsKey(countKey) ? apiCaseMap.get(countKey).intValue() : 0) +
 				(apiScenarioMap.containsKey(countKey) ? apiScenarioMap.get(countKey).intValue() : 0);

@@ -129,6 +129,7 @@ body {
   .arco-trigger-popup-wrapper {
     .arco-popover-popup-content {
       padding: 4px 8px;
+      border-color: var(--color-text-n8);
     }
   }
 
@@ -214,4 +215,30 @@ body {
       color: rgb(var(--primary-5));
     }
   }
+}
+
+// 表格选中行样式
+.selected-row-class.arco-table-tr {
+  background: var(--color-fill-1) !important;
+  .arco-table-td {
+    background: var(--color-fill-1) !important;
+  }
+}
+
+/** 无权限明亮样式 **/
+.no-permission-svg-bright {
+  margin: 0 auto;
+  width: 160px;
+  height: 90px;
+  background: url('@/assets/svg/no_resource.svg');
+  background-size: cover;
+}
+
+/** 无权限暗黑样式 **/
+.no-permission-svg-dark {
+  margin: 0 auto;
+  width: 160px;
+  height: 90px;
+  background: url('@/assets/svg/no_resource-dark.svg');
+  background-size: cover;
 }

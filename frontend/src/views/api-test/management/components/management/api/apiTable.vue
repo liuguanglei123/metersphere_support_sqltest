@@ -32,6 +32,7 @@
       @selected-change="handleTableSelect"
       @batch-action="handleTableBatch"
       @drag-change="handleTableDragSort"
+      @filter-change="filterChange"
     >
       <template #[FilterSlotNameEnum.API_TEST_API_REQUEST_METHODS]="{ filterContent }">
         <apiMethodName :method="filterContent.value" />
@@ -138,7 +139,7 @@
       >
         <template v-if="batchForm.attr === 'method'" #extra>{{ t('apiTestManagement.requestTypeTip') }}</template>
         <a-select v-model="batchForm.attr" :placeholder="t('common.pleaseSelect')">
-          <a-option v-for="item of attrOptions" :key="item.value" :value="item.value">
+          <a-option v-for="item of fullAttrs" :key="item.value" :value="item.value">
             {{ t(item.name) }}
           </a-option>
         </a-select>
@@ -269,6 +270,7 @@
 </template>
 
 <script setup lang="ts">
+  import { useRoute } from 'vue-router';
   import { FormInstance, Message } from '@arco-design/web-vue';
   import dayjs from 'dayjs';
 
@@ -300,6 +302,7 @@
     sortDefinition,
     updateDefinition,
   } from '@/api/modules/api-test/management';
+  import { NAV_NAVIGATION } from '@/config/workbench';
   import { useI18n } from '@/hooks/useI18n';
   import useModal from '@/hooks/useModal';
   import useTableStore from '@/hooks/useTableStore';
@@ -318,6 +321,7 @@
   import { TagUpdateTypeEnum } from '@/enums/commonEnum';
   import { TableKeyEnum } from '@/enums/tableEnum';
   import { FilterRemoteMethodsEnum, FilterSlotNameEnum } from '@/enums/tableFilterEnum';
+  import { WorkNavValueEnum } from '@/enums/workbenchEnum';
 
   import { apiStatusOptions } from '@/views/api-test/components/config';
 
@@ -351,7 +355,7 @@
   const { t } = useI18n();
   const { openModal } = useModal();
   const tableStore = useTableStore();
-
+  const route = useRoute();
   const folderTreePathMap = inject<MsTreeNodeData[]>('folderTreePathMap');
   const refreshModuleTree: (() => Promise<any>) | undefined = inject('refreshModuleTree');
   const refreshModuleTreeCount: ((data: ApiDefinitionGetModuleParams) => Promise<any>) | undefined =
@@ -405,7 +409,6 @@
         sortDirections: ['ascend', 'descend'],
         sorter: true,
       },
-      fixed: 'left',
       width: 100,
       columnSelectorDisabled: true,
     },
@@ -509,7 +512,6 @@
           projectId: appStore.currentProjectId,
         },
         remoteMethod: FilterRemoteMethodsEnum.PROJECT_PERMISSION_MEMBER,
-        placeholderText: t('caseManagement.featureCase.PleaseSelect'),
       },
       showInTable: true,
       width: 200,
@@ -624,6 +626,7 @@
 
   async function loadApiList(hasRefreshTree: boolean) {
     const moduleIds = await getModuleIds();
+
     const params = {
       keyword: keyword.value,
       projectId: appStore.currentProjectId,
@@ -786,14 +789,18 @@
   }
 
   function onMountedLoad() {
-    if (props.selectedProtocols.length > 0) {
-      loadApiList(true);
+    if (route.query.home) {
+      propsRes.value.filter = { ...NAV_NAVIGATION[route.query.home as WorkNavValueEnum] };
+    }
+
+    if (props.selectedProtocols.length > 0 || route.query.home) {
+      loadApiList(!route.query.home);
     }
   }
 
   const isActivated = computed(() => cacheStore.cacheViews.includes(CacheTabTypeEnum.API_TEST_API_TABLE));
 
-  onBeforeMount(() => {
+  onMounted(() => {
     cacheStore.clearCache();
     if (!isActivated.value) {
       onMountedLoad();
@@ -924,13 +931,6 @@
       value: 'tags',
     },
   ];
-  const attrOptions = computed(() => {
-    // TODO 协议 选择的数据不包含HTTP协议，则选择属性中不展示“请求类型“
-    // if (props.protocol === 'HTTP') {
-    return fullAttrs;
-    // }
-    // return fullAttrs.filter((e) => e.value !== 'method');
-  });
   const valueOptions = computed(() => {
     switch (batchForm.value.attr) {
       case 'status':
@@ -1128,6 +1128,18 @@
       shareListRef.value?.searchList();
     }
     shareButtonRef.value?.initShareList();
+  }
+
+  function filterChange() {
+    if (typeof refreshModuleTreeCount === 'function' && !isAdvancedSearchMode.value) {
+      refreshModuleTreeCount({
+        keyword: keyword.value,
+        filter: propsRes.value.filter,
+        moduleIds: [],
+        protocols: props.selectedProtocols,
+        projectId: appStore.currentProjectId,
+      });
+    }
   }
 
   watch(

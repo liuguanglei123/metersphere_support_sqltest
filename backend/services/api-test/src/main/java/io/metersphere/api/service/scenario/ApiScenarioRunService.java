@@ -7,9 +7,6 @@ import io.metersphere.api.controller.result.ApiResultCode;
 import io.metersphere.api.domain.*;
 import io.metersphere.api.dto.*;
 import io.metersphere.api.dto.debug.ApiResourceRunRequest;
-import io.metersphere.api.dto.definition.ApiModuleDTO;
-import io.metersphere.api.dto.definition.EnvApiModuleRequest;
-import io.metersphere.api.dto.definition.EnvApiTreeDTO;
 import io.metersphere.api.dto.request.MsScenario;
 import io.metersphere.api.dto.request.controller.MsScriptElement;
 import io.metersphere.api.dto.request.http.MsHTTPElement;
@@ -22,7 +19,6 @@ import io.metersphere.api.parser.step.StepParser;
 import io.metersphere.api.parser.step.StepParserFactory;
 import io.metersphere.api.service.ApiCommonService;
 import io.metersphere.api.service.ApiExecuteService;
-import io.metersphere.api.service.definition.ApiDefinitionModuleService;
 import io.metersphere.api.service.definition.ApiDefinitionService;
 import io.metersphere.api.service.definition.ApiTestCaseService;
 import io.metersphere.api.service.queue.ApiExecutionSetService;
@@ -31,9 +27,6 @@ import io.metersphere.project.api.processor.MsProcessor;
 import io.metersphere.project.api.processor.TimeWaitingProcessor;
 import io.metersphere.project.domain.Project;
 import io.metersphere.project.dto.environment.EnvironmentInfoDTO;
-import io.metersphere.project.dto.environment.http.HttpConfig;
-import io.metersphere.project.dto.environment.http.HttpConfigModuleMatchRule;
-import io.metersphere.project.dto.environment.http.SelectModule;
 import io.metersphere.project.mapper.ProjectMapper;
 import io.metersphere.project.service.EnvironmentGroupService;
 import io.metersphere.project.service.EnvironmentService;
@@ -70,6 +63,8 @@ public class ApiScenarioRunService {
     @Resource
     private ApiScenarioService apiScenarioService;
     @Resource
+    private ApiScenarioFileService apiScenarioFileService;
+    @Resource
     private ApiExecuteService apiExecuteService;
     @Resource
     private ApiDefinitionService apiDefinitionService;
@@ -81,8 +76,6 @@ public class ApiScenarioRunService {
     private EnvironmentGroupService environmentGroupService;
     @Resource
     private ApiPluginService apiPluginService;
-    @Resource
-    private ApiDefinitionModuleService apiDefinitionModuleService;
     @Resource
     private ApiCommonService apiCommonService;
     @Resource
@@ -120,12 +113,14 @@ public class ApiScenarioRunService {
         msScenario.setScenarioConfig(getScenarioConfig(request, true));
         msScenario.setProjectId(request.getProjectId());
 
-        List<ApiScenarioCsv> dbCsv = apiScenarioService.getApiScenarioCsv(apiScenario.getId());
+        List<ApiScenarioCsv> dbCsv = apiScenarioFileService.getApiScenarioCsv(apiScenario.getId());
         List<CsvVariable> csvVariables = apiScenarioService.getCsvVariables(msScenario.getScenarioConfig());
-        apiScenarioService.handleRefUpgradeFile(csvVariables, dbCsv);
+        apiScenarioFileService.handleRefUpgradeFile(csvVariables, dbCsv);
 
         // 处理特殊的步骤详情
-        apiScenarioService.addSpecialStepDetails(request.getSteps(), request.getStepDetails());
+        ApiScenarioCopyStepMap apiScenarioCopyStepMap = apiScenarioService.addSpecialStepDetails(request.getSteps(), request.getStepDetails());
+        // 处理copy的步骤文件
+        apiScenarioFileService.handleRunCopyStepFiles(request, apiScenarioCopyStepMap, request.getStepDetails());
 
         ApiResourceRunRequest runRequest = new ApiResourceRunRequest();
         runRequest = setFileParam(request, runRequest);
@@ -414,13 +409,15 @@ public class ApiScenarioRunService {
         msScenario.setResourceId(request.getId());
 
         if (hasSave) {
-            List<ApiScenarioCsv> dbCsv = apiScenarioService.getApiScenarioCsv(apiScenario.getId());
+            List<ApiScenarioCsv> dbCsv = apiScenarioFileService.getApiScenarioCsv(apiScenario.getId());
             List<CsvVariable> csvVariables = apiScenarioService.getCsvVariables(msScenario.getScenarioConfig());
-            apiScenarioService.handleRefUpgradeFile(csvVariables, dbCsv);
+            apiScenarioFileService.handleRefUpgradeFile(csvVariables, dbCsv);
         }
 
         // 处理特殊的步骤详情
-        apiScenarioService.addSpecialStepDetails(request.getSteps(), request.getStepDetails());
+        ApiScenarioCopyStepMap apiScenarioCopyStepMap = apiScenarioService.addSpecialStepDetails(request.getSteps(), request.getStepDetails());
+        // 处理copy的步骤文件
+        apiScenarioFileService.handleRunCopyStepFiles(request, apiScenarioCopyStepMap, request.getStepDetails());
 
         ApiScenarioParseTmpParam tmpParam = parse(msScenario, request.getSteps(), request);
 
@@ -983,7 +980,7 @@ public class ApiScenarioRunService {
 
                 // 记录引用的资源ID和项目ID，下载执行文件时需要使用
                 parseParam.getRefProjectIds().add(step.getProjectId());
-                if (apiScenarioService.isRefOrPartialRef(step.getRefType())) {
+                if (apiScenarioService.isRefOrPartialRef(step.getRefType()) && !apiScenarioService.isRefApi(step.getStepType(), step.getRefType())) {
                     // 引用的步骤记录引用的资源ID
                     parseParam.getFileResourceIds().add(step.getResourceId());
                 } else if (msTestElement instanceof MsHTTPElement) {

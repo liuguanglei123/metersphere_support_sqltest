@@ -32,6 +32,7 @@ docker run -d -p 8081:8081 --name=metersphere -v ~/.metersphere/data:/opt/meters
 
 如你有更多问题，可以通过论坛和技术交流群与我们交流。
 
+-   [案例研究](/use-cases.md)
 -   [论坛求助](https://bbs.fit2cloud.com/c/ms/8)
 -   技术交流群
      
@@ -104,7 +105,7 @@ MeterSphere 产品版本分为社区版和企业版，详情请参见：[MeterSp
 
 ## License & Copyright
 
-Copyright (c) 2014-2024 飞致云 FIT2CLOUD, All rights reserved.
+Copyright (c) 2014-2025 飞致云 FIT2CLOUD, All rights reserved.
 
 Licensed under The GNU General Public License version 3 (GPLv3)  (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 

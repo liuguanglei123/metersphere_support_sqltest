@@ -288,7 +288,13 @@
     @finished="loadCaseListAndResetSelector"
   />
   <!-- 执行结果抽屉 -->
-  <caseAndScenarioReportDrawer v-model:visible="showExecuteResult" :report-id="activeReportId" />
+  <caseAndScenarioReportDrawer
+    v-model:visible="showExecuteResult"
+    :case-name="currentCaseName"
+    :case-id="currentId"
+    is-filter-step
+    :report-id="activeReportId"
+  />
   <!-- 同步抽屉 -->
   <SyncModal
     ref="syncModalRef"
@@ -349,6 +355,7 @@
     updateCasePriority,
     updateCaseStatus,
   } from '@/api/modules/api-test/management';
+  import { NAV_NAVIGATION } from '@/config/workbench';
   import { useI18n } from '@/hooks/useI18n';
   import useModal from '@/hooks/useModal';
   import useTableStore from '@/hooks/useTableStore';
@@ -368,6 +375,7 @@
   import { ReportEnum } from '@/enums/reportEnum';
   import { TableKeyEnum } from '@/enums/tableEnum';
   import { FilterRemoteMethodsEnum, FilterSlotNameEnum } from '@/enums/tableFilterEnum';
+  import { WorkNavValueEnum } from '@/enums/workbenchEnum';
 
   import {
     casePriorityOptions,
@@ -424,7 +432,6 @@
         sortDirections: ['ascend', 'descend'],
         sorter: true,
       },
-      fixed: 'left',
       width: 150,
       columnSelectorDisabled: true,
     },
@@ -469,6 +476,7 @@
       filterConfig: {
         options: caseStatusOptions,
         filterSlotName: FilterSlotNameEnum.API_TEST_CASE_API_STATUS,
+        disabledTooltip: true,
       },
       width: 150,
       showDrag: true,
@@ -546,7 +554,6 @@
           projectId: appStore.currentProjectId,
         },
         remoteMethod: FilterRemoteMethodsEnum.PROJECT_PERMISSION_MEMBER,
-        placeholderText: t('caseManagement.featureCase.PleaseSelect'),
       },
       showInTable: true,
       width: 180,
@@ -663,6 +670,7 @@
 
   async function loadCaseList() {
     const selectModules = await getModuleIds();
+
     const params = {
       apiDefinitionId: props.apiDetail?.id,
       keyword: keyword.value,
@@ -747,7 +755,7 @@
     {
       title: 'case.apiParamsChange',
       dataIndex: 'apiChange',
-      type: FilterType.BOOLEAN,
+      type: FilterType.SELECT_EQUAL,
       selectProps: {
         options: [
           { label: t('case.withoutChanges'), value: false },
@@ -1121,10 +1129,14 @@
   }
 
   const activeReportId = ref('');
+  const currentId = ref<string>('');
+  const currentCaseName = ref<string>('');
   const showExecuteResult = ref(false);
   async function showResult(record: ApiCaseDetail) {
     if (!record.lastReportId) return;
     activeReportId.value = record.lastReportId;
+    currentId.value = record.id;
+    currentCaseName.value = record.name;
     showExecuteResult.value = true;
   }
 
@@ -1194,6 +1206,10 @@
     if (route.query.view) {
       setAdvanceFilter({ conditions: [], searchMode: 'AND' }, route.query.view as string);
       viewName.value = route.query.view as string;
+    }
+
+    if (route.query.home) {
+      propsRes.value.filter = { ...NAV_NAVIGATION[route.query.home as WorkNavValueEnum] };
     }
   });
 

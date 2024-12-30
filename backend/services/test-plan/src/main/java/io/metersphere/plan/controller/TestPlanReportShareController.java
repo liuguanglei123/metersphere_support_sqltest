@@ -98,7 +98,11 @@ public class TestPlanReportShareController {
         ShareInfo shareInfo = testPlanReportShareService.checkResource(request.getShareId());
         testPlanReportShareService.validateExpired(shareInfo);
         Page<Object> page = PageHelper.startPage(request.getCurrent(), request.getPageSize(),
-                StringUtils.isNotBlank(request.getSortString()) ? request.getSortString() : "tprb.bug_num, tprb.id desc");
+                StringUtils.isNotBlank(request.getSortString()) ? request.getSortString() : "tprb.bug_num desc");
+        if (!request.getStartPager()) {
+            page.close();
+            page.setOrderBy("tprb.bug_num desc");
+        }
         return PageUtils.setPageInfo(page, testPlanReportService.listReportDetailBugs(request));
     }
 
@@ -108,9 +112,18 @@ public class TestPlanReportShareController {
         request.setDetailReportIds(testPlanReportService.getActualReportIds(request.getReportId()));
         ShareInfo shareInfo = testPlanReportShareService.checkResource(request.getShareId());
         testPlanReportShareService.validateExpired(shareInfo);
+        String sort = request.getSortString();
+        sort = StringUtils.replace(sort, "request_time", "request_duration");
         Page<Object> page = PageHelper.startPage(request.getCurrent(), request.getPageSize(),
-                StringUtils.isNotBlank(request.getSortString()) ? request.getSortString() : "tprfc.pos desc");
-        return PageUtils.setPageInfo(page, testPlanReportService.listReportDetailCases(request, AssociateCaseType.FUNCTIONAL));
+                StringUtils.isNotBlank(sort) ? sort : "tprfc.pos desc");
+        if (!request.getStartPager()) {
+            // 不分页仅排序 {测试集升序, 用例位次倒序}
+            page.setPageSize(0);
+            page.setPageSizeZero(true);
+            page.setOrderBy("tpc.pos, tpc.name, tprfc.pos desc");
+            page.setOrderByOnly(true);
+        }
+        return PageUtils.setPageInfo(page, testPlanReportService.listReportDetailCases(request, null, AssociateCaseType.FUNCTIONAL));
     }
 
     @PostMapping("/detail/api/case/page")
@@ -119,9 +132,18 @@ public class TestPlanReportShareController {
         request.setDetailReportIds(testPlanReportService.getActualReportIds(request.getReportId()));
         ShareInfo shareInfo = testPlanReportShareService.checkResource(request.getShareId());
         testPlanReportShareService.validateExpired(shareInfo);
+        String sort = request.getSortString();
+        sort = StringUtils.replace(sort, "request_time", "request_duration");
         Page<Object> page = PageHelper.startPage(request.getCurrent(), request.getPageSize(),
-                StringUtils.isNotBlank(request.getSortString()) ? request.getSortString() : "tprac.pos desc");
-        return PageUtils.setPageInfo(page, testPlanReportService.listReportDetailCases(request, AssociateCaseType.API_CASE));
+                StringUtils.isNotBlank(sort) ? sort : "tprac.pos desc");
+        if (!request.getStartPager()) {
+            // 不分页仅排序 {测试集升序, 用例位次倒序}
+            page.setPageSize(0);
+            page.setPageSizeZero(true);
+            page.setOrderBy("tpc.pos, tpc.name, tprac.pos desc");
+            page.setOrderByOnly(true);
+        }
+        return PageUtils.setPageInfo(page, testPlanReportService.listReportDetailCases(request, null, AssociateCaseType.API_CASE));
     }
 
     @PostMapping("/detail/scenario/case/page")
@@ -130,9 +152,18 @@ public class TestPlanReportShareController {
         request.setDetailReportIds(testPlanReportService.getActualReportIds(request.getReportId()));
         ShareInfo shareInfo = testPlanReportShareService.checkResource(request.getShareId());
         testPlanReportShareService.validateExpired(shareInfo);
+        String sort = request.getSortString();
+        sort = StringUtils.replace(sort, "request_time", "request_duration");
         Page<Object> page = PageHelper.startPage(request.getCurrent(), request.getPageSize(),
-                StringUtils.isNotBlank(request.getSortString()) ? request.getSortString() : "tpras.pos desc");
-        return PageUtils.setPageInfo(page, testPlanReportService.listReportDetailCases(request, AssociateCaseType.API_SCENARIO));
+                StringUtils.isNotBlank(sort) ? sort : "tpras.pos desc");
+        if (!request.getStartPager()) {
+            // 不分页仅排序 {测试集升序, 用例位次倒序}
+            page.setPageSize(0);
+            page.setPageSizeZero(true);
+            page.setOrderBy("tpc.pos, tpc.name, tpras.pos desc");
+            page.setOrderByOnly(true);
+        }
+        return PageUtils.setPageInfo(page, testPlanReportService.listReportDetailCases(request, null, AssociateCaseType.API_SCENARIO));
     }
 
     @PostMapping("/detail/plan/report/page")
@@ -142,6 +173,9 @@ public class TestPlanReportShareController {
         testPlanReportShareService.validateExpired(shareInfo);
         Page<Object> page = PageHelper.startPage(request.getCurrent(), request.getPageSize(),
                 StringUtils.isNotBlank(request.getSortString()) ? request.getSortString() : "tpr.create_time desc");
+        if (!request.getStartPager()) {
+            page.close();
+        }
         return PageUtils.setPageInfo(page, testPlanReportService.planReportList(request));
     }
 
@@ -196,8 +230,7 @@ public class TestPlanReportShareController {
         request.setDetailReportIds(testPlanReportService.getActualReportIds(request.getReportId()));
         ShareInfo shareInfo = testPlanReportShareService.checkResource(request.getShareId());
         testPlanReportShareService.validateExpired(shareInfo);
-        Page<Object> page = PageHelper.startPage(request.getCurrent(), request.getPageSize(),
-                StringUtils.isNotBlank(request.getSortString()) ? request.getSortString() : "tpc.pos desc");
+        Page<Object> page = PageHelper.startPage(request.getCurrent(), request.getPageSize(), "tpc.pos asc");
         return PageUtils.setPageInfo(page, testPlanReportService.listReportCollection(request, type));
     }
 }

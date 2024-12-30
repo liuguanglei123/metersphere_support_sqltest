@@ -25,15 +25,39 @@
         <div class="flex gap-[16px]">
           <div v-for="tabItem of testPlanTabList" :key="tabItem.label" class="flex-1">
             <PassRatePie
+              :project-id="projectId"
               :has-permission="hasPermission"
               :options="tabItem.options"
-              :size="60"
               :value-list="tabItem.valueList"
-            />
+            >
+              <template v-if="tabItem.value === 'pass'" #default="{ ele: passItem, index }">
+                <div class="one-line-text mb-[8px] text-[var(--color-text-4)]">{{ passItem.label }}</div>
+                <div class="pass-rate-count-archived">
+                  <div class="text-[rgb(var(--primary-4))]" @click="goNavigation(passItem, index)">
+                    {{ hasPermission ? addCommasToNumber(passItem.value as number) : '-' }}
+                  </div>
+                  <div
+                    class="mr-[8px] text-center text-[var(--color-text-brand)]"
+                    @click="goNavigation(passItem, index, true)"
+                  >
+                    <a-tooltip :content="t('common.archived')" position="top">
+                      <span>
+                        {{ hasPermission ? addCommasToNumber(passItem.archivedPassed || 0) : '-' }}
+                      </span>
+                    </a-tooltip>
+                  </div>
+                </div>
+              </template>
+            </PassRatePie>
           </div>
         </div>
-        <div class="h-[148px]">
-          <MsChart :options="testPlanCountOptions" />
+        <div class="mt-[16px] h-[148px]">
+          <LegendPieChart
+            v-model:currentPage="currentPage"
+            :has-permission="hasPermission"
+            :data="statusPercentValue"
+            :options="testPlanCountOptions"
+          />
         </div>
       </div>
     </div>
@@ -46,15 +70,17 @@
    */
   import { ref } from 'vue';
 
-  import MsChart from '@/components/pure/chart/index.vue';
   import MsSelect from '@/components/business/ms-select';
   import CardSkeleton from './cardSkeleton.vue';
+  import LegendPieChart, { legendDataType } from './legendPieChart.vue';
   import PassRatePie from './passRatePie.vue';
-  import TabCard from './tabCard.vue';
 
   import { workTestPlanRage } from '@/api/modules/workbench';
+  import getVisualThemeColor from '@/config/chartTheme';
   import { useI18n } from '@/hooks/useI18n';
+  import useOpenNewPage from '@/hooks/useOpenNewPage';
   import useAppStore from '@/store/modules/app';
+  import { addCommasToNumber } from '@/utils';
 
   import type {
     SelectedCardItem,
@@ -62,8 +88,11 @@
     WorkTestPlanDetail,
     WorkTestPlanRageDetail,
   } from '@/models/workbench/homePage';
+  import { WorkNavValueEnum } from '@/enums/workbenchEnum';
 
-  import { handlePieData, handleUpdateTabPie } from '../utils';
+  import { colorMapConfig, handlePieData, handleUpdateTabPie } from '../utils';
+
+  const { openNewPage } = useOpenNewPage();
 
   const { t } = useI18n();
   const appStore = useAppStore();
@@ -80,6 +109,7 @@
   const innerProjectIds = defineModel<string[]>('projectIds', {
     required: true,
   });
+  const currentPage = ref(1);
 
   const projectId = ref<string>(innerProjectIds.value[0]);
 
@@ -122,6 +152,7 @@
   // 测试计划权限
   const hasPermission = ref<boolean>(false);
   const showSkeleton = ref(false);
+  const statusPercentValue = ref<legendDataType[]>([]);
 
   async function initTestPlanCount() {
     try {
@@ -135,7 +166,8 @@
         projectId: innerProjectIds.value[0],
       };
       const detail: WorkTestPlanRageDetail = await workTestPlanRage(params);
-      const { passed, notPassed, finished, running, prepared, archived, errorCode } = detail;
+      const { passed, notPassed, finished, running, prepared, archived, errorCode, passedArchived, notPassedArchived } =
+        detail;
       hasPermission.value = errorCode !== 109001;
 
       const passRate = passed + notPassed > 0 ? parseFloat(((passed / (passed + notPassed)) * 100).toFixed(2)) : 0;
@@ -148,26 +180,41 @@
         {
           name: t('workbench.homePage.havePassed'),
           count: passed,
+          archivedPassed: passedArchived,
         },
         {
           name: t('workbench.homePage.notPass'),
           count: notPassed,
+          archivedPassed: notPassedArchived,
         },
       ];
 
       const statusPercentList = [
-        { status: t('common.notStarted'), count: prepared, percentValue: '0%' },
-        { status: t('common.inProgress'), count: running, percentValue: '0%' },
-        { status: t('common.completed'), count: finished, percentValue: '0%' },
-        { status: t('common.archived'), count: archived, percentValue: '0%' },
+        { status: t('common.notStarted'), count: prepared, percentValue: '0.00%' },
+        { status: t('common.inProgress'), count: running, percentValue: '0.00%' },
+        { status: t('common.completed'), count: finished, percentValue: '0.00%' },
+        { status: t('common.archived'), count: archived, percentValue: '0.00%' },
       ];
 
       const total = statusPercentList.reduce((sum, item) => sum + item.count, 0);
 
       const listStatusPercentList = statusPercentList.map((item) => ({
         ...item,
-        percentValue: total > 0 ? `${((item.count / total) * 100).toFixed(2)}%` : '0%',
+        percentValue: total > 0 ? `${((item.count / total) * 100).toFixed(2)}%` : '0.00%',
       }));
+
+      statusPercentValue.value = (statusPercentList || []).map((item, index) => {
+        return {
+          ...item,
+          selected: true,
+          color: `${
+            colorMapConfig[props.item.key][index] !== 'initItemStyleColor'
+              ? colorMapConfig[props.item.key][index]
+              : getVisualThemeColor('initItemStyleColor')
+          }`,
+          percentValue: total > 0 ? `${((item.count / total) * 100).toFixed(2)}%` : '0.00%',
+        };
+      });
 
       const completeRate = total > 0 ? parseFloat((((finished + archived) / total) * 100).toFixed(2)) : 0;
 
@@ -177,16 +224,16 @@
           count: completeRate,
         },
         {
-          name: t('common.completed'),
-          count: finished,
+          name: t('common.notStarted'),
+          count: prepared,
         },
         {
           name: t('common.inProgress'),
           count: running,
         },
         {
-          name: t('common.notStarted'),
-          count: prepared,
+          name: t('common.completed'),
+          count: finished,
         },
         {
           name: t('common.archived'),
@@ -226,6 +273,24 @@
   function changeProject() {
     nextTick(() => {
       emit('change');
+    });
+  }
+
+  function goNavigation(
+    item: { label: string; value: number | string; status?: string; route?: string },
+    index: number,
+    isArchived = false
+  ) {
+    let status;
+    if (isArchived) {
+      status = index === 0 ? WorkNavValueEnum.TEST_PLAN_PASSED_ARCHIVED : WorkNavValueEnum.TEST_PLAN_NOT_PASS_ARCHIVED;
+    } else {
+      status = item.status;
+    }
+
+    openNewPage(item.route, {
+      pId: projectId.value,
+      home: status,
     });
   }
 
@@ -275,5 +340,10 @@
 <style scoped lang="less">
   :deep(.arco-tabs-tab) {
     padding: 0 !important;
+  }
+  .pass-rate-count-archived {
+    font-size: 20px;
+    gap: 8px;
+    @apply grid cursor-pointer grid-cols-2 font-medium;
   }
 </style>

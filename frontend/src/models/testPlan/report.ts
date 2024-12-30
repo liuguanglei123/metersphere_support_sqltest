@@ -7,19 +7,6 @@ export interface ReportBugItem {
   relationCaseCount: number;
 }
 
-export interface FeatureCaseItem {
-  id: string;
-  num: number;
-  name: string;
-  moduleName: string;
-  priority: string;
-  executeResult: string;
-  executeUserName: string;
-  bugCount: number;
-  reportId: string;
-  projectId: string;
-}
-
 export interface UpdateReportDetailParams {
   id: string;
   componentId: string;
@@ -38,4 +25,5 @@ export interface ApiOrScenarioCaseItem {
   bugCount: number;
   reportId: string;
   projectId: string;
+  requestTime?: number;
 }

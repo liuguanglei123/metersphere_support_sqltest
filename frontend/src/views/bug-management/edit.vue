@@ -729,18 +729,18 @@
           tmpObj[item.id] = '';
           // 多选类型需要过滤选项
         } else if (MULTIPLE_TYPE.includes(item.type)) {
+          if (!item.value) {
+            tmpObj[item.id] = [];
+            return;
+          }
           const multipleOptions = getOptionFromTemplate(
             currentCustomFields.value.find((filed: any) => item.id === filed.fieldId)
           );
           // 如果该值在选项中已经被删除掉
           const optionsIds = (multipleOptions || []).map((e: any) => e.value);
           if (item.type !== 'MULTIPLE_INPUT') {
-            if (item.value) {
-              const currentDefaultValue = optionsIds.filter((e: any) => JSON.parse(item.value).includes(e));
-              tmpObj[item.id] = currentDefaultValue;
-            } else {
-              tmpObj[item.id] = [];
-            }
+            const currentDefaultValue = optionsIds.filter((e: any) => JSON.parse(item.value).includes(e));
+            tmpObj[item.id] = currentDefaultValue;
           } else {
             tmpObj[item.id] = JSON.parse(item.value);
           }
@@ -775,6 +775,7 @@
       loading.value = true;
       const res = await getBugDetail(bugId.value as string);
       const { templateId, attachments } = res;
+
       if (templateId) {
         await setTemplateValue(res);
       }
@@ -856,26 +857,33 @@
     return data;
   }
 
+  const originTemId = ref<string>('');
   watch(
     () => innerTemplateId.value,
     (val) => {
       if (val) {
         form.value.templateId = val;
-        templateChange(val);
+        if (props.isCopyBug && originTemId.value === val) {
+          getDetailInfo();
+        } else {
+          templateChange(val);
+        }
       }
-    },
-    {
-      immediate: true,
     }
   );
 
   const { registerCatchSaveShortcut, removeCatchSaveShortcut } = useShortcutSave(() => {
     saveHandler();
   });
+
   onMounted(async () => {
     if (isEditOrCopy.value) {
       // 获取详情
       await getDetailInfo();
+      if (props.isCopyBug) {
+        originTemId.value = form.value.templateId;
+        innerTemplateId.value = form.value.templateId;
+      }
     }
     registerCatchSaveShortcut();
   });

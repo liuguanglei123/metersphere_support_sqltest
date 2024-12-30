@@ -366,33 +366,33 @@
 
     <select id="listUnRelatedCaseWithBug" resultMap="TestCaseProviderDTO">
         select
-        ac.id,
-        ac.num,
-        ac.name,
-        ac.priority,
-        ac.project_id,
-        ac.tags,
+        atc.id,
+        atc.num,
+        atc.name,
+        atc.priority,
+        atc.project_id,
+        atc.tags,
         pv.name as versionName,
-        ac.create_user,
+        atc.create_user,
         u.name as createUserName,
-        ac.create_time
-        from api_test_case ac
-        inner join api_definition ad on ac.api_definition_id = ad.id
-        left join project_version pv ON ac.version_id = pv.id
-        left join user u ON ac.create_user = u.id
-        where ac.deleted = #{deleted}
-        and ac.project_id = #{request.projectId}
-        and ac.id not in
+        atc.create_time
+        from api_test_case atc
+        inner join api_definition a on atc.api_definition_id = a.id
+        left join project_version pv ON atc.version_id = pv.id
+        left join user u ON atc.create_user = u.id
+        where atc.deleted = #{deleted}
+        and atc.project_id = #{request.projectId}
+        and atc.id not in
         (
             select brc.case_id from bug_relation_case brc where brc.bug_id = #{request.sourceId} and brc.case_type = #{request.sourceType}
         )
-        <include refid="queryByTestCaseProviderParam"/>
+        <include refid="queryWhereCondition"/>
         order by
         <if test="sort != null and sort != ''">
-            ac.${sort}
+            atc.${sort}
         </if>
         <if test="sort == null or sort == ''">
-            ac.create_time desc
+            atc.create_time desc
         </if>
     </select>
 
@@ -608,6 +608,12 @@
                             <property name="condition" value="condition"/>
                             <property name="tablePrefix" value="atc"/>
                         </include>
+                        <if test="condition.name == 'belongTestPlan' and condition.operator == 'EQUALS'">
+                            atc.id in (
+                            select test_plan_api_case.api_case_id from test_plan_api_case where
+                            test_plan_api_case.test_plan_id = #{condition.value}
+                            )
+                        </if>
                         <!-- 模块ID -->
                         <if test="condition.name == 'moduleId'">
                             <include refid="io.metersphere.system.mapper.BaseMapper.condition">
@@ -1040,9 +1046,36 @@
           AND api.project_id = #{0}
     </select>
     <select id="selectApiIdByCaseId" resultType="java.lang.String">
-        SELECT api_definition_id FROM api_test_case WHERE deleted is false AND id in
+        SELECT DISTINCT apiCase.api_definition_id FROM api_test_case apiCase
+        INNER JOIN api_definition api ON apiCase.api_definition_id = api.id
+
+        WHERE apiCase.deleted IS FALSE AND api.deleted IS FALSE AND apiCase.id in
         <foreach collection="ids" item="id" separator="," open="(" close=")">
             #{id}
+        </foreach>
+        <if test="protocols!= null and protocols.size > 0">
+            AND api.protocol IN
+            <foreach collection="protocols" item="protocol" open="(" separator="," close=")">
+                #{protocol}
+            </foreach>
+        </if>
+        <if test="ignoreApiIds!= null and ignoreApiIds.size > 0">
+            AND api.id NOT IN
+            <foreach collection="ignoreApiIds" item="ignoreApiId" open="(" separator="," close=")">
+                #{ignoreApiId}
+            </foreach>
+        </if>
+    </select>
+    <select id="selectApiIdByProjectAndProtocol" resultType="java.lang.String">
+        SELECT distinct api.id
+        FROM api_test_case apiCase
+        INNER JOIN api_definition api ON apiCase.api_definition_id = api.id
+        WHERE apiCase.deleted is FALSE
+        AND api.deleted is FALSE
+        AND api.project_id = #{projectId}
+        AND api.protocol IN
+        <foreach collection="protocols" item="protocol" separator="," open="(" close=")">
+            #{protocol}
         </foreach>
     </select>
 </mapper>

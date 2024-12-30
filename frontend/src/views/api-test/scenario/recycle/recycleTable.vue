@@ -159,7 +159,6 @@
         sortDirections: ['ascend', 'descend'],
         sorter: true,
       },
-      fixed: 'left',
       width: 126,
       showTooltip: true,
       showInTable: true,
@@ -250,6 +249,7 @@
       dataIndex: 'modulePath',
       width: 176,
       showDrag: true,
+      showTooltip: true,
     },
     {
       title: 'apiScenario.table.columns.createTime',
@@ -297,7 +297,6 @@
           projectId: appStore.currentProjectId,
         },
         remoteMethod: FilterRemoteMethodsEnum.PROJECT_PERMISSION_MEMBER,
-        placeholderText: t('caseManagement.featureCase.PleaseSelect'),
       },
     },
     {

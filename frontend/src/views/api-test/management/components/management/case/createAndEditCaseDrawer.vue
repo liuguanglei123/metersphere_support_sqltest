@@ -116,7 +116,9 @@
   import { localExecuteApiDebug } from '@/api/modules/api-test/common';
   import {
     addCase,
+    caseFileCopy,
     debugCase,
+    definitionFileCopy,
     getDefinitionDetail,
     getTransferOptionsCase,
     runCase,
@@ -134,6 +136,7 @@
   import { RequestCaseStatus, RequestMethods } from '@/enums/apiEnum';
 
   import { casePriorityOptions, defaultResponse } from '@/views/api-test/components/config';
+  import { parseRequestBodyFiles } from '@/views/api-test/components/utils';
 
   const props = defineProps<{
     apiDetail?: RequestParam | ApiDefinitionDetail;
@@ -219,6 +222,23 @@
     } else {
       await getApiDetail();
     }
+    if (!isCopy && !record) {
+      // 创建用例需要复制文件
+      let copyFilesMap: Record<string, any> = {};
+      const fileIds = parseRequestBodyFiles(apiDetailInfo.value.request.body, [], [], []).uploadFileIds;
+      if (fileIds.length > 0) {
+        try {
+          copyFilesMap = await definitionFileCopy({
+            resourceId: apiDetailInfo.value.id as string,
+            fileIds,
+          });
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.log(error);
+        }
+      }
+      parseRequestBodyFiles(apiDetailInfo.value.request.body, [], [], [], copyFilesMap); // 替换请求文件 id
+    }
     // 创建的时候，请求参数为接口定义的请求参数
     environmentId.value = appStore.currentEnvConfig?.id;
     detailForm.value = {
@@ -238,7 +258,26 @@
     };
     // 复制
     if (isCopy) {
-      detailForm.value = cloneDeep(record as RequestParam);
+      if (record?.protocol === 'HTTP') {
+        // 复制的用例需要复制文件
+        let copyFilesMap: Record<string, any> = {};
+        const fileIds = parseRequestBodyFiles(record.request.body, [], [], []).uploadFileIds;
+        if (fileIds.length > 0) {
+          try {
+            copyFilesMap = await caseFileCopy({
+              resourceId: record.id as string,
+              fileIds,
+            });
+          } catch (error) {
+            // eslint-disable-next-line no-console
+            console.log(error);
+          }
+        }
+        parseRequestBodyFiles(record.request.body, [], [], [], copyFilesMap); // 替换请求文件 id
+        detailForm.value = {
+          ...cloneDeep(record as RequestParam),
+        };
+      }
       detailForm.value.name = `copy_${record?.name}`;
       detailForm.value.isCopy = true;
       environmentId.value = record?.environmentId ?? environmentId.value;

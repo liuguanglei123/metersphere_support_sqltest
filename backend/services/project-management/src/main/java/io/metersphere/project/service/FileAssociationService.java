@@ -255,6 +255,15 @@ public class FileAssociationService {
         return this.deleteAndSaveLog(example, logRecord);
     }
 
+    public List<FileAssociation> selectBySourceIds(List<String> sourceIds) {
+        if (CollectionUtils.isEmpty(sourceIds)) {
+            return List.of();
+        }
+        FileAssociationExample example = new FileAssociationExample();
+        example.createCriteria().andSourceIdIn(sourceIds);
+        return fileAssociationMapper.selectByExample(example);
+    }
+
     /**
      * 取消关联
      *
@@ -287,6 +296,9 @@ public class FileAssociationService {
         Map<String,String> fileIdMap = new HashMap<>();
         for (FileAssociation fileAssociation:fileAssociationList){
             FileAssociationSource source  = extFileAssociationMapper.selectNameBySourceTableAndId(FileAssociationSourceUtil.getQuerySql(fileAssociation.getSourceType()),fileAssociation.getSourceId());
+            if (source == null) {
+                continue;
+            }
             this.validateSourceName(source);
             String fileName = null;
             if(fileIdMap.containsKey(fileAssociation.getFileId())){

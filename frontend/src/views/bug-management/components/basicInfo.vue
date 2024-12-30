@@ -17,7 +17,7 @@
             class="w-full"
             :option="options"
             :disabled="!hasAnyPermission(['PROJECT_BUG:READ+UPDATE']) || props.currentPlatform !== detailInfo.platform"
-            @change="handelFormCreateChange"
+            @change="handleFormCreateChange"
           />
           <!-- 自定义字段结束 -->
           <div v-if="!props.isPlatformDefaultTemplate" class="baseItem">
@@ -173,7 +173,7 @@
     }
   }
 
-  const handelFormCreateChange = debounce(() => {
+  const handleFormCreateChange = debounce(() => {
     saveHandler();
   }, 300);
 

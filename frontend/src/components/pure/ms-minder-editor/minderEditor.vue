@@ -21,7 +21,12 @@
     </div>
     <div class="ms-minder-editor-extra" :class="[extraVisible ? 'ms-minder-editor-extra--visible' : '']">
       <div v-if="props.extractContentTabList?.length" class="pl-[16px] pt-[16px]">
-        <MsTab v-model:activeKey="activeExtraKey" :content-tab-list="props.extractContentTabList" mode="button" />
+        <MsTab
+          v-model:activeKey="activeExtraKey"
+          :content-tab-list="props.extractContentTabList"
+          mode="button"
+          :disabled="props.disabledExtraTab"
+        />
       </div>
       <div class="ms-minder-editor-extra-content">
         <slot name="extractTabContent"></slot>
@@ -234,9 +239,10 @@
   .ms-minder-editor-container {
     @apply relative flex h-full w-full;
     .ms-minder-editor-extra {
-      @apply flex flex-col overflow-hidden  bg-white;
+      @apply flex flex-col overflow-hidden;
 
       width: 0;
+      background-color: var(--color-text-fff);
       transition: all 300ms ease-in-out;
       :deep(.ms-tab--button-item) {
         flex: 1;

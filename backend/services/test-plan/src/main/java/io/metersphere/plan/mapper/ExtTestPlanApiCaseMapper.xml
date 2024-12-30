@@ -88,7 +88,7 @@
         a.project_id, a.module_id, a.latest, a.version_id, a.ref_id, a.description,
         a.create_time, a.create_user, a.update_time, a.update_user, a.delete_user, a.delete_time, a.deleted,
         project_version.name as version_name
-        from api_definition a left join project_version on project_version.id = a.version_id
+        from api_definition  a left join project_version on project_version.id = a.version_id
         where a.deleted = false
         <include refid="queryWhereApiDefinitionCondition"/>
         and exists (
@@ -116,7 +116,7 @@
         </if>
         <if test="request.keyword != null and request.keyword != ''">
             and (
-                a.name like concat('%', #{request.keyword},'%')
+            a.name like concat('%', #{request.keyword},'%')
                 or a.num like concat('%', #{request.keyword},'%')
                 or a.path like concat('%', #{request.keyword},'%')
                 or a.tags like concat('%', #{request.keyword},'%')
@@ -152,27 +152,27 @@
                 <if test="values != null and values.size() > 0">
                     <choose>
                         <when test="key=='status'">
-                            and api_definition.status in
+                            and a.status in
                             <include refid="io.metersphere.system.mapper.BaseMapper.filterInWrapper"/>
                         </when>
                         <when test="key=='method'">
-                            and api_definition.method in
+                            and a.method in
                             <include refid="io.metersphere.system.mapper.BaseMapper.filterInWrapper"/>
                         </when>
                         <when test="key=='createUser'">
-                            and api_definition.create_user in
+                            and a.create_user in
                             <include refid="io.metersphere.system.mapper.BaseMapper.filterInWrapper"/>
                         </when>
                         <when test="key=='versionId'">
-                            and api_definition.version_id in
+                            and a.version_id in
                             <include refid="io.metersphere.system.mapper.BaseMapper.filterInWrapper"/>
                         </when>
                         <when test="key=='deleteUser'">
-                            and api_definition.delete_user in
+                            and a.delete_user in
                             <include refid="io.metersphere.system.mapper.BaseMapper.filterInWrapper"/>
                         </when>
                         <when test="key.startsWith('custom_single')">
-                            and api_definition.id in (
+                            and a.id in (
                             select api_id from api_definition_custom_field where concat('custom_single_', field_id) =
                             #{key}
                             and trim(both '"' from `value`) in
@@ -180,7 +180,7 @@
                             )
                         </when>
                         <when test="key.startsWith('custom_multiple')">
-                            and api_definition.id in (
+                            and a.id in (
                             select api_id from api_definition_custom_field where concat('custom_multiple_', field_id) =
                             #{key}
                             and JSON_CONTAINS(`value`, json_array(#{value}))
@@ -411,6 +411,15 @@
                                 <property name="column" value="a.protocol"/>
                             </include>
                         </if>
+                        <if test="condition.name == 'belongTestPlan' and condition.operator == 'EQUALS'">
+                            a.id in (
+                            select api.id from api_definition api inner join api_test_case apiCase ON api.id =
+                            apiCase.api_definition_id
+                            WHERE api.deleted IS FALSE and apiCase.deleted IS FALSE and apiCase.id in (
+                            select api_case_id from test_plan_api_case where test_plan_id = #{condition.value}
+                            )
+                            )
+                        </if>
                         <if test="condition.name == 'status'">
                             <include refid="io.metersphere.system.mapper.BaseMapper.condition">
                                 <property name="condition" value="condition"/>
@@ -505,6 +514,11 @@
                             <property name="condition" value="condition"/>
                             <property name="tablePrefix" value="atc"/>
                         </include>
+                        <if test="condition.name == 'belongTestPlan' and condition.operator == 'EQUALS'">
+                            atc.id in (
+                            select api_case_id from test_plan_api_case where test_plan_id = #{condition.value}
+                            )
+                        </if>
                         <!-- 所属模块(项目ID_模块ID 组合查询) -->
                         <if test="condition.name == 'moduleId'">
                             <choose>
@@ -832,7 +846,7 @@
     </select>
 
     <select id="getPlanApiCaseByIds" resultType="io.metersphere.plan.domain.TestPlanApiCase">
-        select tpac.test_plan_id testPlanId, tpac.api_case_id apiCaseId, tpac.last_exec_result lastExecResult
+        select tpac.test_plan_id testPlanId, tpac.api_case_id apiCaseId, tpac.last_exec_result lastExecResult, tpac.execute_user executeUser
         from test_plan_api_case tpac join api_test_case atc on atc.id = tpac.api_case_id
         <where>
             atc.deleted = false
@@ -899,17 +913,19 @@
         END AS execResult,
         test_plan.group_id AS testPlanGroupId
         from test_plan_api_case resource
+        INNER JOIN api_test_case apiCase ON resource.api_case_id = apiCase.id
         INNER JOIN test_plan ON test_plan.id = resource.test_plan_id
-        where test_plan.id IN
+        where resource.test_plan_id IN
         <foreach collection="testPlanIds" item="testPlanId" separator="," open="(" close=")">
             #{testPlanId}
         </foreach>
-        AND test_plan.status != 'ARCHIVED'
+        AND apiCase.deleted IS FALSE
     </select>
 
     <select id="selectLastExecResultByTestPlanIds"
             resultType="io.metersphere.plan.dto.TestPlanResourceExecResultDTO">
         select resource.test_plan_id AS testPlanId,
+        test_plan.group_id AS testPlanGroupId,
         CASE
         WHEN resource.last_exec_result is null
         THEN 'PENDING'
@@ -920,10 +936,13 @@
         ELSE resource.last_exec_result
         END AS execResult
         from test_plan_api_case resource
+        INNER JOIN api_test_case apiCase ON resource.api_case_id = apiCase.id
+        INNER JOIN test_plan ON test_plan.id = resource.test_plan_id
         where resource.test_plan_id IN
         <foreach collection="testPlanIds" item="testPlanId" separator="," open="(" close=")">
             #{testPlanId}
         </foreach>
+        AND apiCase.deleted IS FALSE
     </select>
     <select id="getBatchRunInfoByIds" resultType="io.metersphere.plan.dto.TestPlanApiCaseBatchRunDTO">
         SELECT t.id as id, t.test_plan_collection_id as test_plan_collection_id, atc.name as name, atc.id as caseId
@@ -944,5 +963,17 @@
                 #{planId}
             </foreach>
         </where>
+    </select>
+    <select id="selectLastExecResultByProjectId"
+            resultType="io.metersphere.plan.dto.TestPlanResourceExecResultDTO">
+        select resource.test_plan_id     AS testPlanId,
+               resource.last_exec_result AS execResult,
+               test_plan.group_id        AS testPlanGroupId
+        from test_plan_api_case resource
+                 INNER JOIN test_plan ON test_plan.id = resource.test_plan_id
+                 INNER JOIN api_test_case ON resource.api_case_id = api_test_case.id
+        where test_plan.project_id = #{projectId}
+          AND api_test_case.deleted is false
+          AND test_plan.status != 'ARCHIVED'
     </select>
 </mapper>

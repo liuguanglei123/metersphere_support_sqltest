@@ -1010,8 +1010,11 @@
           processor.extractParams || [],
           defaultKeyValueParamItem
         ).validParams;
-      } else if (processor.processorType === RequestConditionProcessor.EXTRACT) {
-        processor.extractors = filterKeyValParams(processor.extractors || [], defaultExtractParamItem).validParams;
+      } else if (processor.processorType === RequestConditionProcessor.EXTRACT && processor.extractors) {
+        processor.extractors = filterKeyValParams(
+          processor.extractors,
+          processor.extractors[processor.extractors.length - 1]
+        ).validParams;
       }
       return processor;
     });
@@ -1787,19 +1790,21 @@
     .ms-scroll-bar();
   }
   .sticky-content {
-    @apply sticky bg-white;
+    @apply sticky;
 
     z-index: 101; // .arco-scrollbar-track是100
+    background-color: var(--color-text-fff);
   }
   .request-content-and-response {
     display: flex;
     &.vertical {
       flex-direction: column;
       .response :deep(.response-head) {
-        @apply sticky bg-white;
+        @apply sticky;
 
         top: 46px; // 请求参数tab高度(不算border-bottom)
         z-index: 11;
+        background-color: var(--color-text-fff);
       }
       .request-tab-pane {
         min-height: 400px;

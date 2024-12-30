@@ -34,15 +34,18 @@
         </a-form-item>
       </a-form>
     </div>
-    <div v-if="hasEditPermission" class="flex items-center gap-[12px] bg-white py-[16px]">
-      <a-button
-        v-permission="['FUNCTIONAL_CASE:READ+UPDATE']"
-        type="primary"
-        :loading="saveLoading"
-        @click="handleSave"
-      >
-        {{ t('common.save') }}
-      </a-button>
+    <div v-if="hasEditPermission" class="flex items-center gap-[12px] bg-[var(--color-text-fff)] py-[16px]">
+      <a-tooltip :content="t('ms.minders.moduleNewTip')" :disabled="!props.activeCase.moduleIsNew">
+        <a-button
+          v-permission="['FUNCTIONAL_CASE:READ+UPDATE']"
+          type="primary"
+          :loading="saveLoading"
+          :disabled="props.activeCase.moduleIsNew"
+          @click="handleSave"
+        >
+          {{ t('common.save') }}
+        </a-button>
+      </a-tooltip>
       <a-button type="secondary" :disabled="saveLoading" @click="handleCancel">{{ t('common.cancel') }}</a-button>
     </div>
   </div>

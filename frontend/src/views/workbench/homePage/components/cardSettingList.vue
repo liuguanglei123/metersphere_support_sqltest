@@ -4,8 +4,6 @@
       v-model:model-value="searchKeyword"
       :placeholder="t('workbench.homePage.searchCard')"
       allow-clear
-      @search="searchList"
-      @press-enter="searchList"
       @clear="resetSearch"
     />
   </div>
@@ -22,7 +20,7 @@
         <a-menu-item v-for="ele of item.children" :key="ele.value" class="card-config-item" @click="addCard(ele)">
           <div class="card-config-menu-item">
             <div class="card-config-img">
-              <svg-icon width="98px" height="69px" :name="ele.img" />
+              <svg-icon width="98px" height="69px" :name="getImgType(ele)" />
             </div>
             <div class="card-config-text">
               <div>{{ t(ele.label) }}</div>
@@ -48,11 +46,13 @@
   import { ref } from 'vue';
 
   import { useI18n } from '@/hooks/useI18n';
+  import { useAppStore } from '@/store';
 
   import { childrenWorkConfigItem, WorkConfigCard } from '@/models/workbench/homePage';
   import { WorkCardEnum } from '@/enums/workbenchEnum';
 
   const { t } = useI18n();
+  const appStore = useAppStore();
   const defaultOpenKeys = ref(['overview', 'caseManagement', 'apiTest', 'testPlan', 'bugManagement']);
 
   const emit = defineEmits<{
@@ -75,19 +75,29 @@
           label: 'workbench.homePage.projectOverview',
           value: WorkCardEnum.PROJECT_VIEW,
           description: 'workbench.homePage.projectOverviewDesc',
-          img: 'project-overview-img',
+          brightImg: 'project-overview-img',
+          darkImg: 'project-overview-dark-img',
+        },
+        {
+          label: 'workbench.homePage.testPlanOverview',
+          value: WorkCardEnum.PROJECT_PLAN_VIEW,
+          description: 'workbench.homePage.testPlanOverviewDesc',
+          brightImg: 'test-plan-overview',
+          darkImg: 'test-plan-overview-dark',
         },
         {
           label: 'workbench.homePage.staffOverview',
           value: WorkCardEnum.PROJECT_MEMBER_VIEW,
           description: 'workbench.homePage.staffOverviewDesc',
-          img: 'staff-overview-img',
+          brightImg: 'staff-overview-img',
+          darkImg: 'staff-overview-dark-img',
         },
         {
           label: 'workbench.homePage.createdByMe',
           value: WorkCardEnum.CREATE_BY_ME,
           description: 'workbench.homePage.createdByMeDesc',
-          img: 'my-created-project-img',
+          brightImg: 'my-created-project-img',
+          darkImg: 'my-created-project-dark-img',
         },
       ],
     },
@@ -102,25 +112,29 @@
           label: 'workbench.homePage.useCasesNumber',
           value: WorkCardEnum.CASE_COUNT,
           description: 'workbench.homePage.useCasesNumberDesc',
-          img: 'link-case-img',
+          brightImg: 'link-case-img',
+          darkImg: 'link-case-dark-img',
         },
         {
           label: 'workbench.homePage.useCasesCount',
           value: WorkCardEnum.ASSOCIATE_CASE_COUNT,
           description: 'workbench.homePage.useCasesCountDesc',
-          img: 'case-count-img',
+          brightImg: 'case-count-img',
+          darkImg: 'case-count-dark-img',
         },
         {
           label: 'workbench.homePage.numberOfCaseReviews',
           value: WorkCardEnum.REVIEW_CASE_COUNT,
           description: 'workbench.homePage.numberOfCaseReviewsDesc',
-          img: 'case-review-img',
+          brightImg: 'case-review-img',
+          darkImg: 'case-review-dark-img',
         },
         {
           label: 'workbench.homePage.waitForReview',
           value: WorkCardEnum.REVIEWING_BY_ME,
           description: 'workbench.homePage.waitForReviewDesc',
-          img: 'wait-review-img',
+          brightImg: 'wait-review-img',
+          darkImg: 'wait-review-dark-img',
         },
       ],
     },
@@ -135,25 +149,29 @@
           label: 'workbench.homePage.apiCount',
           value: WorkCardEnum.API_COUNT,
           description: 'workbench.homePage.apiCountDesc',
-          img: 'api-count-img',
+          brightImg: 'api-count-img',
+          darkImg: 'api-count-dark-img',
         },
         {
           label: 'workbench.homePage.apiUseCasesNumber',
           value: WorkCardEnum.API_CASE_COUNT,
           description: 'workbench.homePage.apiUseCasesNumberDesc',
-          img: 'api-use-case-img',
+          brightImg: 'api-use-case-img',
+          darkImg: 'api-use-case-dark-img',
         },
         {
           label: 'workbench.homePage.scenarioUseCasesNumber',
           value: WorkCardEnum.SCENARIO_COUNT,
           description: 'workbench.homePage.scenarioUseCasesNumberDesc',
-          img: 'scenario-case-img',
+          brightImg: 'scenario-case-img',
+          darkImg: 'scenario-case-dark-img',
         },
         {
           label: 'workbench.homePage.interfaceChange',
           value: WorkCardEnum.API_CHANGE,
           description: 'workbench.homePage.interfaceChangeDesc',
-          img: 'api-change-img',
+          brightImg: 'api-change-img',
+          darkImg: 'api-change-dark-img',
         },
       ],
     },
@@ -168,13 +186,15 @@
           label: 'workbench.homePage.numberOfTestPlan',
           value: WorkCardEnum.TEST_PLAN_COUNT,
           description: 'workbench.homePage.numberOfTestPlanDesc',
-          img: 'test-plan-img',
+          brightImg: 'test-plan-img',
+          darkImg: 'test-plan-dark-img',
         },
         {
           label: 'workbench.homePage.remainingBugOfPlan',
           value: WorkCardEnum.PLAN_LEGACY_BUG,
           description: 'workbench.homePage.remainingBugOfPlanDesc',
-          img: 'test-plan-bug-img',
+          brightImg: 'test-plan-bug-img',
+          darkImg: 'test-plan-bug-dark-img',
         },
       ],
     },
@@ -189,25 +209,29 @@
           label: 'workbench.homePage.bugCount',
           value: WorkCardEnum.BUG_COUNT,
           description: 'workbench.homePage.bugCountDesc',
-          img: 'bug-count-img',
+          brightImg: 'bug-count-img',
+          darkImg: 'bug-count-dark-img',
         },
         {
           label: 'workbench.homePage.createdBugByMe',
           value: WorkCardEnum.CREATE_BUG_BY_ME,
           description: 'workbench.homePage.createdBugByMeDesc',
-          img: 'my-created-bug-img',
+          brightImg: 'my-created-bug-img',
+          darkImg: 'my-created-bug-dark-img',
         },
         {
           label: 'workbench.homePage.pendingDefect',
           value: WorkCardEnum.HANDLE_BUG_BY_ME,
           description: 'workbench.homePage.pendingDefectDesc',
-          img: 'wait-handle-bug-img',
+          brightImg: 'wait-handle-bug-img',
+          darkImg: 'wait-handle-bug-dark-img',
         },
         {
           label: 'workbench.homePage.defectProcessingNumber',
           value: WorkCardEnum.BUG_HANDLE_USER,
           description: 'workbench.homePage.defectProcessingNumberDesc',
-          img: 'bug-handler-img',
+          brightImg: 'bug-handler-img',
+          darkImg: 'bug-handler-dark-img',
         },
       ],
     },
@@ -226,9 +250,9 @@
     }));
   });
 
-  // 搜索
-  function searchList(keyword: string) {
-    searchKeyword.value = keyword;
+  function getImgType(ele: childrenWorkConfigItem) {
+    const key = appStore.isDarkTheme ? 'darkImg' : 'brightImg';
+    return ele[key];
   }
 
   // 重置
@@ -248,7 +272,7 @@
     .ms-scroll-bar();
     :deep(.card-config-item) {
       padding: 0;
-      background: white;
+      background: var(--color-text-fff);
     }
     .card-config-menu-item {
       padding: 8px 16px 8px 10px;
@@ -283,14 +307,14 @@
       padding: 0 !important;
       .arco-menu-inline-header {
         &:hover {
-          background: white !important;
+          background: var(--color-text-fff) !important;
         }
       }
       .arco-menu-selected {
         font-weight: normal !important;
         color: var(--color-text-1) !important;
         &:not(.arco-menu-inline-header) {
-          background-color: white !important;
+          background-color: var(--color-text-fff) !important;
         }
       }
     }

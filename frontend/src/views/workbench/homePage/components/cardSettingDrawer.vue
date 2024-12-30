@@ -127,6 +127,7 @@
     WorkCardEnum.PROJECT_VIEW,
     WorkCardEnum.PROJECT_MEMBER_VIEW,
     WorkCardEnum.CREATE_BY_ME,
+    WorkCardEnum.PROJECT_PLAN_VIEW,
   ];
 
   const defaultAllProjectType = [WorkCardEnum.PROJECT_VIEW, WorkCardEnum.CREATE_BY_ME];
@@ -144,7 +145,11 @@
       key: item.value,
       projectIds: defaultAllProjectType.includes(item.value) ? [] : [appStore.currentProjectId],
       handleUsers: [],
-      selectAll: !![WorkCardEnum.PROJECT_VIEW, WorkCardEnum.CREATE_BY_ME].includes(item.value),
+      selectAll: [WorkCardEnum.PROJECT_VIEW, WorkCardEnum.CREATE_BY_ME, WorkCardEnum.PROJECT_MEMBER_VIEW].includes(
+        item.value
+      ),
+      planId: '',
+      groupId: '',
     };
     selectedCardList.value.push(newCard);
   }
@@ -204,8 +209,8 @@
     .setting-wrapper-config {
       padding-left: 12px;
       width: 300px;
+      background-color: var(--color-text-fff);
       box-shadow: 0 0 10px rgba(120 56 135/ 5%);
-      @apply bg-white;
     }
     .setting-wrapper-content {
       padding: 16px;
@@ -218,8 +223,9 @@
   .card-item {
     padding: 16px;
     border-radius: 4px;
+    background-color: var(--color-text-fff);
     box-shadow: 0 0 10px rgba(120 56 135/ 5%);
-    @apply flex items-center justify-between bg-white;
+    @apply flex items-center justify-between;
     .card-item-text {
       @apply flex items-center gap-2;
     }

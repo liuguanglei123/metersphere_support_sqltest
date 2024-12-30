@@ -152,6 +152,11 @@ public class TestPlanApiCaseService extends TestPlanResourceService {
     }
 
     @Override
+    public List<TestPlanResourceExecResultDTO> selectLastExecResultByProjectId(String projectId) {
+        return extTestPlanApiCaseMapper.selectLastExecResultByProjectId(projectId);
+    }
+
+    @Override
     public void deleteBatchByTestPlanId(List<String> testPlanIdList) {
         TestPlanApiCaseExample example = new TestPlanApiCaseExample();
         example.createCriteria().andTestPlanIdIn(testPlanIdList);
@@ -796,7 +801,7 @@ public class TestPlanApiCaseService extends TestPlanResourceService {
             taskInfo.setRealTime(true);
         }
 
-        return apiExecuteService.execute(taskRequest);
+        return apiExecuteService.executePlanResource(taskRequest);
     }
 
     public void runRun(ExecTask execTask, ExecTaskItem execTaskItem, String userId) {

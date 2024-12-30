@@ -21,6 +21,7 @@ import io.metersphere.api.service.scenario.ApiScenarioService;
 import io.metersphere.project.service.FileModuleService;
 import io.metersphere.sdk.constants.PermissionConstants;
 import io.metersphere.sdk.dto.api.task.TaskRequestDTO;
+import io.metersphere.sdk.util.JSON;
 import io.metersphere.system.dto.OperationHistoryDTO;
 import io.metersphere.system.dto.request.OperationHistoryRequest;
 import io.metersphere.system.dto.sdk.BaseTreeNode;
@@ -46,6 +47,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping(value = "/api/scenario")
@@ -154,12 +156,28 @@ public class ApiScenarioController {
         return apiScenarioService.getApiScenarioDetailDTO(scenarioId, SessionUtils.getUserId());
     }
 
+    @PostMapping("/step/get/un-save")
+    @Operation(summary = "接口测试-接口场景管理-获取未保存的场景步骤详情")
+    @RequiresPermissions(value = {PermissionConstants.PROJECT_API_SCENARIO_UPDATE, PermissionConstants.PROJECT_API_SCENARIO_ADD},
+            logical = Logical.OR)
+    public Object getUnsavedStepDetail(@Validated @RequestBody ApiScenarioStepDetailRequest request) {
+        return JSON.parseObject(JSON.toJSONString(apiScenarioService.getUnsavedStepDetail(request)));
+    }
+
     @GetMapping("/step/get/{stepId}")
     @Operation(summary = "接口测试-接口场景管理-获取场景步骤详情")
     @RequiresPermissions(PermissionConstants.PROJECT_API_SCENARIO_READ)
     @CheckOwner(resourceId = "#stepId", resourceType = "api_scenario_step")
     public Object getStepDetail(@PathVariable String stepId) {
-        return apiScenarioService.getStepDetail(stepId);
+        return JSON.parseObject(JSON.toJSONString(apiScenarioService.getStepDetail(stepId)));
+    }
+
+    @PostMapping("/step/file/copy")
+    @Operation(summary = "接口测试-接口场景管理-复制步骤时，复制步骤文件")
+    @RequiresPermissions(value = {PermissionConstants.PROJECT_API_SCENARIO_UPDATE, PermissionConstants.PROJECT_API_SCENARIO_ADD},
+            logical = Logical.OR)
+    public Map<String, String> copyStepFile(@Validated @RequestBody ApiScenarioStepFileCopyRequest request) {
+        return apiScenarioService.copyStepFile(request);
     }
 
     @GetMapping("/step/resource-info/{resourceId}")

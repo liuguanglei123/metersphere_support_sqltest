@@ -175,9 +175,12 @@
         v-model:keyword-name="keywordName"
         :key-words="cascaderKeywords"
         show-type="CASE"
+        :case-id="props.caseId"
+        :case-name="props.caseName"
         :active-type="activeTab"
         :report-detail="detail || []"
         :get-report-step-detail="props.getReportStepDetail"
+        :is-filter-step="props.isFilterStep"
         :is-export="props.isExport"
       />
     </div>
@@ -199,6 +202,7 @@
   import { addCommasToNumber, formatDuration } from '@/utils';
 
   import type { LegendData, ReportDetail } from '@/models/apiTest/report';
+  import { ExecuteStatusEnum } from '@/enums/taskCenter';
 
   import { getIndicators } from '../utils';
 
@@ -207,6 +211,9 @@
     detailInfo?: ReportDetail;
     getReportStepDetail?: (...args: any) => Promise<any>; // 获取步骤的详情内容接口
     isExport?: boolean;
+    isFilterStep?: boolean; // 是否打开抽屉之前过滤用例步骤
+    caseName?: string; // 用例名称关键字
+    caseId?: string; // 用例id
   }>();
 
   const detail = ref<ReportDetail>({
@@ -222,7 +229,7 @@
     startTime: 0, // 开始时间/同创建时间一致
     endTime: 0, //  结束时间/报告执行完成
     requestDuration: 0, // 请求总耗时
-    status: '', // 报告状态/SUCCESS/ERROR
+    status: ExecuteStatusEnum.PENDING, // 报告状态/SUCCESS/ERROR
     triggerMode: '', // 触发方式
     runMode: '', // 执行模式
     poolId: '', // 资源池
@@ -250,7 +257,7 @@
   });
 
   const cascaderKeywords = ref<string>('');
-  const keywordName = ref<string>('');
+  const keywordName = ref<string>(props.caseName || '');
 
   const getTotalTime = computed(() => {
     if (detail.value) {
@@ -436,14 +443,17 @@
       padding: 0 16px;
       height: 54px;
       border-radius: 4px;
-      background: white;
-      @apply mb-4 bg-white;
+      background: var(--color-text-fff);
+      @apply mb-4;
+
+      background-color: var(--color-text-fff);
     }
     .analyze {
-      @apply mb-4  bg-white;
+      @apply mb-4;
 
       padding: 16px;
       border-radius: 4px;
+      background-color: var(--color-text-fff);
       .request-analyze {
         @apply flex h-full flex-1 flex-col;
         .chart-legend {
@@ -501,7 +511,7 @@
     .report-info {
       padding: 16px;
       border-radius: 4px;
-      @apply bg-white;
+      background-color: var(--color-text-fff);
     }
   }
   .block-title {

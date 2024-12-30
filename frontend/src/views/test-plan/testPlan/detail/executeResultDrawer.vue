@@ -3,7 +3,9 @@
     <template #title>
       <div class="flex flex-1 items-center gap-[8px] overflow-hidden">
         <a-tag :color="executeResultMap[detail.result]?.color">
-          {{ t(executeResultMap[detail.result]?.label || '-') }}
+          <div class="text-[var(--color-text-1)]">
+            {{ t(executeResultMap[detail.result]?.label || '-') }}
+          </div>
         </a-tag>
         <div class="one-line-text flex-1">{{ detail.taskName }}</div>
       </div>
@@ -23,7 +25,7 @@
             v-model:model-value="activePlan"
             :options="testPlanGroups"
             size="small"
-            @change="searchList"
+            @change="handlePlanChange"
           ></a-select>
           <executeRatePopper
             v-else-if="item.key === 'rate'"
@@ -47,7 +49,7 @@
       <div class="flex items-center justify-between">
         <MsTab
           v-model:active-key="activeTable"
-          :content-tab-list="contentTabList"
+          :content-tab-list="showContentTabList"
           :show-badge="false"
           class="testPlan-execute-tab no-content"
           @change="searchList"
@@ -159,6 +161,8 @@
   const testPlanGroups = ref<SelectOptionData[]>([]);
   const executeRateVisible = ref(false);
   const activePlan = ref('');
+  const activePlanCaseTotal = ref(0);
+  const activePlanScenarioTotal = ref(0);
 
   const columns: MsTableColumn = [
     {
@@ -214,6 +218,14 @@
     { value: 'case', label: t('report.detail.apiCaseDetails') },
     { value: 'scenario', label: t('report.detail.scenarioCaseDetails') },
   ];
+  const showContentTabList = computed(() =>
+    contentTabList.filter((item) => {
+      if (item.value === 'case') {
+        return activePlanCaseTotal.value > 0;
+      }
+      return activePlanScenarioTotal.value > 0;
+    })
+  );
   const keyword = ref('');
 
   const useApiTable = useTable(getApiPage, {
@@ -261,6 +273,20 @@
       reportId: activePlan.value || detail.value.reportId,
     });
     currentCaseTable.value.loadList();
+  }
+
+  function handlePlanChange(
+    value: string | number | boolean | Record<string, any> | (string | number | boolean | Record<string, any>)[]
+  ) {
+    const plan = testPlanGroups.value.find((item) => item.value === value);
+    if (plan) {
+      activePlanCaseTotal.value = plan.apiCaseTotal;
+      activePlanScenarioTotal.value = plan.apiScenarioTotal;
+      activeTable.value = activePlanCaseTotal.value > 0 ? 'case' : 'scenario';
+      nextTick(() => {
+        searchList();
+      });
+    }
   }
 
   // 去用例详情页面
@@ -322,9 +348,18 @@
         testPlanGroups.value = res.childPlans.map((item) => ({
           value: item.id,
           label: item.name,
+          apiCaseTotal: item.apiCaseTotal,
+          apiScenarioTotal: item.apiScenarioTotal,
         }));
         activePlan.value = res.childPlans[0]?.id;
+        activePlanCaseTotal.value = res.childPlans[0]?.apiCaseTotal;
+        activePlanScenarioTotal.value = res.childPlans[0]?.apiScenarioTotal;
+      } else {
+        testPlanGroups.value = [];
+        activePlanCaseTotal.value = res.apiCaseTotal;
+        activePlanScenarioTotal.value = res.apiScenarioTotal;
       }
+      activeTable.value = activePlanCaseTotal.value > 0 ? 'case' : 'scenario';
       searchList();
     } catch (error) {
       // eslint-disable-next-line no-console

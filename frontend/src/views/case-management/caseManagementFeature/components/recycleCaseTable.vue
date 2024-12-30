@@ -84,6 +84,11 @@
             <template #caseLevel="{ record }">
               <caseLevel :case-level="(getCaseLevels(record.customFields) as CaseLevel)" />
             </template>
+            <template #deleteUserName="{ record }">
+              <a-tooltip :content="`${record.deleteUserName}`" position="tl">
+                <div class="one-line-text">{{ record.deleteUserName }}</div>
+              </a-tooltip>
+            </template>
             <!-- 用例等级 -->
             <template #[FilterSlotNameEnum.CASE_MANAGEMENT_CASE_LEVEL]="{ filterContent }">
               <caseLevel :case-level="filterContent.text" />
@@ -265,7 +270,6 @@
       },
       'filter-icon-align-left': true,
       'showTooltip': true,
-      'ellipsis': true,
       'showDrag': false,
       'columnSelectorDisabled': true,
     },
@@ -280,7 +284,6 @@
         sortDirections: ['ascend', 'descend'],
         sorter: true,
       },
-      ellipsis: true,
       showDrag: false,
       columnSelectorDisabled: true,
     },
@@ -356,7 +359,6 @@
           projectId: appStore.currentProjectId,
         },
         remoteMethod: FilterRemoteMethodsEnum.PROJECT_PERMISSION_MEMBER,
-        placeholderText: t('caseManagement.featureCase.PleaseSelect'),
       },
       showInTable: true,
       showTooltip: true,
@@ -386,7 +388,6 @@
           projectId: appStore.currentProjectId,
         },
         remoteMethod: FilterRemoteMethodsEnum.PROJECT_PERMISSION_MEMBER,
-        placeholderText: t('caseManagement.featureCase.PleaseSelect'),
       },
       showInTable: true,
       width: 200,
@@ -406,17 +407,16 @@
     },
     {
       title: 'caseManagement.featureCase.tableColumnDeleteUser',
-      dataIndex: 'deleteUserName',
+      slotName: 'deleteUserName',
+      dataIndex: 'deleteUser',
       filterConfig: {
         mode: 'remote',
         loadOptionParams: {
           projectId: appStore.currentProjectId,
         },
         remoteMethod: FilterRemoteMethodsEnum.PROJECT_PERMISSION_MEMBER,
-        placeholderText: t('caseManagement.featureCase.PleaseSelect'),
       },
       showInTable: true,
-      showTooltip: true,
       width: 200,
       showDrag: true,
     },
@@ -912,7 +912,7 @@
     min-width: 1000px;
     height: calc(100vh - 126px);
     border-radius: var(--border-radius-large);
-    @apply bg-white;
+    background-color: var(--color-text-fff);
     .back {
       margin-right: 8px;
       width: 20px;

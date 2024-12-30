@@ -92,9 +92,12 @@ public class BugController {
     @RequiresPermissions(PermissionConstants.PROJECT_BUG_READ)
     @CheckOwner(resourceId = "#request.getProjectId()", resourceType = "project")
     public Pager<List<BugDTO>> page(@Validated @RequestBody BugPageRequest request) {
+        request.setUseTrash(false);
+        if (request.getBoardCount() || request.getRelatedToPlan() || request.getCreateByMe() || request.getAssignedToMe() || request.getUnresolved()) {
+            request.setTodoParam(bugService.buildBugToDoParam(request, SessionUtils.getUserId(), SessionUtils.getCurrentOrganizationId()));
+        }
         Page<Object> page = PageHelper.startPage(request.getCurrent(), request.getPageSize(),
                 StringUtils.isNotBlank(request.getSortString()) ? request.getSortString() : "pos desc");
-        request.setUseTrash(false);
         return PageUtils.setPageInfo(page, bugService.list(request));
     }
 

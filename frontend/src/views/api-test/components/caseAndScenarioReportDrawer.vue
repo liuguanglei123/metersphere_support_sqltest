@@ -44,9 +44,19 @@
       <CaseReportCom
         v-if="!props.isScenario"
         :detail-info="reportStepDetail"
+        :is-filter-step="props.isFilterStep"
+        :case-name="props.caseName"
+        :case-id="props.caseId"
         :get-report-step-detail="props.getReportStepDetail"
       />
-      <ScenarioCom v-else :detail-info="reportStepDetail" :get-report-step-detail="props.getReportStepDetail" />
+      <ScenarioCom
+        v-else
+        :detail-info="reportStepDetail"
+        :is-filter-step="props.isFilterStep"
+        :case-name="props.caseName"
+        :case-id="props.caseId"
+        :get-report-step-detail="props.getReportStepDetail"
+      />
     </a-spin>
   </MsDrawer>
 </template>
@@ -69,6 +79,7 @@
 
   import type { ReportDetail } from '@/models/apiTest/report';
   import { FullPageEnum, RouteEnum } from '@/enums/routeEnum';
+  import { ExecuteStatusEnum } from '@/enums/taskCenter';
 
   const props = defineProps<{
     reportId: string;
@@ -76,6 +87,9 @@
     doNotShowShare?: boolean; // 不展示分享按钮
     reportDetail?: (...args: any) => Promise<any>; // 获取报告接口
     getReportStepDetail?: (...args: any) => Promise<any>; // 获取步骤的详情内容接口
+    caseName?: string; // 用例名称
+    caseId?: string; // 用例id
+    isFilterStep?: boolean;
   }>();
 
   const appStore = useAppStore();
@@ -101,7 +115,7 @@
     startTime: 0, // 开始时间/同创建时间一致
     endTime: 0, //  结束时间/报告执行完成
     requestDuration: 0, // 请求总耗时
-    status: '', // 报告状态/SUCCESS/ERROR
+    status: ExecuteStatusEnum.PENDING, // 报告状态/SUCCESS/ERROR
     triggerMode: '', // 触发方式
     runMode: '', // 执行模式
     poolId: '', // 资源池

@@ -75,6 +75,7 @@
 
   import type { ReportDetail } from '@/models/apiTest/report';
   import { FullPageEnum, RouteEnum } from '@/enums/routeEnum';
+  import { ExecuteStatusEnum } from '@/enums/taskCenter';
 
   const appStore = useAppStore();
   const { copy, isSupported } = useClipboard({ legacy: true });
@@ -120,7 +121,7 @@
     startTime: 0, // 开始时间/同创建时间一致
     endTime: 0, //  结束时间/报告执行完成
     requestDuration: 0, // 请求总耗时
-    status: '', // 报告状态/SUCCESS/ERROR
+    status: ExecuteStatusEnum.PENDING, // 报告状态/SUCCESS/ERROR
     triggerMode: '', // 触发方式
     runMode: '', // 执行模式
     poolId: '', // 资源池
@@ -210,13 +211,17 @@
       padding: 0 16px;
       height: 54px;
       border-radius: 4px;
-      background: white;
-      @apply mb-4 bg-white;
+      background: var(--color-text-fff);
+      @apply mb-4;
+
+      background-color: var(--color-text-fff);
     }
     .analyze {
       height: 196px;
       border-radius: 4px;
-      @apply mb-4 flex justify-between  bg-white;
+      @apply mb-4 flex justify-between;
+
+      background-color: var(--color-text-fff);
       .request-analyze {
         @apply flex h-full flex-1 flex-col p-4;
         .chart-legend {
@@ -266,7 +271,7 @@
     .report-info {
       padding: 16px;
       border-radius: 4px;
-      @apply bg-white;
+      background-color: var(--color-text-fff);
     }
   }
   .block-title {

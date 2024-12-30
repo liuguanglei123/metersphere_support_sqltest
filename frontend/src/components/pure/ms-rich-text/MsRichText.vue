@@ -211,7 +211,7 @@
         ExtensionText,
         ExtensionImage.configure({
           inline: true,
-          allowBase64: true,
+          allowBase64: false,
           HTMLAttributes: {
             loading: 'lazy',
           },
@@ -598,6 +598,7 @@
     @apply relative overflow-hidden;
     :deep(.halo-rich-text-editor .ProseMirror) {
       padding: 16px !important;
+      padding-top: 30px !important;
       min-height: 130px;
       > p:first-child {
         margin-top: 0;
@@ -609,6 +610,8 @@
         .ms-scroll-bar();
 
         justify-content: start !important;
+        border-color: var(--color-text-n8);
+        background-color: var(--color-text-fff);
       }
       > p:first-child {
         margin-top: 0;
@@ -629,23 +632,25 @@
       div:first-of-type {
         .ms-scroll-bar();
       }
+      & > div {
+        overflow: visible;
+        .bubble-menu button {
+          padding: 3px;
+        }
+      }
     }
   }
   :deep(.editor-content) {
     .ms-scroll-bar();
-    & + div[data-tippy-root] {
-      transform: translate(60%) !important;
-    }
-  }
-  [data-tippy-root] {
-    inset: auto !important;
+
+    background: var(--color-text-fff);
   }
   :deep(.tableWrapper) {
     .ms-scroll-bar();
     table {
       tr,
       th {
-        background: white !important;
+        background: var(--color-text-fff) !important;
       }
       tr {
         th,

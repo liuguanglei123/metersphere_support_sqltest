@@ -66,6 +66,7 @@ import {
   GetTestPlanDetailUrl,
   GetTestPlanExecutorOptionsUrl,
   GetTestPlanListUrl,
+  GetTestPlanListWithoutPageUrl,
   GetTestPlanModuleCountUrl,
   GetTestPlanModuleUrl,
   GetTestPlanUsersUrl,
@@ -134,8 +135,10 @@ import type {
   RunFeatureCaseParams,
   SortApiCaseParams,
   TestPlanBaseParams,
+  TestPlanCaseDetail,
   TestPlanDetail,
   TestPlanItem,
+  TestPlanWithoutPageItem,
   UseCountType,
 } from '@/models/testPlan/testPlan';
 
@@ -177,6 +180,11 @@ export function getPlanModulesCount(data: TableQueryParams) {
 // 获取计划列表
 export function getTestPlanList(data: TableQueryParams) {
   return MSR.post<CommonList<TestPlanItem>>({ url: GetTestPlanListUrl, data });
+}
+
+// 获取计划列表(无分页)
+export function getTestPlanListWithoutPage(projectId: string) {
+  return MSR.get<TestPlanWithoutPageItem[]>({ url: `${GetTestPlanListWithoutPageUrl}/${projectId}` });
 }
 
 // 创建测试计划
@@ -291,7 +299,7 @@ export function runFeatureCase(data: RunFeatureCaseParams) {
 }
 // 计划详情-功能用例-详情
 export function getCaseDetail(id: string) {
-  return MSR.get({ url: `${TestPlanCaseDetailUrl}/${id}` });
+  return MSR.get<TestPlanCaseDetail>({ url: `${TestPlanCaseDetailUrl}/${id}` });
 }
 // 测试计划-用例详情-缺陷列表
 export function associatedBugPage(data: TableQueryParams) {

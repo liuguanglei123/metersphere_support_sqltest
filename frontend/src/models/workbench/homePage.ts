@@ -12,6 +12,8 @@ export interface WorkConfigItem {
 
 export interface childrenWorkConfigItem extends WorkConfigItem {
   value: WorkCardEnum;
+  brightImg: string;
+  darkImg: string;
 }
 
 export interface WorkConfigCard extends WorkConfigItem {
@@ -28,6 +30,8 @@ export interface SelectedCardItem {
   projectIds: string[];
   handleUsers: string[];
   selectAll: boolean; // 是否全选项目
+  planId: string; // 测试计划id
+  groupId: string; // 测试计划组id
 }
 
 // 查询入参
@@ -56,6 +60,8 @@ export interface WorkTestPlanRageDetail {
   prepared: number;
   archived: number;
   errorCode: number;
+  passedArchived: number; // 已归档通过状态
+  notPassedArchived: number; // 已归档未通过状态
 }
 
 export interface TimeFormParams {
@@ -117,4 +123,13 @@ export interface ApiCoverageData {
   unCoverWithApiScenario: number; // 未覆盖 API 场景的数量
   coverWithApiScenario: number; // 覆盖了 API 场景的数量
   scenarioCoverage: string; // API 场景覆盖率
+}
+
+export interface StatusValueItem {
+  name: string;
+  value: number;
+  status?: string;
+  route?: string;
+  tab?: string; // api | case 列表
+  selected?: boolean;
 }

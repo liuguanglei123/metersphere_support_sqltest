@@ -68,9 +68,9 @@
           >
             <a-tooltip :mouse-enter-delay="300" :content="t(item.label)" position="top">
               <div class="flex items-center justify-between">
-                <div :class="`${getLabelClass(item)} custom-card-item-label one-line-text max-w-[calc(100%-14px)]`">{{
-                  t(item.label)
-                }}</div>
+                <div :class="`${getLabelClass(item)} custom-card-item-label one-line-text max-w-[calc(100%-14px)]`">
+                  {{ t(item.label) }}
+                </div>
                 <icon-close
                   v-if="item.type !== FieldTypeEnum.SYSTEM"
                   :style="{ 'font-size': '14px' }"
@@ -403,7 +403,9 @@
   .report-name {
     padding: 0 16px;
     height: 56px;
-    @apply flex items-center justify-between border-b bg-white;
+    border-color: var(--color-text-n8);
+    background-color: var(--color-text-fff);
+    @apply flex items-center justify-between border-b;
   }
   .block-title {
     @apply mb-4 font-medium;
@@ -416,7 +418,7 @@
       width: 300px;
       border-radius: 0 0 10px 10px;
       box-sizing: border-box;
-      @apply bg-white;
+      background-color: var(--color-text-fff);
       .custom-card-list {
         @apply grid grid-cols-2 gap-2;
         .custom-card-item {

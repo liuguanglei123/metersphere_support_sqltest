@@ -2,7 +2,7 @@ import type { MinderJsonNode, MinderJsonNodeData } from '@/components/pure/ms-mi
 import type { BatchActionQueryParams } from '@/components/pure/ms-table/type';
 import type { saveParams } from '@/components/business/ms-associate-case/types';
 
-import type { customFieldsItem } from '@/models/caseManagement/featureCase';
+import type { customFieldsItem, DetailCase } from '@/models/caseManagement/featureCase';
 import type { TableQueryParams } from '@/models/common';
 import { BatchApiParams, DragSortParams } from '@/models/common';
 import { CaseLinkEnum, LastExecuteResults } from '@/enums/caseEnum';
@@ -98,6 +98,20 @@ export interface TestPlanDetail extends AddTestPlanParams {
   bugCount?: number;
   apiCaseCount?: number;
   apiScenarioCount?: number;
+}
+// 计划列表（不分页）
+export interface TestPlanWithoutPageItem {
+  id: string;
+  num: number;
+  groupId: string;
+  projectId: string;
+  moduleId: string;
+  name: string;
+  status: planStatusType;
+  type: keyof typeof testPlanTypeEnum;
+  tags: string[] | { id: string; name: string }[];
+  createUser: string;
+  createTime: string;
 }
 
 // 计划分页
@@ -262,6 +276,7 @@ export interface PassRateCountDetail {
   };
   nextTriggerTime: number;
   status: planStatusType;
+  pass: boolean; // 是否通过
 }
 
 // 执行历史
@@ -460,7 +475,18 @@ export interface PlanExecuteResultExecuteCaseCount {
 export interface PlanExecuteResult extends TaskReportDetail {
   taskName: string;
   reportId: string;
-  childPlans: { id: string; name: string }[]; // 子计划
+  childPlans: { id: string; name: string; apiCaseTotal: number; apiScenarioTotal: number }[]; // 子计划
   createUser: string;
+  executeRate: string;
   executeCaseCount: PlanExecuteResultExecuteCaseCount;
+  apiCaseTotal: number;
+  apiScenarioTotal: number;
+}
+
+export interface TestPlanCaseDetail extends DetailCase {
+  createUserName: string;
+  createTime: number;
+  lastExecuteResult: string;
+  bugListCount: number;
+  customFields: Record<string, any>[];
 }

@@ -147,6 +147,16 @@
               </span>
             </a-tooltip>
           </template>
+          <template #createUserName="{ record }">
+            <a-tooltip :content="`${record.createUserName}`" position="tl">
+              <div class="one-line-text">{{ record.createUserName }}</div>
+            </a-tooltip>
+          </template>
+          <template #updateUserName="{ record }">
+            <a-tooltip :content="`${record.updateUserName}`" position="tl">
+              <div class="one-line-text">{{ record.updateUserName }}</div>
+            </a-tooltip>
+          </template>
           <!-- 渲染自定义字段开始TODO -->
           <template v-for="item in customFieldsColumns" :key="item.slotName" #[item.slotName]="{ record }">
             <a-tooltip
@@ -429,6 +439,7 @@
     updateCaseRequest,
   } from '@/api/modules/case-management/featureCase';
   import { getCaseRelatedInfo } from '@/api/modules/project-management/menuManagement';
+  import { NAV_NAVIGATION } from '@/config/workbench';
   import { useI18n } from '@/hooks/useI18n';
   import useModal from '@/hooks/useModal';
   import useWebsocket from '@/hooks/useWebsocket';
@@ -463,6 +474,7 @@
   import { CaseManagementRouteEnum, RouteEnum } from '@/enums/routeEnum';
   import { ColumnEditTypeEnum, TableKeyEnum } from '@/enums/tableEnum';
   import { FilterRemoteMethodsEnum, FilterSlotNameEnum } from '@/enums/tableFilterEnum';
+  import { WorkNavValueEnum } from '@/enums/workbenchEnum';
 
   import { executionResultMap, getCaseLevels, getTableFields, statusIconMap } from './utils';
   import { LabelValue } from '@arco-design/web-vue/es/tree-select/interface';
@@ -571,7 +583,6 @@
         sortDirections: ['ascend', 'descend'],
         sorter: true,
       },
-      'fixed': 'left',
       'width': 150,
       'showTooltip': true,
       'columnSelectorDisabled': true,
@@ -589,7 +600,6 @@
         sortDirections: ['ascend', 'descend'],
         sorter: true,
       },
-      ellipsis: true,
       showDrag: false,
       columnSelectorDisabled: true,
     },
@@ -675,15 +685,13 @@
     {
       title: 'caseManagement.featureCase.tableColumnUpdateUser',
       slotName: 'updateUserName',
-      showTooltip: true,
-      dataIndex: 'updateUserName',
+      dataIndex: 'updateUser',
       filterConfig: {
         mode: 'remote',
         loadOptionParams: {
           projectId: appStore.currentProjectId,
         },
         remoteMethod: FilterRemoteMethodsEnum.PROJECT_PERMISSION_MEMBER,
-        placeholderText: t('caseManagement.featureCase.PleaseSelect'),
       },
       showInTable: true,
       width: 200,
@@ -704,17 +712,15 @@
     {
       title: 'caseManagement.featureCase.tableColumnCreateUser',
       slotName: 'createUserName',
-      dataIndex: 'createUserName',
+      dataIndex: 'createUser',
       filterConfig: {
         mode: 'remote',
         loadOptionParams: {
           projectId: appStore.currentProjectId,
         },
         remoteMethod: FilterRemoteMethodsEnum.PROJECT_PERMISSION_MEMBER,
-        placeholderText: t('caseManagement.featureCase.PleaseSelect'),
       },
       showInTable: true,
-      showTooltip: true,
       width: 200,
       showDrag: true,
     },
@@ -1028,6 +1034,7 @@
       selectAll: batchParams.value.selectAll,
       selectIds: batchParams.value.selectedIds || [],
       keyword: keyword.value,
+      filter: propsRes.value.filter,
     };
   }
   // 获取父组件模块数量
@@ -1811,6 +1818,9 @@
   }
 
   async function mountedLoad() {
+    if (route.query.home) {
+      propsRes.value.filter = { ...NAV_NAVIGATION[route.query.home as WorkNavValueEnum] };
+    }
     await initFilter();
     await initData();
     getCaseExportData();

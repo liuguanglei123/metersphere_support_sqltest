@@ -61,7 +61,7 @@
       <div v-if="record.type === 'CASE_RELATED'" class="flex flex-row">
         <!-- 用例 关联需求 -->
         <div>{{ t('project.menu.row4') }}</div>
-        <div class="ml-[8px] cursor-pointer text-[rgb(var(--primary-7))]" @click="showRelatedCaseDrawer">
+        <div class="ml-[8px] cursor-pointer text-[rgb(var(--primary-5))]" @click="showRelatedCaseDrawer">
           {{ t('project.menu.CASE_RELATED') }}
         </div>
       </div>

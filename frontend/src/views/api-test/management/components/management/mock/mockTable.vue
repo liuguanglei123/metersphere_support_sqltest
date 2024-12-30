@@ -270,7 +270,6 @@
         sortDirections: ['ascend', 'descend'],
         sorter: true,
       },
-      fixed: 'left',
       width: 120,
     },
     {
@@ -496,7 +495,7 @@
     {
       title: 'common.status',
       dataIndex: 'enable',
-      type: FilterType.BOOLEAN,
+      type: FilterType.SELECT_EQUAL,
       selectProps: {
         options: [
           { label: t('system.config.email.close'), value: false },

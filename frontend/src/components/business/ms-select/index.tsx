@@ -44,6 +44,8 @@ export interface MsSearchSelectProps {
   optionLabelRender?: (item: SelectOptionData) => string; // 自定义 option 的 label 渲染，返回一个 html 字符串，默认使用 item.label
   optionTooltipContent?: (item: SelectOptionData) => string; // 自定义 option 的 tooltip 内容，返回一个字符串，默认使用 item.label
   remoteFilterFunc?: (options: SelectOptionData[]) => SelectOptionData[]; // 自定义过滤函数，会在远程请求返回数据后执行
+  optionTooltipPosition?: 'top' | 'tl' | 'tr' | 'bottom' | 'bl' | 'br' | 'left' | 'lt' | 'lb' | 'right' | 'rt' | 'rb'; // // label tooltip 的位置
+  fullTooltipPosition?: 'top' | 'tl' | 'tr' | 'bottom' | 'bl' | 'br' | 'left' | 'lt' | 'lb' | 'right' | 'rt' | 'rb'; // // 全选 tooltip 的位置
 }
 export interface RadioProps {
   options: SelectOptionData[];
@@ -283,7 +285,12 @@ export default defineComponent(
       const _slots: MsSearchSelectSlots = {
         default: () =>
           filterOptions.value.map((item) => (
-            <a-tooltip content={item.tooltipContent} mouse-enter-delay={500} position="bl">
+            <a-tooltip
+              content={item.tooltipContent}
+              mouse-enter-delay={500}
+              position={props.optionTooltipPosition || 'bl'}
+              arrow-class={props.optionTooltipPosition === 'tr' ? 'absolute right-[4px] !left-auto' : ''}
+            >
               <a-option
                 key={item[props.valueKey || 'value']}
                 value={props.objectValue ? item : item[props.valueKey || 'value']}
@@ -473,7 +480,7 @@ export default defineComponent(
         <a-tooltip
           content={selectFullTooltip.value}
           class={disabledTooltip.value ? 'opacity-0' : ''}
-          position="top"
+          position={props.fullTooltipPosition || 'top'}
           mouse-enter-delay={300}
           mini
         >
@@ -581,6 +588,8 @@ export default defineComponent(
       'shouldCalculateMaxTag',
       'disabled',
       'size',
+      'optionTooltipPosition',
+      'fullTooltipPosition',
     ],
     emits: [
       'update:modelValue',

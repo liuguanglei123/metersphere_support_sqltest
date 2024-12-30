@@ -449,7 +449,6 @@
       title: 'ID',
       dataIndex: 'num',
       width: 80,
-      ellipsis: true,
     },
     {
       title: 'case.caseName',
@@ -466,7 +465,6 @@
     {
       title: 'common.belongModule',
       dataIndex: 'moduleName',
-      ellipsis: true,
       width: 200,
     },
     {
@@ -1040,10 +1038,11 @@
     }
   }
   .report-header {
-    @apply mb-4 flex items-center bg-white;
+    @apply mb-4 flex items-center;
 
     padding: 16px;
     border-radius: var(--border-radius-large);
+    background-color: var(--color-text-fff);
     box-shadow: 0 0 10px rgb(120 56 135 / 5%);
   }
   .block-title {
@@ -1055,8 +1054,9 @@
       padding: 24px;
       height: 250px;
       border: 1px solid transparent;
+      background-color: var(--color-text-fff);
       box-shadow: 0 0 10px rgba(120 56 135/ 5%);
-      @apply rounded-xl bg-white;
+      @apply rounded-xl;
       .charts {
         @apply absolute text-center;
 
@@ -1100,7 +1100,7 @@
       left: 50%;
       transform: translateX(-50%);
       z-index: 9 !important;
-      background: white;
+      background: var(--color-text-fff);
       opacity: 0;
       @apply flex items-center justify-end;
       .actionList {
@@ -1121,8 +1121,9 @@
     display: flex;
     padding: 16px;
     border-radius: 12px;
+    background-color: var(--color-text-fff);
     box-shadow: 0 0 10px rgb(120 56 135 / 5%);
-    @apply flex-col bg-white;
+    @apply flex-col;
   }
   :deep(.arco-table-body) {
     max-height: 100% !important;

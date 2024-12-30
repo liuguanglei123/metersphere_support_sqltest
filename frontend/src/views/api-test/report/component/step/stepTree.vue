@@ -36,8 +36,8 @@
               >
                 {{ step.index }}
               </div>
-              <div class="step-node-content flex justify-between">
-                <div class="flex max-w-[calc(100%-566px)] flex-1 items-center">
+              <div class="step-node-content">
+                <div class="flex max-w-[calc(100%-580px)] flex-1 items-center">
                   <!-- 步骤展开折叠按钮 -->
                   <a-tooltip
                     v-if="step.children?.length > 0"
@@ -75,7 +75,7 @@
                     </div>
                   </a-tooltip>
                 </div>
-                <div class="flex">
+                <div class="flex flex-1 flex-nowrap justify-end">
                   <stepStatus :status="step.status || 'PENDING'" />
                   <!-- 脚本报错 -->
                   <a-popover position="left" content-class="response-popover-content">
@@ -98,7 +98,7 @@
                     </template>
                   </a-popover>
                   <div v-show="showStatus(step)" class="flex">
-                    <span class="statusCode mx-2">
+                    <span class="statusCode">
                       <div v-show="step.code" class="mr-2"> {{ t('report.detail.api.statusCode') }}</div>
                       <a-popover position="left" content-class="response-popover-content">
                         <div
@@ -371,23 +371,23 @@
       margin-top: 4px;
     }
     &:hover {
-      background-color: white !important;
+      background-color: var(--color-text-fff) !important;
       .arco-tree-node-title {
-        background-color: white !important;
+        background-color: var(--color-text-fff) !important;
       }
     }
     .arco-tree-node-title {
-      @apply !cursor-pointer bg-white;
+      @apply !cursor-pointer;
 
       padding: 8px 4px;
+      background-color: var(--color-text-fff);
       &:hover {
-        background-color: white !important;
+        background-color: var(--color-text-fff) !important;
       }
       .step-node-content {
-        width: calc(100% - 16px);
-        @apply flex w-full flex-1 items-center;
-
+        width: calc(100% - 20px);
         gap: 8px;
+        @apply flex items-center justify-between;
       }
       .step-name-container {
         @apply flex flex-1 items-center overflow-hidden;
@@ -461,7 +461,7 @@
     height: 16px;
     border-radius: 50%;
     background: var(--color-text-n8) !important;
-    @apply bg-white;
+    background-color: var(--color-text-fff);
   }
   :deep(.arco-table-expand-btn) {
     width: 16px;
@@ -472,7 +472,9 @@
   }
   .resContentWrapper {
     border-radius: 0 0 6px 6px;
-    @apply mb-4 bg-white p-4;
+    @apply mb-4 p-4;
+
+    background-color: var(--color-text-fff);
     .resContent {
       height: 38px;
       border-radius: 6px;

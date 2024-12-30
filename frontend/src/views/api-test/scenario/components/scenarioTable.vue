@@ -45,7 +45,7 @@
                 </span>
               </template>
               <a-tag
-                style="border-color: #00c261; color: #00c261; background-color: transparent"
+                style="border-color: rgb(var(--success-6)); color: rgb(var(--success-6)); background-color: transparent"
                 bordered
                 @click="openScheduleModal(record)"
                 >{{ t('apiScenario.schedule.abbreviation') }}
@@ -55,7 +55,7 @@
           <div v-if="record.scheduleConfig && !record.scheduleConfig.enable" class="float-right">
             <a-tooltip :content="t('apiScenario.schedule.table.tooltip.disable')" position="top">
               <a-tag
-                style="border-color: #d4d4d8; color: #323233; background-color: transparent"
+                style="border-color: var(--color-text-n8); color: var(--color-text-1); background-color: transparent"
                 bordered
                 @click="openScheduleModal(record)"
                 >{{ t('apiScenario.schedule.abbreviation') }}
@@ -110,7 +110,7 @@
       <template #requestPassRateColumn>
         <div class="flex items-center text-[var(--color-text-3)]">
           {{ t('apiScenario.table.columns.passRate') }}
-          <a-tooltip :content="t('case.passRateTip')" position="right">
+          <a-tooltip :content="t('apiScenario.executeRateTip')" position="right">
             <icon-question-circle
               class="ml-[4px] text-[var(--color-text-4)] hover:text-[rgb(var(--primary-5))]"
               size="16"
@@ -468,6 +468,9 @@
   <caseAndScenarioReportDrawer
     v-model:visible="showScenarioReportVisible"
     is-scenario
+    is-filter-step
+    :case-name="tableRecord?.name || ''"
+    :case-id="tableRecord?.id || ''"
     :report-id="tableRecord?.lastReportId || ''"
   />
   <!--  场景导出-->
@@ -523,6 +526,7 @@
     updateScenarioPro,
     updateScenarioStatus,
   } from '@/api/modules/api-test/scenario';
+  import { NAV_NAVIGATION } from '@/config/workbench';
   import { useI18n } from '@/hooks/useI18n';
   import useModal from '@/hooks/useModal';
   import useTableStore from '@/hooks/useTableStore';
@@ -543,6 +547,7 @@
   import { ReportEnum, ReportStatus } from '@/enums/reportEnum';
   import { TableKeyEnum } from '@/enums/tableEnum';
   import { FilterRemoteMethodsEnum, FilterSlotNameEnum } from '@/enums/tableFilterEnum';
+  import { WorkNavValueEnum } from '@/enums/workbenchEnum';
 
   import { casePriorityOptions } from '@/views/api-test/components/config';
   import { scenarioStatusOptions } from '@/views/api-test/scenario/components/config';
@@ -653,7 +658,6 @@
         sortDirections: ['ascend', 'descend'],
         sorter: true,
       },
-      fixed: 'left',
       width: operationWidth(160, 140),
       showTooltip: false,
       columnSelectorDisabled: true,
@@ -697,6 +701,7 @@
       filterConfig: {
         options: requestApiScenarioStatusOptions.value,
         filterSlotName: FilterSlotNameEnum.API_TEST_CASE_API_STATUS,
+        disabledTooltip: true,
       },
       showDrag: true,
       width: 140,
@@ -786,7 +791,6 @@
           projectId: appStore.currentProjectId,
         },
         remoteMethod: FilterRemoteMethodsEnum.PROJECT_PERMISSION_MEMBER,
-        placeholderText: t('caseManagement.featureCase.PleaseSelect'),
       },
     },
     {
@@ -801,7 +805,6 @@
           projectId: appStore.currentProjectId,
         },
         remoteMethod: FilterRemoteMethodsEnum.PROJECT_PERMISSION_MEMBER,
-        placeholderText: t('caseManagement.featureCase.PleaseSelect'),
       },
     },
     {
@@ -972,10 +975,12 @@
 
   async function loadScenarioList(refreshTreeCount?: boolean) {
     const moduleIds = await getModuleIds();
+
     const params = {
       keyword: keyword.value,
       projectId: appStore.currentProjectId,
       moduleIds,
+      filter: propsRes.value.filter,
     };
     setLoadListParams({ ...params, viewId: viewId.value, combineSearch: advanceFilter });
     await loadList();
@@ -1638,6 +1643,11 @@
     if (route.query.view) {
       setAdvanceFilter({ conditions: [], searchMode: 'AND' }, route.query.view as string);
       viewName.value = route.query.view as string;
+    }
+    if (route.query.home) {
+      propsRes.value.filter = {
+        ...NAV_NAVIGATION[route.query.home as WorkNavValueEnum],
+      };
     }
     if (!isActivated.value) {
       loadScenarioList();

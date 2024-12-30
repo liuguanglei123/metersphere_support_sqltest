@@ -1,5 +1,9 @@
 <template>
-  <div v-if="preheat" class="login-form" :style="props.isPreview ? 'height: inherit' : 'height: 100vh'">
+  <div
+    v-if="preheat && !props.isPreview"
+    class="login-form"
+    :style="props.isPreview ? 'height: inherit' : 'height: 100vh'"
+  >
     <a-spin :loading="preheat" :tip="t('login.form.loading')"> </a-spin>
   </div>
   <div v-else class="login-form" :style="props.isPreview ? 'height: inherit' : 'height: 100vh'">
@@ -93,7 +97,7 @@
           class="loginType"
           @click="switchLoginType('QR_CODE')"
         >
-          <svg-icon name="scan_code" width="18px" height="18px" class="text-[rgb(var(--primary-6))]"></svg-icon>
+          <MsIcon type="icon-icon_scan_outlined" class="text-[rgb(var(--primary-5))]" />
         </div>
         <div v-if="userInfo.authenticate !== 'LDAP' && isShowLDAP" class="loginType" @click="switchLoginType('LDAP')">
           <span class="type-text text-[10px]">LDAP</span>
@@ -122,6 +126,7 @@
   import { useStorage } from '@vueuse/core';
   import { Message, SelectOptionData } from '@arco-design/web-vue';
 
+  import MsIcon from '@/components/pure/ms-icon-font/index.vue';
   import TabQrCode from '@/views/login/components/tabQrCode.vue';
 
   import { getProjectInfo } from '@/api/modules/project-management/basicInfo';
@@ -365,14 +370,16 @@
   }
 
   onMounted(() => {
-    userStore.getAuthentication();
-    initPlatformInfo();
-    try {
-      isLogin().then((res) => {
-        preheat.value = res;
-      });
-    } catch (e) {
-      preheat.value = false;
+    if (!props.isPreview) {
+      userStore.getAuthentication();
+      initPlatformInfo();
+      try {
+        isLogin().then((res) => {
+          preheat.value = res;
+        });
+      } catch (e) {
+        preheat.value = false;
+      }
     }
   });
 </script>
@@ -385,10 +392,11 @@
       color: rgb(var(--primary-5));
     }
     .form {
-      @apply relative bg-white;
+      @apply relative;
 
       padding: 40px;
       border-radius: var(--border-radius-large);
+      background-color: var(--color-text-fff);
       box-shadow: 0 8px 10px 0 #3232330d, 0 16px 24px 0 #3232330d, 0 6px 30px 0 #3232330d;
       .login-form-item {
         margin-bottom: 28px;

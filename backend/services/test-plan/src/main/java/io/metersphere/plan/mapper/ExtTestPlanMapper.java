@@ -1,6 +1,8 @@
 package io.metersphere.plan.mapper;
 
 import io.metersphere.plan.domain.TestPlan;
+import io.metersphere.plan.domain.TestPlanConfig;
+import io.metersphere.plan.dto.TestPlanAndGroupInfoDTO;
 import io.metersphere.plan.dto.TestPlanExecuteHisDTO;
 import io.metersphere.plan.dto.TestPlanGroupCountDTO;
 import io.metersphere.plan.dto.TestPlanQueryConditions;
@@ -69,7 +71,7 @@ public interface ExtTestPlanMapper {
 
     List<String> selectRightfulIdsForExecute(@Param("ids") List<String> ids);
 
-    List<TestPlanExecuteHisDTO> listHis(@Param("request")TestPlanExecuteHisPageRequest request);
+    List<TestPlanExecuteHisDTO> listHis(@Param("request") TestPlanExecuteHisPageRequest request);
 
     List<String> selectGroupIdByKeyword(@Param("projectId") String projectId, @Param("keyword") String keyword);
 
@@ -88,13 +90,29 @@ public interface ExtTestPlanMapper {
 
     /**
      * 获取项目下的计划关联缺陷
-     * @param projectId 项目
-     * @param type 计划类型
-     * @param platform 缺陷平台集合
+     *
+     * @param projectId  项目
+     * @param type       计划类型
+     * @param platform   缺陷平台集合
      * @param statusList 缺陷状态
      * @return List<SelectOption>
      */
     List<SelectOption> getPlanBugList(@Param("projectId") String projectId, @Param("type") String type, @Param("platforms") List<String> platform, @Param("statusList") List<String> statusList);
 
     List<TestPlan> selectIdAndStatusByProjectIdAndCreateTimeRangeAndType(@Param("projectId") String projectId, @Param("startTime") Long startTime, @Param("endTime") Long endTime, @Param("type") String testPlanTypePlan);
+
+    /**
+     * @param projectId 项目
+     *                  获取项目下计划组和计划的名称
+     */
+    List<TestPlanAndGroupInfoDTO> getGroupAndPlanInfo(@Param("projectId") String projectId);
+
+    TestPlan getLatestPlan(@Param("projectId") String projectId);
+
+    TestPlan getLatestPlanByProjectIds(@Param("projectIds") Set<String> projectIds);
+
+
+    List<TestPlanConfig> selectTestPlanConfigByTestPlanIds(@Param("testPlanIds") List<String> testPlanIds);
+
+    List<TestPlan> selectIdAndGroupIdByProjectId(@Param("projectId") String projectId, @Param("selectArchived") boolean selectArchived);
 }

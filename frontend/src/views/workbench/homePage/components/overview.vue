@@ -6,7 +6,11 @@
         <a-tooltip :content="t(props.item.label)" position="tl">
           <div class="title one-line-text"> {{ t(props.item.label) }} </div>
         </a-tooltip>
-        <div>
+        <div class="flex items-center gap-[12px]">
+          <div class="text-[var(--color-text-n4)]">
+            {{ t('workbench.homePage.selected') }}
+            <span class="text-[rgb(var(--link-6))]">{{ innerProjectIds.length }}</span>
+          </div>
           <MsSelect
             v-model:model-value="innerProjectIds"
             :options="appStore.projectList"
@@ -18,6 +22,7 @@
             :prefix="t('workbench.homePage.project')"
             :multiple="true"
             :has-all-select="true"
+            full-tooltip-position="left"
             :default-all-select="props.item.selectAll"
             :at-least-one="true"
             @popup-visible-change="popupVisibleChange"
@@ -26,14 +31,14 @@
         </div>
       </div>
       <div class="my-[16px]">
-        <TabCard
+        <HeaderCard
           :content-tab-list="cardModuleList"
           :no-permission-text="hasPermission ? '' : 'workbench.homePage.notHasResPermission'"
         />
       </div>
       <!-- 概览图 -->
       <div>
-        <MsChart height="280px" :options="options" />
+        <MsChart ref="chartRef" height="280px" :options="options" />
       </div>
     </div>
   </div>
@@ -46,15 +51,15 @@
   import { ref } from 'vue';
 
   import MsChart from '@/components/pure/chart/index.vue';
+  import bindDataZoomEvent from '@/components/pure/chart/utils';
   import MsSelect from '@/components/business/ms-select';
   import CardSkeleton from './cardSkeleton.vue';
-  import TabCard from './tabCard.vue';
+  import HeaderCard from './headerCard.vue';
 
   import { workMyCreatedDetail, workProOverviewDetail } from '@/api/modules/workbench';
   import { contentTabList } from '@/config/workbench';
   import { useI18n } from '@/hooks/useI18n';
   import useAppStore from '@/store/modules/app';
-  import { characterLimit } from '@/utils';
 
   import type {
     ModuleCardItem,
@@ -64,7 +69,7 @@
   } from '@/models/workbench/homePage';
   import { WorkCardEnum } from '@/enums/workbenchEnum';
 
-  import { getColorScheme, getCommonBarOptions, getSeriesData, handleNoDataDisplay } from '../utils';
+  import { createCustomTooltip, getColorScheme, getSeriesData } from '../utils';
 
   const { t } = useI18n();
 
@@ -103,8 +108,6 @@
     }
   );
 
-  const hasRoom = computed(() => innerProjectIds.value.length >= 7 || props.item.projectIds.length === 0);
-
   const options = ref<Record<string, any>>({});
 
   const hasPermission = ref<boolean>(false);
@@ -123,19 +126,9 @@
       })
       .filter((e) => Object.keys(detail.caseCountMap).includes(e.value as string));
 
-    options.value = getCommonBarOptions(hasRoom.value, getColorScheme(detail.projectCountList.length));
-    const { invisible, text } = handleNoDataDisplay(detail.xaxis, hasPermission.value);
-    options.value.graphic.invisible = invisible;
-    options.value.graphic.style.text = text;
-    // x轴
-    options.value.xAxis.data = detail.xaxis.map((e) => characterLimit(e, 10));
-
-    const { maxAxis, data } = getSeriesData(detail.projectCountList);
-    options.value.series = data;
-    options.value.yAxis[0].max = maxAxis;
+    options.value = getSeriesData(contentTabList, detail, getColorScheme(detail.projectCountList.length));
   }
   const showSkeleton = ref(false);
-  const selectAll = computed(() => appStore.projectList.length === innerProjectIds.value.length);
 
   async function initOverViewDetail() {
     try {
@@ -169,18 +162,28 @@
       showSkeleton.value = false;
     }
   }
+  const chartRef = ref<InstanceType<typeof MsChart>>();
 
-  function handleProjectChange(shouldEmit = false) {
-    nextTick(() => {
-      innerSelectAll.value = selectAll.value;
-      initOverViewDetail();
-      if (shouldEmit) emit('change');
-    });
+  async function handleProjectChange(shouldEmit = false) {
+    await nextTick();
+    innerSelectAll.value = appStore.projectList.length === innerProjectIds.value.length;
+    await nextTick();
+    await initOverViewDetail();
+
+    const chartDom = chartRef.value?.chartRef;
+
+    if (chartDom && chartDom.chart) {
+      createCustomTooltip(chartDom);
+      bindDataZoomEvent(chartRef, options);
+    }
+    if (shouldEmit) emit('change');
   }
 
   function popupVisibleChange(val: boolean) {
     if (!val) {
-      handleProjectChange(true);
+      nextTick(() => {
+        handleProjectChange(true);
+      });
     }
   }
 
@@ -194,8 +197,23 @@
     }, 0);
   }
 
-  onMounted(() => {
-    initOverViewDetail();
+  onMounted(async () => {
+    await initOverViewDetail();
+    nextTick(() => {
+      const chartDom = chartRef.value?.chartRef;
+
+      if (chartDom && chartDom.chart) {
+        createCustomTooltip(chartDom);
+        bindDataZoomEvent(chartRef, options);
+      }
+    });
+  });
+
+  onBeforeUnmount(() => {
+    const unbindDataZoom = bindDataZoomEvent(chartRef, options);
+    if (unbindDataZoom) {
+      unbindDataZoom.clear();
+    }
   });
 
   watch(

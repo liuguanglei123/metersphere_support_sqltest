@@ -201,14 +201,12 @@
       slotName: 'num',
       width: 100,
       columnSelectorDisabled: true,
-      fixed: 'left',
     },
     {
       title: 'ms.taskCenter.taskName',
       dataIndex: 'taskName',
       showTooltip: true,
       width: 200,
-      fixed: 'left',
       showDrag: true,
     },
     {
@@ -677,6 +675,9 @@
 
   const shareTime = ref<string>('');
   async function getTime() {
+    if (!appStore.currentProjectId) {
+      return;
+    }
     try {
       const res = await getShareTime(appStore.currentProjectId);
       const match = res.match(/^(\d+)([MYHD])$/);
