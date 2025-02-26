@@ -24,6 +24,15 @@ import java.util.stream.Collectors;
 
 import static io.metersphere.sdk.constants.SessionConstants.ATTR_USER;
 
+/**
+ * 提供与用户会话相关的实用工具方法。
+ * 包含获取当前用户、会话ID、设置和清除当前组织和项目ID、踢除用户、检查权限等功能。
+ * 使用Shiro进行会话管理和权限校验，同时支持通过Redis会话存储库进行会话操作。
+ *
+ * @author [您的姓名]
+ * @version 1.0
+ * @since [版本号]
+ */
 public class SessionUtils {
 
     private static final ThreadLocal<String> projectId = new ThreadLocal<>();

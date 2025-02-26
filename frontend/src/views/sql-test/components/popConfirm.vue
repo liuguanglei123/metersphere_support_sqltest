@@ -64,7 +64,7 @@
 
   const props = defineProps<{
     mode: 'add' | 'rename' | 'tabRename';
-    nodeType?: 'MODULE' | 'API';
+    nodeType?: 'MODULE' | 'SQL';
     visible?: boolean;
     title?: string;
     allNames: string[];
@@ -140,7 +140,7 @@
             });
             Message.success(t('common.addSuccess'));
             emit('addFinish', form.value.field);
-          } else if (props.mode === 'rename' && props.nodeType === 'API' && props.updateApiNodeApi) {
+          } else if (props.mode === 'rename' && props.nodeType === 'SQL' && props.updateApiNodeApi) {
             // 接口节点重命名
             await props.updateApiNodeApi({
               id: props.nodeId || '',

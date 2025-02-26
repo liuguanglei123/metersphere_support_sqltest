@@ -34,6 +34,7 @@ async function bootstrap() {
   const localLocale = localStorage.getItem('MS-locale');
   if (!localLocale) {
     const defaultLocale = await getDefaultLocale();
+
     const { changeLocale } = useLocale();
     changeLocale(defaultLocale);
   }

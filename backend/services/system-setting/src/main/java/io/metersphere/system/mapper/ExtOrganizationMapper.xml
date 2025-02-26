@@ -80,7 +80,25 @@
     </select>
 
     <select id="listMemberByOrg" resultType="io.metersphere.system.dto.OrgUserExtend">
-        select temp.*, min(temp.memberTime) as groupTime
+        select
+            temp.id,
+            temp.name,
+            temp.email,
+            temp.password,
+            temp.enable,
+            temp.create_time,
+            temp.update_time,
+            temp.language,
+            temp.last_organization_id,
+            temp.phone,
+            temp.source,
+            temp.last_project_id,
+            temp.create_user,
+            temp.update_user,
+            temp.deleted,
+            temp.cft_token,
+            temp.role_id,
+            min(temp.memberTime) as groupTime
         from (
         select u.*, urr.role_id, urr.create_time as memberTime
         from user_role_relation urr
@@ -97,7 +115,7 @@
         </where>
         order by u.update_time desc
         ) temp
-        group by temp.id
+        group by temp.id,temp.role_id
         order by groupTime desc
     </select>
 

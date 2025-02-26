@@ -1,36 +1,43 @@
 <template>
-  <div v-show="props.requestResult?.responseResult.responseCode" class="h-full">
+<!--  <div v-show="props.requestResult?.responseResult.responseCode" class="h-full">-->
+  <div class="h-full">
     <div class="flex items-center" :class="$slots.tabRight ? 'border-b border-[var(--color-text-n8)]' : ''">
       <a-tabs v-model:active-key="activeTab" class="no-content flex-1">
-        <a-tab-pane v-for="item of responseCompositionTabList" :key="item.value" :title="item.label" />
+        <a-tab-pane v-for="item of sqlResponseCompositionTabList" :key="item.value" :title="item.label" />
       </a-tabs>
       <slot name="tabRight"></slot>
     </div>
     <div v-if="!props.loading" class="response-container">
-      <ResBody
-        v-if="activeTab === ResponseComposition.BODY"
+      <Table
+        v-if="activeTab === SqlResponseComposition.TABLE"
         ref="resBodyRef"
         :request-result="props.requestResult"
         @copy="copyScript"
       />
-      <ResConsole v-else-if="activeTab === ResponseComposition.CONSOLE" :console="props.console?.trim()" />
-      <ResValueScript
-        v-else-if="activeTab === ResponseComposition.HEADER || activeTab === ResponseComposition.REAL_REQUEST"
-        :active-tab="activeTab"
-        :request-result="props.requestResult"
-      />
+      <!--      :request-result="props.requestResult"-->
+
+      <!-- TODO: -->
+      <!--      <ResConsole v-else-if="activeTab === SqlResponseComposition.CONSOLE" :console="props.console?.trim()" />-->
+      <!--      <ResValueScript-->
+      <!--        v-else-if="activeTab === SqlResponseComposition.HEADER || activeTab === SqlResponseComposition.REAL_SQL"-->
+      <!--        :active-tab="activeTab"-->
+      <!--        :request-result="props.requestResult"-->
+      <!--      />-->
+      <!-- 提取变量，暂时不需要
       <ExtractTable
-        v-else-if="activeTab === ResponseComposition.EXTRACT"
+        v-else-if="activeTab === SqlResponseComposition.EXTRACT"
         :request-result="props.requestResult"
         :scroll="{ x: '100%' }"
-      />
+      /> -->
+      <!-- 数据校验，暂时不需要
       <ResAssertion
-        v-else-if="activeTab === ResponseComposition.ASSERTION"
+        v-else-if="activeTab === SqlResponseComposition.ASSERTION"
         :request-result="props.requestResult"
         :scroll="{ x: '100%' }"
-      />
+      /> -->
     </div>
   </div>
+  <!-- TODO:这里的默认状态暂时隐藏了，后面需要放开，目前还不知道v-show的条件怎么写，所以先注释掉
   <a-empty
     v-if="props.showEmpty"
     v-show="!props.requestResult?.responseResult.responseCode"
@@ -51,7 +58,7 @@
       </MsButton>
       <div>{{ t('apiTestManagement.getResponse') }}</div>
     </div>
-  </a-empty>
+  </a-empty> -->
 </template>
 
 <script setup lang="ts">
@@ -59,20 +66,19 @@
   import { Message } from '@arco-design/web-vue';
 
   import MsButton from '@/components/pure/ms-button/index.vue';
-  import ResAssertion from './result/assertionTable.vue';
   import ResBody from './result/body.vue';
   import ResConsole from './result/console.vue';
-  import ExtractTable from './result/extractTable.vue';
   import ResValueScript from './result/resValueScript.vue';
+  import Table from './result/table.vue';
 
   import { useI18n } from '@/hooks/useI18n';
 
-  import { RequestResult } from '@/models/apiTest/common';
-  import { ResponseComposition } from '@/enums/apiEnum';
+  import { IManageResultData } from '@/models/sqlTest/common';
+  import { SqlResponseComposition } from '@/enums/apiEnum';
 
   const props = withDefaults(
     defineProps<{
-      requestResult?: RequestResult;
+      requestResult?: IManageResultData[];
       console?: string;
       isPriorityLocalExec: boolean;
       requestUrl?: string;
@@ -90,44 +96,46 @@
   const { t } = useI18n();
 
   const noDataSvg = `${import.meta.env.BASE_URL}images/noResponse.svg`;
-  const responseCompositionTabList = [
+  const sqlResponseCompositionTabList = [
     {
-      label: t('apiTestDebug.responseBody'),
-      value: ResponseComposition.BODY,
+      label: t('sqlTestDebug.responseTable'),
+      value: SqlResponseComposition.TABLE,
     },
     {
-      label: t('apiTestDebug.responseHeader'),
-      value: ResponseComposition.HEADER,
+      label: t('sqlTestDebug.responseHeader'),
+      value: SqlResponseComposition.HEADER,
     },
     {
-      label: t('apiTestDebug.realRequest'),
-      value: ResponseComposition.REAL_REQUEST,
+      label: t('sqlTestDebug.realSql'),
+      value: SqlResponseComposition.REAL_SQL,
     },
     {
-      label: t('apiTestDebug.console'),
-      value: ResponseComposition.CONSOLE,
+      label: t('sqlTestDebug.console'),
+      value: SqlResponseComposition.CONSOLE,
     },
     ...(props.isDefinition
       ? [
           {
             label: t('apiTestDebug.extract'),
-            value: ResponseComposition.EXTRACT,
+            value: SqlResponseComposition.EXTRACT,
           },
           {
             label: t('apiTestDebug.assertion'),
-            value: ResponseComposition.ASSERTION,
+            value: SqlResponseComposition.ASSERTION,
           },
         ]
       : []),
   ];
 
-  const activeTab = defineModel<ResponseComposition>('activeTab', {
+  const activeTab = defineModel<SqlResponseComposition>('activeTab', {
     required: true,
-    default: ResponseComposition.BODY,
+    default: SqlResponseComposition.TABLE,
   });
 
   const { copy, isSupported } = useClipboard({ legacy: true });
+
   const resBodyRef = ref();
+
   function copyScript() {
     const encodingFormatValue = resBodyRef.value.responseEditorRef.getEncodingCode();
     if (isSupported) {

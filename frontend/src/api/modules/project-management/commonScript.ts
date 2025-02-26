@@ -12,7 +12,7 @@ import {
   GetFormApiImportModuleCountUrl,
   GetFormApiImportPageListUrl,
   GetFormApiImportUrl,
-  GetInsertCommonScriptPageUrl,
+  GetInsertCommonScriptPageUrl, SqlConnectionWebsocketUrl,
   TestScriptUrl,
   UpdateCommonScriptStatusUrl,
   UpdateCommonScriptUrl,
@@ -115,6 +115,10 @@ export const apiSocket = (url: string, host?: string) => {
 
 export function getSocket(reportId: string | number, socketUrl?: string, host?: string) {
   return apiSocket(`${socketUrl || ConnectionWebsocketUrl}/${reportId}`, host);
+}
+
+export function getSqlSocket(reportId: string | number, socketUrl?: string, host?: string) {
+  return apiSocket(`${socketUrl || SqlConnectionWebsocketUrl}/${reportId}`, host);
 }
 
 // 获取单个公共脚本详情

@@ -24,6 +24,9 @@ public class MinioRepository implements FileRepository {
     // 缓冲区大小
     private static final int BUFFER_SIZE = 8192;
     public static final String BUCKET = "metersphere";
+
+    public static final String JAR_BUCKET = "jar-packages";
+
     public static final String ENDPOINT = "endpoint";
     public static final String ACCESS_KEY = "accessKey";
     public static final String SECRET_KEY = "secretKey";
@@ -54,10 +57,20 @@ public class MinioRepository implements FileRepository {
                         .endpoint(minioConfig.get(ENDPOINT).toString())
                         .credentials(minioConfig.get(ACCESS_KEY).toString(), minioConfig.get(SECRET_KEY).toString())
                         .build();
+
+                // 创建metersphere bucket，用于ms原有的文件存储
                 boolean exist = client.bucketExists(BucketExistsArgs.builder().bucket(BUCKET).build());
                 if (!exist) {
                     client.makeBucket(MakeBucketArgs.builder().bucket(BUCKET).build());
                 }
+
+                // 创建jar-packages bucket，用于存储jar文件
+                exist = client.bucketExists(BucketExistsArgs.builder().bucket(JAR_BUCKET).build());
+                if (!exist) {
+                    client.makeBucket(MakeBucketArgs.builder().bucket(JAR_BUCKET).build());
+                }
+
+
             }
         } catch (Exception e) {
             LogUtils.error("MinIOClient初始化失败！", e);

@@ -18,6 +18,8 @@ public class MinioConfig {
 
     public static final String BUCKET = "metersphere";
 
+    public static final String JAR_BUCKET = "jar-packages";
+
     @Bean
     public MinioClient minioClient(MinioProperties minioProperties) throws Exception {
         // 创建 MinioClient 客户端
@@ -33,6 +35,11 @@ public class MinioConfig {
         boolean exist = minioClient.bucketExists(BucketExistsArgs.builder().bucket(BUCKET).build());
         if (!exist) {
             minioClient.makeBucket(MakeBucketArgs.builder().bucket(BUCKET).build());
+        }
+
+        exist = minioClient.bucketExists(BucketExistsArgs.builder().bucket(JAR_BUCKET).build());
+        if (!exist) {
+            minioClient.makeBucket(MakeBucketArgs.builder().bucket(JAR_BUCKET).build());
         }
         return minioClient;
     }

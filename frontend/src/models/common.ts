@@ -72,7 +72,7 @@ export interface AddModuleParams {
 export interface ModuleTreeNode extends TreeNodeData {
   id: string;
   name: string;
-  type: 'MODULE' | 'API';
+  type: 'MODULE' | 'API' | 'SQL';
   children: ModuleTreeNode[];
   attachInfo: {
     method?: keyof typeof RequestMethods;

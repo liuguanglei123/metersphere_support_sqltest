@@ -9,6 +9,12 @@ export enum RequestMethods {
   HEAD = 'HEAD',
   CONNECT = 'CONNECT',
 }
+
+// 接口请求方法
+export enum SQLRequestMethods {
+  SQL = 'SQL',
+}
+
 // 接口组成部分
 export enum RequestComposition {
   BASE_INFO = 'BASE_INFO',
@@ -50,6 +56,16 @@ export enum ResponseComposition {
   BODY = 'BODY',
   HEADER = 'HEADER',
   REAL_REQUEST = 'REAL_REQUEST', // 实际请求
+  CONSOLE = 'CONSOLE',
+  EXTRACT = 'EXTRACT',
+  ASSERTION = 'ASSERTION',
+  CODE = 'CODE',
+}
+// SQL响应组成部分
+export enum SqlResponseComposition {
+  TABLE = 'table',
+  HEADER = 'HEADER',
+  REAL_SQL = 'REAL_SQL', // 实际请求
   CONSOLE = 'CONSOLE',
   EXTRACT = 'EXTRACT',
   ASSERTION = 'ASSERTION',

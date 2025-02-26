@@ -1,0 +1,331 @@
+#!/bin/bash
+action=$1
+target=$2
+args=$@
+
+source ~/.msrc >/dev/null
+MS_BASE=${MS_BASE:-/opt}
+COMPOSE_FILES=$(cat ${MS_BASE}/metersphere/compose_files 2>/dev/null || echo "")
+source ${MS_BASE}/metersphere/install.conf
+export COMPOSE_HTTP_TIMEOUT=180
+
+function usage() {
+  echo "MeterSphere 控制脚本"
+  echo
+  echo "Usage: "
+  echo "  ./msctl.sh [COMMAND] [ARGS...]"
+  echo "  ./msctl.sh --help"
+  echo
+  echo "Commands: "
+  echo "  status    查看 MeterSphere 服务运行状态"
+  echo "  start     启动 MeterSphere 服务"
+  echo "  stop      停止 MeterSphere 服务"
+  echo "  restart   重启 MeterSphere 服务"
+  echo "  reload    重新加载 MeterSphere 服务"
+  echo "  upgrade   升级 MeterSphere 至最新版本"
+  echo "  upgrade [RELEASE]  根据版本号搜索离线包，升级 MeterSphere 至对应版本"
+  echo "  uninstall 卸载 MeterSphere 服务"
+  echo "  version   查看 MeterSphere 版本信息"
+}
+
+function generate_compose_files() {
+  compose_files="-f docker-compose-base.yml"
+  mkdir -p ${MS_BASE}/metersphere/logs/metersphere
+  mkdir -p ${MS_BASE}/metersphere/logs/result-hub
+  mkdir -p ${MS_BASE}/metersphere/logs/task-runner
+  case ${MS_INSTALL_MODE} in
+  allinone)
+    compose_files="${compose_files} -f docker-compose-metersphere.yml -f docker-compose-task-runner.yml -f docker-compose-result-hub.yml"
+    ;;
+  server)
+    compose_files="${compose_files} -f docker-compose-metersphere.yml"
+    ;;
+  task-runner)
+    compose_files="${compose_files} -f docker-compose-task-runner.yml"
+    ;;
+  middleware)
+    compose_files="${compose_files} -f docker-compose-result-hub.yml"
+    ;;
+  *)
+    log "... 不支持的安装模式，请从 [ allinone | server | task-runner | middleware ] 中进行选择"
+    ;;
+  esac
+  if [ "${MS_INSTALL_MODE}" != "task-runner" ] && [ "${MS_INSTALL_MODE}" != "server" ]; then
+    # 是否使用外部数据库
+    if [ "${MS_EXTERNAL_MYSQL}" = "false" ]; then
+      mkdir -p ${MS_BASE}/metersphere/data/mysql
+      chmod 655 ${MS_BASE}/metersphere/conf/my.cnf
+      compose_files="${compose_files} -f docker-compose-mysql.yml"
+      # 中间件去掉 depends_on
+      if [ "${MS_INSTALL_MODE}" = "middleware" ]; then
+        sed -i -e '/metersphere:/,+3d' ${MS_BASE}/metersphere/docker-compose-mysql.yml
+      fi
+    fi
+    # 是否使用外部 Kafka
+    if [ "${MS_EXTERNAL_KAFKA}" = "false" ]; then
+      compose_files="${compose_files} -f docker-compose-kafka.yml"
+      if [ "${MS_INSTALL_MODE}" = "middleware" ]; then
+        sed -i -e '/result-hub:/,+3d' ${MS_BASE}/metersphere/docker-compose-kafka.yml
+      fi
+    fi
+
+    # 是否使用外部 Redis
+    if [ "${MS_EXTERNAL_REDIS}" = "false" ]; then
+      mkdir -p ${MS_BASE}/metersphere/data/redis
+      compose_files="${compose_files} -f docker-compose-redis.yml"
+      if [ "${MS_INSTALL_MODE}" = "middleware" ]; then
+        sed -i -e '/metersphere:/,+3d' ${MS_BASE}/metersphere/docker-compose-redis.yml
+      fi
+    fi
+    # 是否使用外部 minio
+    if [ "${MS_EXTERNAL_MINIO}" = "false" ]; then
+      mkdir -p ${MS_BASE}/metersphere/data/minio
+      compose_files="${compose_files} -f docker-compose-minio.yml"
+    fi
+
+  fi
+  echo ${compose_files} >${MS_BASE}/metersphere/compose_files
+  chmod 777 -R ${MS_BASE}/metersphere/logs/metersphere
+  chmod 777 -R ${MS_BASE}/metersphere/logs/result-hub
+  chmod 777 -R ${MS_BASE}/metersphere/logs/task-runner
+  chmod +rw -R ${MS_BASE}/metersphere/conf
+  chmod +rw -R ${MS_BASE}/metersphere/*.yml
+  COMPOSE_FILES=$(cat ${MS_BASE}/metersphere/compose_files 2>/dev/null || echo "")
+}
+
+function download() {
+  git_urls=('github.com' 'hub.fastgit.org' 'ghproxy.com/https://github.com')
+
+  for git_url in ${git_urls[*]}; do
+    success="true"
+    for i in {1..3}; do
+      echo -ne "检测 ${git_url} ... ${i} "
+      curl -m 5 -kIs https://${git_url} >/dev/null
+      if [ $? != 0 ]; then
+        echo "failed"
+        success="false"
+        break
+      else
+        echo "ok"
+      fi
+    done
+    if [ ${success} == "true" ]; then
+      server_url=${git_url}
+      break
+    fi
+  done
+
+  if [ "x${server_url}" == "x" ]; then
+    echo "没有找到稳定的下载服务器，请稍候重试"
+    exit 1
+  fi
+  echo "使用下载服务器 ${server_url}"
+  cd /tmp
+  wget -nv -T 60 -t 1 --no-check-certificate https://${server_url}/metersphere/metersphere/releases/download/${MS_LATEST_VERSION}/metersphere-ce-online-installer-${MS_LATEST_VERSION}.tar.gz -O /tmp/metersphere-ce-online-installer-${MS_LATEST_VERSION}.tar.gz
+  if [ $? -ne 0 ]; then
+    echo -e "\e[31m升级失败:连接下载服务器超时！\n可手动下载升级包，然后执行\e[1;33m msctl upgrade ${MS_LATEST_VERSION} \e[0;31m离线升级\e[0m"
+    return 2
+  fi
+}
+
+function status() {
+  echo
+  cd ${MS_BASE}/metersphere
+  docker-compose ${COMPOSE_FILES} ps
+}
+function start() {
+  echo
+  cd ${MS_BASE}/metersphere
+  docker-compose ${COMPOSE_FILES} start ${target}
+}
+function stop() {
+  echo
+  cd ${MS_BASE}/metersphere
+  docker-compose ${COMPOSE_FILES} stop ${target}
+}
+function restart() {
+  echo
+  cd ${MS_BASE}/metersphere
+  docker-compose ${COMPOSE_FILES} stop ${target}
+  docker-compose ${COMPOSE_FILES} start ${target}
+}
+function reload() {
+  echo
+  cd ${MS_BASE}/metersphere
+  docker-compose ${COMPOSE_FILES} up -d --remove-orphans
+}
+function uninstall() {
+  echo
+  cd ${MS_BASE}/metersphere
+  docker-compose ${COMPOSE_FILES} down ${target}
+  #
+  rm -f ~/.msrc
+  rm -f /usr/local/bin/msctl
+}
+function version() {
+  echo
+  cat ${MS_BASE}/metersphere/version
+}
+function upgrade() {
+  curl -s https://api.github.com/repos/metersphere/metersphere/releases >/dev/null
+  if [ $? -ne 0 ]; then
+    echo -e "\e[31m获取最新版本信息失败,请检查服务器到GitHub的网络连接是否正常！\e[0m"
+    return 2
+  fi
+  export MS_VERSION=$(cat ${MS_BASE}/metersphere/version)
+  echo -e "\e[32m 检测当前版本为\e[1;33m${MS_VERSION} \e[0m"
+
+  latest_release=""
+  release_pattern=""
+
+  # 判断是否是 LTS 版本
+  current_version=$MS_VERSION
+  if [[ $current_version == v1.* || $current_version == v2.* ]]; then
+    release_pattern="v2\.[0-9]+\.[0-9]+-lts$"
+  elif [[ $current_version == v3.* ]]; then
+    if [[ $current_version == *-lts ]]; then
+      release_pattern="v3\.[0-9]+\.[0-9]+-lts$"
+    else
+      release_pattern="v3\.[0-9]+\.[0-9]+$"
+    fi
+  else
+    release_pattern="v[0-9]+\.[0-9]+\.[0-9]+$"
+  fi
+
+  get_releases() {
+    # 根据是否是 LTS 版本获取对应的最新版本号
+    page=$1
+    releases=$(curl -s "https://api.github.com/repos/metersphere/metersphere/releases?page=$page")
+    releases=$(echo "${releases}" | grep -o '"name": "[^"]*' | awk -F '[:"]' '{print $5}' | grep '^v')
+    for release in $releases; do
+      if [[ $release =~ $release_pattern ]]; then
+        echo "$release"
+        return 0
+      fi
+    done
+    return 1
+  }
+
+  page=1
+  while [[ $page -le 10 ]]; do
+    latest_release=$(get_releases $page)
+    if [[ -n $latest_release ]]; then
+      break
+    fi
+    ((page++))
+  done
+
+  # 记录最新版本号
+  echo "$latest_release" >/tmp/ms_latest_release
+
+  MS_LATEST_VERSION=$(cat /tmp/ms_latest_release)
+  if [ "${MS_LATEST_VERSION}" = "" ]; then
+    echo -e "未获取到最新版本"
+    exit 1
+  elif [ "${MS_LATEST_VERSION}" = "${MS_VERSION}" ]; then
+    echo -e "最新版本与当前版本一致,退出升级过程"
+    exit 0
+  else
+    echo -e "\e[32m 检测到GitHub上最新版本为\e[1;33m${MS_LATEST_VERSION}\e[0;32m 即将执行在线升级...\e[0m"
+  fi
+  sleep 5s
+
+  if [ -z "$target" ]; then
+    download
+  else
+    __current_version=${MS_VERSION%-*}
+    current_version=${__current_version:1}
+    current_version_arr=($(echo $current_version | tr '.' ' '))
+
+    __target_version=${target%-*}
+    target_version=${__target_version:1}
+    target_version_arr=($(echo $target_version | tr '.' ' '))
+
+    current_version=$(printf '1%02d%02d%02d' ${current_version_arr[0]} ${current_version_arr[1]} ${current_version_arr[2]})
+    target_version=$(printf '1%02d%02d%02d' ${target_version_arr[0]} ${target_version_arr[1]} ${target_version_arr[2]})
+
+    if [[ ${current_version} == ${target_version} ]]; then
+      echo -e "\e[31m当前版本与目标版本一致\e[0m"
+      return 2
+    fi
+
+    if [[ ${current_version} > ${target_version} ]]; then
+      echo -e "\e[31m不支持降级\e[0m"
+      return 2
+    fi
+
+    if [[ "${__current_version}" = "v1"* ]] || [[ "${__current_version}" = "v2"* ]]; then
+      if [[ "${__target_version}" = "v3"* ]]; then
+        echo -e "\e[31m不支持升级到此版本\e[0m"
+        return 2
+      fi
+    else
+      MS_LATEST_VERSION=${target}
+    fi
+    download
+  fi
+
+  if [ "${MS_ENTERPRISE_ENABLE}" = "true" ]; then
+    echo -e "\e[32m 企业版请通过离线包进行升级\e[0m"
+    return 3
+  fi
+
+  if [ ! -f "/tmp/metersphere-ce-online-installer-${MS_LATEST_VERSION}.tar.gz" ]; then
+    if [ ! -f "/tmp/metersphere-ce-offline-installer-${MS_LATEST_VERSION}.tar.gz" ]; then
+      echo -e "\e[31m未找到升级包\e[1;33m/tmp/metersphere-*-installer-${MS_LATEST_VERSION}.tar.gz\e[31m，请检查！\e[0m"
+      echo -e "参考下载地址：\e[4;7mwget -T60 -t1 --no-check-certificate https://github.com/metersphere/metersphere/releases/download/${MS_LATEST_VERSION}/metersphere-ce-online-installer-${MS_LATEST_VERSION}.tar.gz -O /tmp/metersphere-ce-online-installer-${MS_LATEST_VERSION}.tar.gz\e[0m"
+      return 2
+    fi
+  fi
+
+  cd /tmp
+  tar zxvf metersphere-ce-online-installer-${MS_LATEST_VERSION}.tar.gz
+  cd metersphere-ce-online-installer-${MS_LATEST_VERSION}
+  /bin/bash install.sh
+  rm -rf /tmp/metersphere-ce-online-installer-${MS_LATEST_VERSION}
+}
+
+function main() {
+  case "${action}" in
+  status)
+    status
+    ;;
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  restart)
+    restart
+    ;;
+  reload)
+    generate_compose_files
+    reload
+    ;;
+  upgrade)
+    upgrade
+    ;;
+  uninstall)
+    uninstall
+    ;;
+  version)
+    version
+    ;;
+  help)
+    usage
+    ;;
+  --help)
+    usage
+    ;;
+  generate_compose_files)
+    generate_compose_files
+    ;;
+  *)
+    echo
+    cd ${MS_BASE}/metersphere
+    docker-compose ${COMPOSE_FILES} $@
+    ;;
+  esac
+}
+main $@

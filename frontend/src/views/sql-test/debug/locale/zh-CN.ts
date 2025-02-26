@@ -202,4 +202,15 @@ export default {
   'apiTestDebug.first': '首次',
   'apiTestDebug.retry': '重试',
   'apiTestDebug.autoMakeJsonTip': '根据Schema高级设置中的规则生成 Json 数据',
+
+  'sqlTestDebug.newSQL': '新建SQL',
+  'sqlTestDebug.searchTip': '请输入模块/请求名称',
+  'sqlTestDebug.allRequest': '全部请求',
+  'sqlTestDebug.serverExec': '服务端执行',
+  'sqlTestDebug.responseTable': 'SQL执行结果',
+  'sqlTestDebug.responseHeader': 'SQL执行属性',
+  'sqlTestDebug.realSql': '原始SQL请求',
+  'sqlTestDebug.console': '控制台',
+  'common.text.executionResul': '结果',
+
 };

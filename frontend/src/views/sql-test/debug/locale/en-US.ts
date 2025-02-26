@@ -216,4 +216,6 @@ export default {
   'apiTestDebug.first': 'First',
   'apiTestDebug.retry': 'Retry',
   'apiTestDebug.autoMakeJsonTip': 'Generate Json data based on rules in Schema advanced settings',
+
+  // TODO：需要添加多语言文档，从中文的文案里提取新的文案就可以
 };

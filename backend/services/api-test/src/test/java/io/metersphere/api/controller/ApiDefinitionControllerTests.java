@@ -241,10 +241,10 @@ public class ApiDefinitionControllerTests extends BaseTest {
         // 创建测试数据
         ApiDefinitionAddRequest request = createApiDefinitionAddRequest();
         MsHTTPElement msHttpElement = MsHTTPElementTest.getMsHttpElement();
-        msHttpElement.setBody(ApiDebugControllerTests.addBodyLinkFile(msHttpElement.getBody(), fileMetadataId));
+        msHttpElement.setBody(SqlDebugControllerTests.addBodyLinkFile(msHttpElement.getBody(), fileMetadataId));
         request.setRequest(getMsElementParam(msHttpElement));
         List<HttpResponse> msHttpResponse = MsHTTPElementTest.getMsHttpResponse();
-        msHttpResponse.getFirst().setBody(ApiDebugControllerTests.addBodyLinkFile(msHttpResponse.getFirst().getBody(), fileMetadataId));
+        msHttpResponse.getFirst().setBody(SqlDebugControllerTests.addBodyLinkFile(msHttpResponse.getFirst().getBody(), fileMetadataId));
         request.setResponse(msHttpResponse);
 
         uploadFileId = doUploadTempFile(getMockMultipartFile("api-add-file_upload.JPG"));

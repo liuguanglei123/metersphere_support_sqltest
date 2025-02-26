@@ -30,7 +30,7 @@
               :class="['font-medium', activeResponseType === 'content' ? '' : '!text-[var(--color-text-n4)]', '!mr-0']"
               @click="() => setActiveResponse('content')"
             >
-              {{ t('apiTestDebug.responseContent') }}
+              {{ t('apiTestDebug.responseContent') }}1
             </MsButton>
             <a-divider direction="vertical" :margin="4"></a-divider>
             <MsButton
@@ -38,7 +38,7 @@
               :class="['font-medium', activeResponseType === 'result' ? '' : '!text-[var(--color-text-n4)]']"
               @click="() => setActiveResponse('result')"
             >
-              {{ t('apiTestManagement.executeResult') }}
+              {{ t('apiTestManagement.executeResult') }}2
             </MsButton>
           </div>
           <div v-else class="ml-[4px] mr-[24px] font-medium">{{ t('apiTestDebug.responseContent') }}</div>
@@ -49,37 +49,38 @@
             size="small"
             @change="(val) => emit('changeLayout', val as Direction)"
           >
-            <a-radio value="vertical">{{ t('apiTestDebug.vertical') }}</a-radio>
-            <a-radio value="horizontal">{{ t('apiTestDebug.horizontal') }}</a-radio>
+            <a-radio value="vertical">{{ t('apiTestDebug.vertical') }}上下</a-radio>
+            <a-radio value="horizontal">{{ t('apiTestDebug.horizontal') }}左右</a-radio>
           </a-radio-group>
         </div>
       </slot>
       <slot name="titleRight"></slot>
-      <responseCodeTimeSize :request-result="props.requestResult" />
+      <!--响应状态码及耗时展示，后期需调整-->
+<!--      <responseCodeTimeSize :request-result="props.requestResult" />-->
     </div>
     <a-spin
       v-show="innerIsExpanded"
       :loading="props.loading"
       :class="[isResponseModel ? 'h-[381px] w-full' : 'w-full flex-1 px-[16px] pb-[16px]']"
     >
+      <!-- TODO：这里的edit部分是定义接口或者具体用例时，定义具体的响应种类，比如一个接口可能会返回成功的json，也可能有失败的json
+      这部分内容是在接口定义--预览页面查看，在接口定义--定义页面编辑，对于sql来说这段应该是不需要的
       <edit
         v-if="props.isEdit && activeResponseType === 'content' && responseDefinition"
         v-model:response-definition="responseDefinition"
         :upload-temp-file-api="props.uploadTempFileApi"
         @change="handleResponseChange"
       />
+      -->
       <result
-        v-else-if="!props.isEdit || (props.isEdit && activeResponseType === 'result')"
+        v-if="!props.isEdit || (props.isEdit && activeResponseType === 'result')"
         v-model:active-tab="activeTab"
         :loading="props.loading"
         :request-result="props.requestResult"
         :console="props.console"
-        :is-http-protocol="props.isHttpProtocol"
-        :is-priority-local-exec="props.isPriorityLocalExec"
-        :request-url="props.requestUrl"
         :is-definition="props.isDefinition"
         :show-empty="props.showEmpty"
-        @execute="emit('execute', props.isPriorityLocalExec ? 'localExec' : 'serverExec')"
+        @execute="emit('execute', 'serverExec')"
       />
     </a-spin>
   </div>
@@ -95,6 +96,7 @@
   import { useI18n } from '@/hooks/useI18n';
 
   import { RequestResult } from '@/models/apiTest/common';
+  import {IManageResultData} from "@/models/sqlTest/common";
   import { ResponseBodyFormat, ResponseComposition } from '@/enums/apiEnum';
 
   const props = withDefaults(
@@ -103,7 +105,7 @@
       isPriorityLocalExec?: boolean;
       requestUrl?: string;
       isHttpProtocol?: boolean;
-      requestResult?: RequestResult;
+      requestResult?: IManageResultData[];
       console?: string;
       hideLayoutSwitch?: boolean; // 隐藏布局切换
       loading?: boolean;
@@ -221,9 +223,9 @@
   watch(
     () => props.requestResult,
     (requestResult) => {
-      if (requestResult?.responseResult?.responseCode) {
-        setActiveResponse('result');
-      }
+      // if (requestResult?.responseResult?.responseCode) {
+      //   setActiveResponse('result');
+      // }
     }
   );
 

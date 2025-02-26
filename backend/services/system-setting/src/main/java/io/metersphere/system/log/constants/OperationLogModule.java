@@ -185,4 +185,7 @@ public class OperationLogModule {
     public static final String SETTING_ORGANIZATION_TASK_CENTER = "SETTING_ORGANIZATION_TASK_CENTER";
     //项目任务中心：PROJECT_MANAGEMENT_TASK_CENTER
     public static final String PROJECT_MANAGEMENT_TASK_CENTER = "PROJECT_MANAGEMENT_TASK_CENTER";
+
+    //接口调试模块
+    public static final String SQL_TEST_DEBUG_MANAGEMENT_MODULE = "SQL_TEST_DEBUG_MANAGEMENT_MODULE";
 }

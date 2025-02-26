@@ -365,7 +365,7 @@ public class ApiTestCaseControllerTests extends BaseTest {
         request.setTags(new LinkedHashSet<>(List.of("tag1", "tag2")));
         request.setEnvironmentId(environments.getFirst().getId());
         MsHTTPElement msHttpElement = MsHTTPElementTest.getMsHttpElement();
-        msHttpElement.setBody(ApiDebugControllerTests.addBodyLinkFile(msHttpElement.getBody(), fileMetadataId));
+        msHttpElement.setBody(SqlDebugControllerTests.addBodyLinkFile(msHttpElement.getBody(), fileMetadataId));
         request.setRequest(getMsElementParam(msHttpElement));
 
         uploadFileId = doUploadTempFile(getMockMultipartFile());

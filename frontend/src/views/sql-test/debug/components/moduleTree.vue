@@ -1,15 +1,15 @@
 <template>
   <div class="flex h-full flex-col p-[12px_16px]">
     <div class="mb-[8px] flex items-center gap-[8px]">
-      <a-input v-model:model-value="moduleKeyword" :placeholder="t('apiTestDebug.searchTip')" allow-clear />
+      <a-input v-model:model-value="moduleKeyword" :placeholder="t('sqlTestDebug.searchTip')" allow-clear />
       <a-button v-permission="['PROJECT_API_DEBUG:READ+ADD']" type="primary" @click="emit('newApi')">
-        {{ t('apiTestDebug.newApi') }}
+        {{ t('sqlTestDebug.newSQL') }}
       </a-button>
     </div>
     <div class="folder">
       <div class="folder-text">
         <MsIcon type="icon-icon_folder_filled1" class="folder-icon" />
-        <div class="folder-name">{{ t('apiTestDebug.allRequest') }}</div>
+        <div class="folder-name">{{ t('sqlTestDebug.allRequest') }}</div>
         <div class="folder-count">({{ allFileCount }})</div>
       </div>
       <div class="ml-auto flex items-center">
@@ -23,7 +23,7 @@
           mode="add"
           :all-names="rootModulesName"
           parent-id="NONE"
-          :add-module-api="addDebugModule"
+          :add-module-api="sqladdDebugModule"
           @add-finish="handleAddFinish"
         >
           <MsButton type="icon" class="!mr-0 p-[2px]">
@@ -92,8 +92,8 @@
             :field-config="{ field: renameFolderTitle }"
             :all-names="(nodeData.parent? nodeData.parent.children || [] : folderTree).filter((e: ModuleTreeNode) => e.id !== nodeData.id).map((e: ModuleTreeNode) => e.name || '')"
             :node-type="nodeData.type"
-            :update-module-api="updateDebugModule"
-            :update-api-node-api="updateDebug"
+            :update-module-api="sqlupdateDebugModule"
+            :update-api-node-api="sqlupdateDebug"
             @close="resetFocusNodeKey"
             @rename-finish="handleRenameFinish"
           >
@@ -105,7 +105,7 @@
             mode="add"
             :all-names="(nodeData.children || []).map((e: ModuleTreeNode) => e.name || '')"
             :parent-id="nodeData.id"
-            :add-module-api="addDebugModule"
+            :add-module-api="sqladdDebugModule"
             @close="resetFocusNodeKey"
             @add-finish="handleAddFinish"
           >
@@ -129,19 +129,8 @@
   import MsTree from '@/components/business/ms-tree/index.vue';
   import type { MsTreeNodeData } from '@/components/business/ms-tree/types';
   import apiMethodName from '@/views/api-test/components/apiMethodName.vue';
-  import popConfirm from '@/views/api-test/components/popConfirm.vue';
+  import popConfirm from '@/views/sql-test/components/popConfirm.vue';
 
-  import {
-    addDebugModule,
-    deleteDebug,
-    deleteDebugModule,
-    dragDebug,
-    getDebugModuleCount,
-    getDebugModules,
-    moveDebugModule,
-    updateDebug,
-    updateDebugModule,
-  } from '@/api/modules/api-test/debug';
   import {
     sqladdDebugModule,
     sqldeleteDebug,
@@ -253,7 +242,7 @@
   const allFileCount = computed(() => modulesCount.value.all || 0);
   async function initModuleCount() {
     try {
-      const res = await getDebugModuleCount({
+      const res = await sqlgetDebugModuleCount({
         keyword: '',
       });
       modulesCount.value = res;
@@ -286,7 +275,7 @@
       maskClosable: false,
       onBeforeOk: async () => {
         try {
-          await deleteDebugModule(node.id);
+          await sqldeleteDebugModule(node.id);
           Message.success(t('apiTestDebug.deleteSuccess'));
           emit('deleteFinish', node);
           await initModules();
@@ -324,7 +313,7 @@
       maskClosable: false,
       onBeforeOk: async () => {
         try {
-          await deleteDebug(node.id);
+          await sqldeleteDebug(node.id);
           Message.success(t('apiTestDebug.deleteSuccess'));
           emit('deleteFinish', node);
           await initModules();
@@ -395,13 +384,13 @@
       }
       loading.value = true;
       if (dragNode.type === 'MODULE') {
-        await moveDebugModule({
+        await sqlmoveDebugModule({
           dragNodeId: dragNode.id as string,
           dropNodeId: dropNode.id || '',
           dropPosition,
         });
       } else {
-        await dragDebug({
+        await sqldragDebug({
           projectId: appStore.currentProjectId,
           moveMode: dropPositionMap[dropPosition],
           moveId: dragNode.id,

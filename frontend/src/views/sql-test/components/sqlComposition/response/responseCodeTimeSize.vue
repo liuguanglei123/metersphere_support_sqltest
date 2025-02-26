@@ -1,4 +1,5 @@
 <template>
+<!--  // TODO:这里是用于展示响应内容一行标题最右侧的内容，包括响应状态码，耗时，响应大小等，需要根据sql进行重写-->
   <div
     v-if="props.requestResult?.responseResult?.responseCode"
     class="flex items-center justify-between gap-[16px] text-[14px]"

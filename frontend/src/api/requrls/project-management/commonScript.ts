@@ -27,6 +27,8 @@ export const GetFormApiImportModuleCountUrl = '/api/definition/module/count';
 export const TestScriptUrl = '/api/test/custom/func/run';
 // websoket连接
 export const ConnectionWebsocketUrl = '/ws/api';
+// sql-test-websoket连接
+export const SqlConnectionWebsocketUrl = '/ws/sql';
 // 公共脚本变更历史详情
 export const getChangeHistoryUrl = '/project/custom/func/history/page';
 // 获取单个公共脚本详情

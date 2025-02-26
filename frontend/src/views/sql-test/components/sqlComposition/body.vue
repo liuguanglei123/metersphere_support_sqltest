@@ -19,6 +19,7 @@
   import useVisit from '@/hooks/useVisit';
 
   import { ModuleTreeNode, TransferFileParams } from '@/models/common';
+  import {SqlExecuteBody} from "@/models/sqlTest/common";
 
   const bodyLoading = ref(false);
 
@@ -42,19 +43,16 @@
   const visitedKey = 'apiTestAutoMakeJsonTip';
   const { addVisited, getIsVisited } = useVisit(visitedKey);
 
-  // const innerParams = defineModel<ExecuteBody>('params', {
-  //   required: true,
-  // });
+  const innerParams = defineModel<SqlExecuteBody>('params', {required: true,});
 
   // 当前显示的sql
   const currentBodyCode = computed({
     get() {
-      console.log(1111);
-      return 'select * from t1;';
-      // return innerParams.value.sql || '';
+      // return 'select * from t1;';
+      return innerParams.value.sqlContent || '';
     },
     set(val) {
-      // innerParams.value.sql = val || '';
+      innerParams.value.sqlContent = val || '';
     },
   });
 </script>

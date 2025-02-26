@@ -8,6 +8,7 @@
       @add="addResponseTab"
     >
       <template #label="{ tab }">
+        <div>123</div>
         <div class="response-tab">
           <div v-if="tab.defaultFlag" class="response-tab-default-icon"></div>
           <a-tooltip

@@ -1,6 +1,7 @@
 import { Language } from '@/components/pure/ms-code-editor/types';
 import type { JsonSchema, JsonSchemaTableItem } from '@/components/pure/ms-json-schema/types';
 
+import {ExecuteBody} from "@/models/apiTest/common";
 import {
   type FullResponseAssertionType,
   RequestAssertionCondition,
@@ -23,6 +24,7 @@ import {
   ResponseBodyXPathAssertionFormat,
   ScenarioExecuteStatus,
 } from '@/enums/apiEnum';
+import {DataType, TableDataType} from "@/models/sqlTest/constants/table";
 
 // 获取插件表单选项参数
 export interface SqlGetPluginOptionsParams {
@@ -335,26 +337,27 @@ export interface SqlExecuteValueBody {
 }
 // 执行请求- body 配置
 export interface SqlExecuteBody {
-  sqlBody: SqlExecuteValueBody;
+  sqlContent: string;
 }
 // 执行HTTP请求入参
 export interface SqlExecuteApiRequestFullParams {
-  authConfig: SqlExecuteAuthConfig;
+  // authConfig: SqlExecuteAuthConfig;
   body: SqlExecuteBody;
-  headers: SqlEnableKeyValueParam[];
-  method: RequestMethods | string;
-  otherConfig: SqlExecuteOtherConfig;
-  path: string;
-  query: SqlExecuteRequestCommonParam[];
-  rest: SqlExecuteRequestCommonParam[];
-  url: string;
-  polymorphicName: string; // 协议多态名称
-  children: SqlExecuteCommonChild[]; // 协议共有的子项配置
+  // headers: SqlEnableKeyValueParam[];
+  // method: RequestMethods | string;
+  // otherConfig: SqlExecuteOtherConfig;
+  // path: string;
+  // query: SqlExecuteRequestCommonParam[];
+  // rest: SqlExecuteRequestCommonParam[];
+  // url: string;
+  // polymorphicName: string; // 协议多态名称
+  // TODO：这里是原版的前置和后置处理器，如果有前置操作的话，可以放在下面这个children中
+  // children: SqlExecuteCommonChild[]; // 协议共有的子项配置
 }
 
 // 执行HTTP请求入参
 export interface ExecuteSqlRequestFullParams {
-  sql: string;
+  body: SqlExecuteBody;
 }
 
 // 执行插件请求入参
@@ -367,13 +370,13 @@ export interface SqlExecutePluginRequestParams {
 export interface SqlExecuteRequestParams {
   id?: string;
   reportId?: string;
-  environmentId: string;
-  uploadFileIds: string[];
-  linkFileIds: string[];
-  request: SqlExecuteApiRequestFullParams | SqlExecutePluginRequestParams;
-  projectId: string;
+  environmentId?: string;
+  // request: SqlExecuteApiRequestFullParams | SqlExecutePluginRequestParams;
+  request: SqlExecuteApiRequestFullParams;
+  projectId?: string;
   frontendDebug?: boolean; // 是否本地调试，该模式下接口会返回执行参数，用来调用本地执行服务
   apiDefinitionId?: string | number; // 接口用例执行和调试时需要传
+  dataSourceId: number;
 }
 // 断言-断言列表表格子项
 export interface SqlResponseAssertionTableItem {
@@ -472,4 +475,34 @@ export interface SqlCurlParseResult {
   body: Record<string, any> | string;
   bodyType: RequestBodyFormat;
   queryParams: Record<string, any>;
+}
+
+export interface ITableHeaderItem {
+  dataType: DataType;
+  name: string;
+  autoIncrement: boolean | null; // 是否自增
+  columnSize: number | null; // 字段长度
+  comment: string | null; // 字段注释
+  decimalDigits: number | null; // 小数位
+  defaultValue: string | null; // 默认值
+  nullable: boolean | null; // 是否为空
+  primaryKey: boolean | null; // 是否为主键
+}
+
+export interface IManageResultData {
+  dataList: string[][];
+  headerList: ITableHeaderItem[];
+  description: string;
+  message: string | undefined;
+  sql: string | undefined;
+  originalSql: string;
+  success: boolean;
+  uuid?: string;
+  duration: number;
+  fuzzyTotal: string;
+  hasNextPage: boolean;
+  sqlType: 'SELECT' | 'UNKNOWN';
+  updateCount?: number; // 如果是修改的话。后端会返回修改的条数
+  canEdit?: boolean; // 返回的数据是否可以编辑
+  tableName?: string; // 如果可以编辑的话。后端会返回表名称。修改需要给后端传递表名
 }

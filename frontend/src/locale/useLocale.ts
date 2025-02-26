@@ -44,6 +44,7 @@ async function changeLocale(locale: LocaleType) {
     setI18nLanguage(locale);
     return locale;
   }
+
   const langModule = ((await import(`./${locale}/index.ts`)) as any).default as LangModule;
   if (!langModule) return;
 

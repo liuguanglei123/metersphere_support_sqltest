@@ -18,6 +18,7 @@ import org.apache.shiro.spring.security.interceptor.AopAllianceAnnotationsAuthor
 import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
+import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
 import org.apache.shiro.web.session.mgt.ServletContainerSessionManager;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.context.annotation.Bean;
@@ -61,7 +62,9 @@ public class ShiroConfig {
 
     @Bean
     public SessionManager sessionManager() {
-        return new ServletContainerSessionManager();
+        DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
+        sessionManager.setGlobalSessionTimeout(30 * 24 * 60 * 60 * 1000L);
+        return sessionManager;
     }
 
     /**

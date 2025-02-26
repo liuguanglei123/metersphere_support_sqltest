@@ -1,0 +1,558 @@
+// 定义一个临时变量并export出去
+export const tempvar1 = 1;
+
+export const tempvar2 = [
+    {
+        "sql": null,
+        "originalSql": "select * from t1 limit 2",
+        "description": "执行成功",
+        "message": null,
+        "success": true,
+        "updateCount": null,
+        "headerList": [
+            {
+                "dataType": "CHAT2DB_ROW_NUMBER",
+                "name": "行号",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "NUMERIC",
+                "name": "ID",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "STRING",
+                "name": "NAME",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "NUMERIC",
+                "name": "AGE",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "NUMERIC",
+                "name": "GMT",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "NUMERIC",
+                "name": "PRICE",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "NUMERIC",
+                "name": "AMOUNT",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "STRING",
+                "name": "ADDRESS",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "DATETIME",
+                "name": "BIRTHDAY",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "DATETIME",
+                "name": "CREATE_TIME",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "DATETIME",
+                "name": "UPDATE_TIME",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "STRING",
+                "name": "ZIP_CODE",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "NUMERIC",
+                "name": "IS_DELETE",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            }
+        ],
+        "dataList": [
+            [
+                "1",
+                "0",
+                "ZKaPYQeHO5ph",
+                "6201",
+                "1664339717072652667",
+                "9099.4599609375",
+                "-493538.58",
+                "kg9vlY",
+                "1973-07-16",
+                "12:31:24",
+                "2005-04-14 18:24:05",
+                "EFh8Mp",
+                "0"
+            ],
+            [
+                "2",
+                "1",
+                "SV1ldfKZ9BuC",
+                "3496",
+                "7084485097497417296",
+                "955.239990234375",
+                "967677.86",
+                "2YAAPb",
+                "2019-01-03",
+                "08:19:42",
+                "2003-03-24 13:26:29",
+                "nXXkCx",
+                "0"
+            ]
+        ],
+        "sqlType": "SELECT",
+        "hasNextPage": false,
+        "pageNo": 1,
+        "pageSize": 200,
+        "fuzzyTotal": "2",
+        "duration": 232,
+        "canEdit": true,
+        "tableName": "t1"
+    },
+    {
+        "sql": null,
+        "originalSql": "select * from t2 limit 2",
+        "description": "执行成功",
+        "message": null,
+        "success": true,
+        "updateCount": null,
+        "headerList": [
+            {
+                "dataType": "CHAT2DB_ROW_NUMBER",
+                "name": "行号",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "NUMERIC",
+                "name": "ID",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "STRING",
+                "name": "NAME",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "NUMERIC",
+                "name": "AGE",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "NUMERIC",
+                "name": "GMT",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "NUMERIC",
+                "name": "PRICE",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "NUMERIC",
+                "name": "AMOUNT",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "STRING",
+                "name": "ADDRESS",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "DATETIME",
+                "name": "BIRTHDAY",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "DATETIME",
+                "name": "CREATE_TIME",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "DATETIME",
+                "name": "UPDATE_TIME",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "STRING",
+                "name": "ZIP_CODE",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "NUMERIC",
+                "name": "IS_DELETE",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            }
+        ],
+        "dataList": [
+            [
+                "1",
+                "0",
+                "xglciyDg7Oxp",
+                "5316",
+                "-6390572875905262453",
+                "4085.2099609375",
+                "509681.6",
+                "V10Ol7",
+                "2014-02-26",
+                "19:39:16",
+                "2002-06-27 07:58:07",
+                "f4Q5TR",
+                "1"
+            ],
+            [
+                "2",
+                "1",
+                "CwkEstaEmSeX",
+                "3220",
+                "-5526191462240588486",
+                "2146.260009765625",
+                "-540428.7",
+                "2EeoCY",
+                "2004-11-08",
+                "00:43:53",
+                "1990-12-01 18:47:50",
+                "CrI2Qc",
+                "1"
+            ]
+        ],
+        "sqlType": "SELECT",
+        "hasNextPage": false,
+        "pageNo": 1,
+        "pageSize": 200,
+        "fuzzyTotal": "2",
+        "duration": 153,
+        "canEdit": true,
+        "tableName": "t2"
+    },
+    {
+        "sql": null,
+        "originalSql": "select * from t3 limit 2",
+        "description": "执行成功",
+        "message": null,
+        "success": true,
+        "updateCount": null,
+        "headerList": [
+            {
+                "dataType": "CHAT2DB_ROW_NUMBER",
+                "name": "行号",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "NUMERIC",
+                "name": "ID",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "STRING",
+                "name": "NAME",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "NUMERIC",
+                "name": "AGE",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "NUMERIC",
+                "name": "GMT",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "NUMERIC",
+                "name": "PRICE",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "NUMERIC",
+                "name": "AMOUNT",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "STRING",
+                "name": "FEATURE",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "NUMERIC",
+                "name": "FEATURE_ID",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "NUMERIC",
+                "name": "DOC_ID",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            },
+            {
+                "dataType": "STRING",
+                "name": "DOC",
+                "primaryKey": null,
+                "comment": null,
+                "defaultValue": null,
+                "autoIncrement": null,
+                "nullable": null,
+                "columnSize": null,
+                "decimalDigits": null
+            }
+        ],
+        "dataList": [
+            [
+                "1",
+                "1",
+                "1abcd",
+                "2",
+                "12",
+                "1.111111044883728",
+                "2.222222222222222",
+                "[0.7817841, 0.507303, 0.2708584, 0.19122167, 0.38541377, 0.7119671, 0.54912096, 0.7863701, 0.20055728, 0.21660058, 0.9177247, 0.39415815, 0.07428255, 0.91409206, 0.10021213, 0.5977497, 0.8164901, 0.83933264, 0.5588912, 0.5776185, 0.71376204, 0.26443338, 0.43759817, 0.26149145, 0.3172445, 0.09334426, 0.40888, 0.753324, 0.84761214, 0.7790497, 0.18710195, 0.45246828, 0.96738845, 0.24530429, 0.14183688, 0.42361382, 0.859374, 0.5849121, 0.39999455, 0.2587406, 0.51965964, 0.6278422, 0.060500465, 0.88424104, 0.92467964, 0.8250107, 0.6619363, 0.5095296, 0.26398528, 0.27735105, 0.841404, 0.18787466, 0.74389625, 0.15483072, 0.2019789, 0.26584923, 0.56191456, 0.19636345, 0.766467, 0.3347134, 0.5277606, 0.45910463, 0.036784876, 0.16520335]",
+                "1",
+                "1",
+                "degradable adoulie civil Chnuphis before-going aviatory autoclaves collisions almahs cephalitis Aleksandrovac algebraizing author-ridden colporter cajou cavaliere chloroquine Corpl Aymaran aspire categorizer bunkers Andryc crabbedly compromit Amberley"
+            ],
+            [
+                "2",
+                "2",
+                "2abcd",
+                "4",
+                "24",
+                "2.222222089767456",
+                "4.444444444444444",
+                "[0.6519611, 0.52238494, 0.9097068, 0.16362035, 0.39158857, 0.3944834, 0.6633203, 0.5586099, 0.21257684, 0.6980717, 0.38162154, 0.66733664, 0.5925646, 0.20303144, 0.63023317, 0.12268478, 0.0019105306, 0.47190365, 0.7149199, 0.82356393, 0.515672, 0.46961758, 0.79645526, 0.7416984, 0.09365977, 0.5971326, 0.7336382, 0.24914598, 0.60599214, 0.48154333, 0.90034086, 0.23708533, 0.5887992, 0.61398613, 0.39531785, 0.9458239, 0.4032015, 0.7167271, 0.5176113, 0.6066434, 0.94041806, 0.5420966, 0.11573629, 0.7080126, 0.26683098, 0.65847844, 0.43543246, 0.94186264, 0.6350644, 0.6623476, 0.38862073, 0.66003335, 0.10060904, 0.17039233, 0.74530363, 0.9766629, 0.5782517, 0.8920427, 0.6105011, 0.48920813, 0.5485458, 0.060269263, 0.68991375, 0.9589461]",
+                "2",
+                "2",
+                "Anglo-asiatic charlocks adiamorphism chammying chauvinists Chol chigetais burn-the-wind Bearsville crumming bradystalsis Chkalov centrifuged circuited accounsel Basil ARAMIS circumvallate aeolight cottaged"
+            ]
+        ],
+        "sqlType": "SELECT",
+        "hasNextPage": false,
+        "pageNo": 1,
+        "pageSize": 200,
+        "fuzzyTotal": "2",
+        "duration": 196,
+        "canEdit": true,
+        "tableName": "t3"
+    }
+];
