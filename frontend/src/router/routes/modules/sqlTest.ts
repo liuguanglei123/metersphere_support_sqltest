@@ -34,6 +34,16 @@ const SqlTest: AppRouteRecordRaw = {
         isTopMenu: true,
       },
     },
+    {
+      path: 'sal-case',
+      name: SqlTestRouteEnum.SQL_TEST_CASE,
+      component: () => import('@/views/sql-test/case/index.vue'),
+      meta: {
+        locale: 'menu.sqlTest.sqlCase',
+        roles: ['PROJECT_API_DEBUG:READ'],
+        isTopMenu: true,
+      },
+    },
   ],
 };
 

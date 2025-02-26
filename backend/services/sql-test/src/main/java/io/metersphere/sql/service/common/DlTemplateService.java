@@ -19,7 +19,13 @@ public interface DlTemplateService {
      * @param param
      * @return
      */
-    ListResult<ExecuteResult> execute(DlExecuteParam param);
+    void execute(DlExecuteParam param);
 
-
+    /**
+     * data source execution dl direct
+     *
+     * @param param
+     * @return
+     */
+    ListResult<ExecuteResult> executeDirect(DlExecuteParam param);
 }

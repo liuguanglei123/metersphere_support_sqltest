@@ -14,7 +14,7 @@ public class DataSourceBaseRequest{
      * user-connection-info表中的id值
      */
     @NotNull
-    private Integer dataSourceId;
+    private Long dataSourceId;
 
     /**
      * DB name

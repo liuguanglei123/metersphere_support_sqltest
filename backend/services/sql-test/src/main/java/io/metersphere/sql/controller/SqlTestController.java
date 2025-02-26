@@ -33,9 +33,9 @@ public class SqlTestController {
      * @return 数据库连接信息
      */
     @PostMapping(value="/execute")
-    public ListResult<ExecuteResultVO> manage(@RequestBody DmlRequest request) {
+    public ListResult<ExecuteResultVO> executeDirect(@RequestBody DmlRequest request) {
         DlExecuteParam param = rdbWebConverter.request2param(request);
-        ListResult<ExecuteResult> resultDTOListResult = dlTemplateService.execute(param);
+        ListResult<ExecuteResult> resultDTOListResult = dlTemplateService.executeDirect(param);
         List<ExecuteResultVO> resultVOS = rdbWebConverter.dto2vo(resultDTOListResult.getData());
         return ListResult.of(resultVOS);
     }
@@ -43,11 +43,10 @@ public class SqlTestController {
     @PostMapping("/debug")
     @Operation(summary = "运行SQL调试")
     @RequiresPermissions(PermissionConstants.PROJECT_API_DEBUG_EXECUTE)
-    public ListResult<ExecuteResultVO> execute(@RequestBody SqlDebugRunRequest request) {
+    public ListResult<Void> execute(@RequestBody SqlDebugRunRequest request) {
         DlExecuteParam param = rdbWebConverter.request2param(request);
-        ListResult<ExecuteResult> resultDTOListResult = dlTemplateService.execute(param);
-        List<ExecuteResultVO> resultVOS = rdbWebConverter.dto2vo(resultDTOListResult.getData());
-        return ListResult.of(resultVOS);
+        dlTemplateService.execute(param);
+        return ListResult.empty();
     }
 
 

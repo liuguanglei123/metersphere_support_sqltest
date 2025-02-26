@@ -84,4 +84,7 @@ public class Command implements Serializable {
 
     @Schema(description = "是否是本地执行")
     private Boolean frontendDebug = false;
+
+    // 数据库的默认协议为mysql
+    private String protocol = "MYSQL";
 }

@@ -1,5 +1,5 @@
 <template>
-  <!-- TODO:全文 多语言支持 -->
+  <!-- TODO:全文 多语言支持，放到最后完成 -->
   <div class="request-composition flex h-full flex-col">
     <div v-if="!props.isCase" class="mb-[8px] px-[18px] pt-[8px]">
       <div class="flex flex-wrap items-baseline justify-between gap-[12px]">
@@ -17,7 +17,7 @@
               type="primary"
               @click="() => execute('serverExec')"
             >
-              {{ t('sqlTestDebug.serverExec') }}
+              服务端执行
             </a-button>
           </template>
           <!-- 接口调试，支持快捷保存 -->
@@ -79,9 +79,8 @@
           v-model:active-layout="activeLayout"
           :loading="requestVModel.executeLoading"
           class="response"
-          :request-result="requestVModel.response"
+          :request-result="requestVModel.response ? requestVModel.response.data : []"
         >
-<!--          TODO：:request-result="requestVModel.response ? requestVModel.response : undefined"-->
         </response>
       </div>
     </div>
@@ -101,7 +100,7 @@
   import { getGenerateId } from '@/utils';
   import { hasAllPermission, hasAnyPermission } from '@/utils/permission';
 
-  import { ExecuteSqlRequestFullParams, SqlExecuteRequestParams } from '@/models/sqlTest/common';
+  import {ExecuteSqlRequestFullParams, SqlExecuteRequestParams, SqlRequestTaskResult} from '@/models/sqlTest/common';
   import { RequestComposition } from '@/enums/apiEnum';
 
   // TODO：暂不确定这里的showResponse有何作用，先临时置为true
@@ -120,7 +119,10 @@
     isExecute?: boolean; // 是否是执行
   }
 
-  export type SqlRequestParam = ExecuteSqlRequestFullParams & RequestCustomAttr & SQLTabItem;
+  export type SqlRequestParam = ExecuteSqlRequestFullParams & {
+    // responseDefinition?: ResponseItem[];
+    response?: SqlRequestTaskResult;
+  } & RequestCustomAttr & SQLTabItem;
 
   const props = defineProps<{
     isCase?: boolean; // 是否是用例引用的组件,只显示请求参数和响应内容,响应内容默认为空且折叠
@@ -436,11 +438,9 @@
 
     let parseRequestBodyResult;
     const requestParams = {
-      // authConfig: requestVModel.value.authConfig,
       body: {
         ...requestVModel.value.body,
       },
-      // otherConfig: requestVModel.value.otherConfig,
     };
     // 这里需要对输入的字符串进行解析，比如替换变量 $table，该部分内容待完成
     reportId.value = getGenerateId();
@@ -505,7 +505,8 @@
   }
 
   /**
-   * 执行调试
+   * 执行调试，这里沿用了ms的api debug逻辑，点击服务端执行后，发起的executeApi请求并不会返回
+   * SQL执行的真实结果会在makeRequestParams中通过websocket监听返回
    * @param val 执行类型
    */
   // TODO：暂时不实现本地请求（localExec），以后再说
@@ -515,14 +516,14 @@
       if (!props.executeApi) return;
       await nextTick();
       requestVModel.value.executeLoading = true;
+      // TODO：确定下面一行的作用
       // requestVModel.value.response = cloneDeep(defaultResponse);
 
       const res = await props.executeApi((await makeRequestParams(executeType)) as SqlExecuteRequestParams);
-      requestVModel.value.executeLoading = false;
     } catch (error) {
       // eslint-disable-next-line no-console
       console.log(error);
-      // websocket.value?.close();
+      websocket.value?.close();
       requestVModel.value.executeLoading = false;
     }
   }

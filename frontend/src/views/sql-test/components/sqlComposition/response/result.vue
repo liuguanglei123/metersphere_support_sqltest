@@ -14,6 +14,8 @@
         :request-result="props.requestResult"
         @copy="copyScript"
       />
+      <!--        :request-result="props.requestResult"-->
+
       <!--      :request-result="props.requestResult"-->
 
       <!-- TODO: -->
@@ -91,9 +93,21 @@
       showEmpty: true,
     }
   );
+
   const emit = defineEmits(['execute']);
 
   const { t } = useI18n();
+
+  watch(
+      () => props.requestResult,
+      (newValue) => {
+        console.log("newValue1");
+        console.log(newValue);
+        newValue?.forEach( (e) => {
+          console.log(e);
+          // console.log(e instanceof IManageResultData);
+        });
+  });
 
   const noDataSvg = `${import.meta.env.BASE_URL}images/noResponse.svg`;
   const sqlResponseCompositionTabList = [

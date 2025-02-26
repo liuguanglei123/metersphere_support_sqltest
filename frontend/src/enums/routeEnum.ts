@@ -12,7 +12,7 @@ export enum ApiTestRouteEnum {
 export enum SqlTestRouteEnum {
   SQL_TEST = 'sqlTest',
   SQL_TEST_DEBUG_MANAGEMENT = 'sqlTestDebug',
-  SQL_TEST_SCENARIO = 'sqlTestScenario',
+  SQL_TEST_CASE = 'sqlTestCase',
   SQL_TEST_SCENARIO_RECYCLE = 'sqlTestScenarioRecycle',
 }
 

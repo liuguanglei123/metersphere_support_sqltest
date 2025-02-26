@@ -122,6 +122,7 @@
       showEmpty: true,
     }
   );
+
   const emit = defineEmits<{
     (e: 'changeLayout', value: Direction): void;
     (e: 'change'): void;

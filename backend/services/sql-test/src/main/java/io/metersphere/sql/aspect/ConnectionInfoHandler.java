@@ -36,7 +36,7 @@ public class ConnectionInfoHandler {
                 for (int i = 0; i < params.length; i++) {
                     Object param = params[i];
                     if (param instanceof DataSourceBaseRequest) {
-                        Integer dataSourceId = ((DataSourceBaseRequest) param).getDataSourceId();
+                        Long dataSourceId = ((DataSourceBaseRequest) param).getDataSourceId();
                         Chat2DBContext.putContext(toInfo(dataSourceId));
                     }
                 }
@@ -48,7 +48,7 @@ public class ConnectionInfoHandler {
         }
     }
 
-    public Chat2dbConnectInfo toInfo(Integer dataSourceId) {
+    public Chat2dbConnectInfo toInfo(Long dataSourceId) {
         UserConnectionInfo userConnectionInfo = userConnectionInfoMapper.selectByPrimaryKey(dataSourceId);
         if (userConnectionInfo == null) {
             throw new ParamBusinessException("userConnectionInfo not exist!");

@@ -7,9 +7,6 @@
         :items=tabsList
         :onChange="onChange"
     />
-    <div>
-      <div>this is table component content</div>
-    </div>
 <!--    <div v-else>this is empty</div>-->
   </div>
 </template>
@@ -26,7 +23,6 @@
 
   import { IManageResultData } from '@/models/sqlTest/common';
 
-  import { tempvar2 } from './temp';
   import { v4 as uuidV4 } from 'uuid';
 
   const props = withDefaults(
@@ -51,15 +47,30 @@
       concealTabHeader: boolean;
       viewTable: boolean;
       isActive: boolean;
-      resultDataList: IManageResultData[];
     }>(),
     {
       isExpanded: true,
       hideLayoutSwitch: false,
       showEmpty: true,
-      resultDataList: tempvar2.map((item) => { return {...item,uuid: uuidV4()} }),
     }
   );
+
+  const resultDataList = ref<IManageResultData[]>();
+
+  // let resultDataList: IManageResultData[] = computed(() => {
+  //   const result= props.requestResult?.map((item) => {
+  //     return { ...item, uuid: uuidV4() };
+  //   });
+  //   return result;
+  // });
+
+  watch(
+    () => props.requestResult,
+    (newValue) => {
+      resultDataList.value = newValue?.map((item) => {
+        return { ...item, uuid: uuidV4() };
+      });
+  }, { immediate: true });
 
   const activeTabId = ref<string>('');
   const { t } = useI18n();
@@ -102,7 +113,7 @@
   }
 
   const tabsList = computed(() => {
-    const result= props.resultDataList?.map((queryResultData,index) => {
+    const result= resultDataList.value?.map((queryResultData,index) => {
       return {
         prefixIcon: '123123',
         popover: queryResultData.originalSql,
@@ -114,7 +125,7 @@
     return result;
   });
 
-  const onChange = (uuid: string) => {
+  const onChange = (uuid: string|number|null) => {
     activeTabId.value = uuid;
   };
 

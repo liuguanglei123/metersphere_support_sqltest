@@ -6,6 +6,9 @@ import com.alibaba.druid.sql.SQLUtils;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
 import com.google.common.collect.Lists;
+import io.metersphere.sdk.constants.KafkaTopicConstants;
+import io.metersphere.sdk.util.JSON;
+import io.metersphere.sql.config.AppConfig;
 import io.metersphere.sql.constant.EasyToolsConstant;
 import io.metersphere.sql.context.Chat2DBContext;
 import io.metersphere.sql.enums.SqlTypeEnum;
@@ -19,6 +22,10 @@ import io.metersphere.sql.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.sql.*;
@@ -40,15 +47,47 @@ public class SQLExecutor implements CommandExecutor {
      */
     private static final SQLExecutor INSTANCE = new SQLExecutor();
 
+    private final KafkaTemplate<String, String> kafkaTemplate;
+
     public SQLExecutor() {
+        kafkaTemplate = AppConfig.getApplicationContext().getBean(KafkaTemplate.class);
     }
 
     public static SQLExecutor getInstance() {
         return INSTANCE;
     }
+    @Override
+    public void sendTaskMessage(Command command) {
+        kafkaTemplate.send(KafkaTopicConstants.SQL_REPORT_DEBUG_TASK_TOPIC, command.getReportId(), JSON.toJSONString(command));
+    }
 
     @Override
-    public List<ExecuteResult> execute(Command command) {
+    public List<ExecuteResult> executeDirect(Command command) {
+        if (StringUtils.isBlank(command.getRequest().getBody().getSqlContent())) {
+            return Collections.emptyList();
+        }
+        // parse sql
+        String type = Chat2DBContext.getConnectInfo().getDbProtocol();
+        DbType dbType = JdbcUtils.parse2DruidDbType(type);
+        List<String> sqlList = Lists.newArrayList(command.getRequest().getBody().getSqlContent());
+        if(!command.isSingle()) {
+            sqlList = SqlUtils.parse(command.getRequest().getBody().getSqlContent(), dbType, true);
+        }
+        if (CollectionUtils.isEmpty(sqlList)) {
+            throw new BusinessException("dataSource.sqlAnalysisError");
+        }
+        List<ExecuteResult> result = new ArrayList<>();
+        // Execute SQL
+        for (String originalSql : sqlList) {
+            ExecuteResult executeResult = executeSQL(originalSql, dbType, command);
+            result.add(executeResult);
+        }
+        return result;
+    }
+
+    // TODO：是否可以注释掉了
+    @Override
+    public List<ExecuteResult> execute(Command command, Connection connection) {
         if (StringUtils.isBlank(command.getRequest().getBody().getSqlContent())) {
             return Collections.emptyList();
         }

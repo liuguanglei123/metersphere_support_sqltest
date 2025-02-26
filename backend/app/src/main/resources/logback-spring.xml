@@ -168,6 +168,9 @@
     <logger name="io.metersphere.functional.mapper" level="${logger.sql.level}">
         <appender-ref ref="console"/>
     </logger>
+    <logger name="io.metersphere.sql.mapper" level="${logger.sql.level}">
+        <appender-ref ref="console"/>
+    </logger>
 
     <logger name="io.metersphere.Application" additivity="false" level="${logger.level:INFO}">
         <appender-ref ref="infoAsyncAppender"/>

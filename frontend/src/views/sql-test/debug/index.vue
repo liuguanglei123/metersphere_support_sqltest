@@ -78,7 +78,6 @@
   import MsSqlEditableTab from '@/components/pure/ms-sql-editable-tab/index.vue';
   import moduleTree from './components/moduleTree.vue';
   import sqlComposition, { SqlRequestParam } from '@/views/sql-test/components/sqlComposition/index.vue';
-  import SqlMethodName from "@/views/sql-test/components/sqlMethodName.vue";
 
   import { localExecuteApiDebug } from '@/api/modules/api-test/common';
   import {
@@ -94,9 +93,8 @@
   import { hasAnyPermission } from '@/utils/permission';
 
   import { ModuleTreeNode } from '@/models/common';
-  import {RequestComposition, ResponseComposition, SQLRequestMethods, SqlResponseComposition} from '@/enums/apiEnum';
+  import { SQLRequestMethods, SqlResponseComposition } from '@/enums/apiEnum';
 
-  import {defaultResponse} from "@/views/api-test/components/config";
   import {defaultSqlBodyParams, defaultSqlResponse} from '@/views/sql-test/components/config';
 
   const requestCompositionStore = useRequestCompositionStore();
@@ -121,8 +119,7 @@
     unSaved: false,
     executeLoading: false,
     responseActiveTab: SqlResponseComposition.TABLE,
-    // TODO：response: cloneDeep(defaultSqlResponse),
-    response: defaultSqlResponse,
+    response: cloneDeep(defaultSqlResponse),
   };
 
   async function handleDebugAddDone() {

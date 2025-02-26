@@ -22,7 +22,7 @@ public class UserConnectionInfoController {
     UserConnectionInfoService userConnectionInfoService;
 
     @PostMapping(value = "/create-user-connection-info")
-    public Integer createUserConnectionInfo(UserConnectionInfo userConnectionInfo){
+    public Long createUserConnectionInfo(UserConnectionInfo userConnectionInfo){
         userConnectionInfo.setUserId(SessionUtils.getUserId());
         userConnectionInfo.setCreateUser(SessionUtils.getUserId());
         return userConnectionInfoService.createUserConnectionInfo(userConnectionInfo);

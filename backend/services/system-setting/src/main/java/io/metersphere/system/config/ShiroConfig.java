@@ -62,9 +62,10 @@ public class ShiroConfig {
 
     @Bean
     public SessionManager sessionManager() {
-        DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
-        sessionManager.setGlobalSessionTimeout(30 * 24 * 60 * 60 * 1000L);
-        return sessionManager;
+//        DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
+//        sessionManager.setGlobalSessionTimeout(30 * 24 * 60 * 60 * 1000L);
+//        return sessionManager;
+        return new ServletContainerSessionManager();
     }
 
     /**

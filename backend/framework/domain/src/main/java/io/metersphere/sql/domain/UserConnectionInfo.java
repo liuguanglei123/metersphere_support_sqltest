@@ -12,7 +12,7 @@ import lombok.Data;
 public class UserConnectionInfo implements Serializable {
     @Schema(description = "主键id", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "{user_connection_info.id.not_blank}", groups = {Updated.class})
-    private Integer id;
+    private Long id;
 
     @Schema(description = "")
     private String host;

@@ -189,7 +189,7 @@ export const pathMap: PathMapItem[] = [
     level: MENU_LEVEL[2],
     children: [
       {
-        key: 'SQL_TEST_DEBUG_MANAGEMENT', // 接口测试-接口调试
+        key: 'SQL_TEST_DEBUG_MANAGEMENT', // SQL调试
         locale: 'menu.sqlTest.debug',
         route: RouteEnum.SQL_TEST_DEBUG_MANAGEMENT,
         permission: [],
@@ -209,6 +209,30 @@ export const pathMap: PathMapItem[] = [
             permission: [],
             level: MENU_LEVEL[2],
           },
+        ],
+      },
+      {
+        key: 'SQL_TEST_DEBUG_MANAGEMENT', // SQL用例定义
+        locale: 'menu.sqlTest.sqlCase',
+        route: RouteEnum.SQL_TEST_CASE,
+        permission: [],
+        level: MENU_LEVEL[2],
+        children: [
+            // TODO：暂时不清楚这里的children有什么作用，尝试注释掉发现页面没什么变化
+          // {
+          //   key: 'SQL_TEST_DEBUG_MANAGEMENT_MODULE', // 接口测试-接口调试-模块
+          //   locale: 'common.module',
+          //   route: RouteEnum.SQL_TEST_DEBUG_MANAGEMENT,
+          //   permission: [],
+          //   level: MENU_LEVEL[2],
+          // },
+          // {
+          //   key: 'API_TEST_DEBUG_MANAGEMENT_DEBUG', // 接口测试-接口调试-调试
+          //   locale: 'menu.sqlTest.debug.debug',
+          //   route: RouteEnum.SQL_TEST_DEBUG_MANAGEMENT,
+          //   permission: [],
+          //   level: MENU_LEVEL[2],
+          // },
         ],
       },
     ],
