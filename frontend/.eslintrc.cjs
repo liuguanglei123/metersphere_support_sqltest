@@ -67,7 +67,8 @@ module.exports = {
         tsx: 'never',
       },
     ],
-    'no-debugger': 2,
+    // TODO:发布版本的时候需要改成2
+    'no-debugger': 0,
     'no-param-reassign': 0,
     'prefer-regex-literals': 0,
     'import/no-extraneous-dependencies': 0,

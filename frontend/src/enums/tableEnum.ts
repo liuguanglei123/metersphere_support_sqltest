@@ -105,6 +105,9 @@ export enum TableKeyEnum {
   TEST_PLAN_REPORT_BUG_TABLE_DETAIL = 'testPlanReportBugDetailTable',
   TEST_PLAN_REPORT_BUG_TABLE_DETAIL_NOT_PREVIEW = 'testPlanReportBugDetailTableNotPreview',
   TEST_PLAN_REPORT_BUG_TABLE_DETAIL_GROUP = 'testPlanReportBugDetailTableGroup',
+
+  SQL_TEST = 'sqlTest',
+
 }
 
 // 具有特殊功能的列

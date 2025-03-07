@@ -1,7 +1,6 @@
-package io.metersphere.sql.controller;
+package io.metersphere.sql.controller.debug;
 
 import io.metersphere.sdk.constants.PermissionConstants;
-import io.metersphere.sdk.dto.api.task.TaskRequestDTO;
 import io.metersphere.sql.converter.RdbWebConverter;
 import io.metersphere.sql.aspect.ConnectionInfoAspect;
 import io.metersphere.sql.pojo.dto.debug.SqlDebugRunRequest;
@@ -14,7 +13,6 @@ import io.metersphere.sql.wrapper.result.ListResult;
 import io.swagger.v3.oas.annotations.Operation;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,7 +20,7 @@ import java.util.List;
 @ConnectionInfoAspect
 @RequestMapping("/sql/debug")
 @RestController
-public class SqlTestController {
+public class SqlDebugController {
     @Autowired
     private RdbWebConverter rdbWebConverter;
 
@@ -33,7 +31,7 @@ public class SqlTestController {
      * @return 数据库连接信息
      */
     @PostMapping(value="/execute")
-    public ListResult<ExecuteResultVO> executeDirect(@RequestBody DmlRequest request) {
+    public ListResult<ExecuteResultVO> executeDirect(@RequestBody SqlDebugRunRequest request) {
         DlExecuteParam param = rdbWebConverter.request2param(request);
         ListResult<ExecuteResult> resultDTOListResult = dlTemplateService.executeDirect(param);
         List<ExecuteResultVO> resultVOS = rdbWebConverter.dto2vo(resultDTOListResult.getData());

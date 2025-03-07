@@ -9,8 +9,9 @@
         </div>
 
         <div>
-          <template v-if="true">
-            <!--            TODO:终止sql执行的按钮，需要实现自动切换-->
+          <!-- SQL定义-调试模式下，可执行 -->
+          <template v-if="props.permissionMap && hasAnyPermission([props.permissionMap.execute])">
+            <!-- TODO:终止sql执行的按钮，需要实现自动切换-->
             <a-button
               class="mr-[12px]"
               :disabled="requestVModel.executeLoading || !requestVModel.body.sqlContent"
@@ -20,15 +21,45 @@
               服务端执行
             </a-button>
           </template>
-          <!-- 接口调试，支持快捷保存 -->
+          <!-- 接口定义-调试模式，可保存或保存为新用例 -->
+          <!-- TODO：不过当前功能还没有做完，目前仅有保存按钮，这里先备注 -->
           <template
             v-if="
+              props.isDefinition &&
+              (requestVModel.isNew
+                ? props.permissionMap && hasAnyPermission([props.permissionMap.create])
+                : props.permissionMap && hasAnyPermission([props.permissionMap.update]))
+            "
+          >
+            <!-- TODO:暂仅支持保存，另存为功能待开发 -->
+            <!-- 接口定义-调试模式，可保存或保存为新用例 -->
+            <a-dropdown-button
+              type="outline"
+              class="arco-btn-group-outline--secondary"
+              :disabled="saveLoading"
+              @click="() => handleSelect('save')"
+            >
+              {{ t('common.save') }}
+              <template #icon>
+                <icon-down />
+              </template>
+              <template #content>
+                <a-doption value="saveAsCase" @click="() => handleSelect('saveAsCase')">
+                  {{ t('apiTestManagement.saveAsCase') }} 未开发
+                </a-doption>
+              </template>
+            </a-dropdown-button>
+          </template>
+          <!-- 接口调试，支持快捷保存 -->
+          <template
+            v-else-if="
               requestVModel.isNew
                 ? props.permissionMap && hasAnyPermission([props.permissionMap.create])
                 : props.permissionMap && hasAnyPermission([props.permissionMap.update])
             "
           >
             <!-- 接口调试-可保存或保存为新接口定义 -->
+            <!-- TODO:目前调试页面下的保存和另存为功能暂不支持 -->
             <a-dropdown-button
               v-if="
                 props.permissionMap &&
@@ -85,23 +116,57 @@
       </div>
     </div>
   </div>
+  <a-modal
+    v-if="!isCase"
+    v-model:visible="saveModalVisible"
+    :title="t('common.save')"
+    :ok-loading="saveLoading"
+    class="ms-modal-form"
+    title-align="start"
+    body-class="!p-0"
+    @before-ok="handleSave"
+    @cancel="handleCancel"
+  >
+    <a-form ref="saveModalFormRef" :model="saveModalForm" layout="vertical">
+      <a-form-item
+        field="name"
+        :label="t('apiTestDebug.requestName')"
+        :rules="[{ required: true, message: t('apiTestDebug.requestNameRequired') }]"
+        asterisk-position="end"
+      >
+        <a-input
+          v-model:model-value="saveModalForm.name"
+          :max-length="255"
+          :placeholder="t('apiTestDebug.requestNamePlaceholder')"
+        />
+      </a-form-item>
+    </a-form>
+  </a-modal>
 </template>
 
 <script setup lang="ts">
   // TODO:代码拆分，结构优化
-  import { InputInstance } from '@arco-design/web-vue';
+  import { FormInstance, InputInstance } from '@arco-design/web-vue';
 
   import { SQLTabItem } from '@/components/pure/ms-editable-tab/types';
+  import { parseTableDataToJsonSchema } from '@/components/pure/ms-json-schema/utils';
   import response from './response/index.vue';
+  import { SqlResponseItem } from '@/views/sql-test/components/sqlComposition/response/edit.vue';
 
   import { useI18n } from '@/hooks/useI18n';
   import useShortcutSave from '@/hooks/useShortcutSave';
   import { useSqlWebsocket } from '@/hooks/useWebsocket';
+  import useAppStore from '@/store/modules/app';
   import { getGenerateId } from '@/utils';
   import { hasAllPermission, hasAnyPermission } from '@/utils/permission';
 
-  import {ExecuteSqlRequestFullParams, SqlExecuteRequestParams, SqlRequestTaskResult} from '@/models/sqlTest/common';
+  import { ExecuteSqlRequestFullParams, SqlExecuteRequestParams, SqlRequestTaskResult } from '@/models/sqlTest/common';
   import { RequestComposition } from '@/enums/apiEnum';
+
+  import { defaultKeyValueParamItem } from '@/views/api-test/components/config';
+  import { filterKeyValParams } from '@/views/api-test/components/utils';
+
+  const appStore = useAppStore();
 
   // TODO：暂不确定这里的showResponse有何作用，先临时置为true
   const showResponse = computed(() => {
@@ -120,9 +185,10 @@
   }
 
   export type SqlRequestParam = ExecuteSqlRequestFullParams & {
-    // responseDefinition?: ResponseItem[];
+    responseDefinition?: SqlResponseItem[];
     response?: SqlRequestTaskResult;
-  } & RequestCustomAttr & SQLTabItem;
+  } & RequestCustomAttr &
+    SQLTabItem;
 
   const props = defineProps<{
     isCase?: boolean; // 是否是用例引用的组件,只显示请求参数和响应内容,响应内容默认为空且折叠
@@ -134,7 +200,8 @@
       update: string;
       saveASApi?: string;
     };
-    executeApi?: (params: SqlExecuteRequestParams) => Promise<any>; // 执行接口
+    executeApi?: (params: SqlExecuteRequestParams) => Promise<any>; // 执行SQL的接口
+    createApi?: (...args: any) => Promise<any>; // 创建SQL调试或者用例的接口
   }>();
 
   const saveLoading = ref(false);
@@ -158,65 +225,149 @@
   // 需要最终提示的信息
   function getFlattenedMessages() {
     // TODO：
-    // if (!requestVModel.value.errorMessageInfo) return;
-    // const flattenedMessages: { label: string; messageList: string[] }[] = [];
-    // const { errorMessageInfo } = requestVModel.value;
-    // Object.entries(errorMessageInfo).forEach(([key, item]) => {
-    //   const label = item.label || Object.values(item)[0]?.label;
-    //   // 处理前后置已删除的
-    //   if ([RequestComposition.POST_CONDITION as string, RequestComposition.PRECONDITION as string].includes(key)) {
-    //     const processorIds = requestVModel.value.children[0][
-    //       key === RequestComposition.POST_CONDITION ? 'postProcessorConfig' : 'preProcessorConfig'
-    //     ].processors.map((processorItem) => String(processorItem.id));
-    //     Object.entries(item).forEach(([childKey, childItem]) => {
-    //       if (!processorIds.includes(childKey)) {
-    //         childItem.messageList = [];
-    //       }
-    //     });
-    //   }
-    //   const messageList: string[] =
-    //     item.messageList || [...new Set(Object.values(item).flatMap((child) => child.messageList))] || [];
-    //   if (messageList.length) {
-    //     flattenedMessages.push({ label, messageList: [...new Set(messageList)] });
-    //   }
-    // });
-    // return flattenedMessages;
   }
 
   async function updateRequest() {
     // TODO：
-    // try {
-    //   if (!props.updateApi) return;
-    //   saveLoading.value = true;
-    //   const requestParams = await makeRequestParams();
-    //   const res = await props.updateApi({
-    //     ...requestParams,
-    //     ...props.otherParams,
-    //   });
-    //   Message.success(t('common.updateSuccess'));
-    //   requestVModel.value.updateTime = res.updateTime;
-    //   requestVModel.value.unSaved = false;
-    //   const parseRequestBodyResult = parseRequestBodyFiles(
-    //       requestVModel.value.body,
-    //       requestVModel.value.responseDefinition
-    //   );
-    //   requestVModel.value.uploadFileIds = parseRequestBodyResult.uploadFileIds;
-    //   requestVModel.value.linkFileIds = parseRequestBodyResult.linkFileIds;
-    //   emit('addDone');
-    // } catch (error) {
-    //   // eslint-disable-next-line no-console
-    //   console.log(error);
-    // } finally {
-    //   saveLoading.value = false;
-    // }
   }
 
   const saveModalVisible = ref(false);
+  const saveModalFormRef = ref<FormInstance>();
+
+  function handleCancel() {
+    saveModalFormRef.value?.resetFields();
+  }
+
+  watch(
+    () => saveModalVisible.value,
+    (val) => {
+      if (!val) {
+        saveModalFormRef.value?.resetFields();
+      }
+    }
+  );
+
+  const reportId = ref('');
+
+  const websocket = ref<WebSocket>();
+
+  const temporaryResponseMap: Record<string, any> = {}; // 缓存websocket返回的报告内容，避免执行接口后切换tab导致报告丢失
+
+  /**
+   * TODO：暂只支持serverExec的执行
+   * 开启websocket监听，接收执行结果
+   */
+  // async function debugSocket(executeType?: 'localExec' | 'serverExec') {
+  async function debugSocket(executeType?: 'serverExec') {
+    const { createSocket, websocket: _websocket } = useSqlWebsocket({
+      reportId: reportId.value,
+      socketUrl: '',
+      host: '',
+      onMessage: (event) => {
+        const data = JSON.parse(event.data);
+        if (data.msgType === 'SQL_EXEC_RESULT') {
+          if (requestVModel.value.reportId === data.reportId) {
+            // 判断当前查看的tab是否是当前返回的报告的tab，是的话直接赋值
+            requestVModel.value.response = data.taskResult;
+            requestVModel.value.executeLoading = false;
+            requestVModel.value.isExecute = false;
+          } else {
+            // 不是则需要把报告缓存起来，等切换到对应的tab再赋值
+            temporaryResponseMap[data.reportId] = data.taskResult;
+          }
+        } else if (data.msgType === 'SQL_EXEC_END') {
+          // 执行结束，关闭websocket
+          websocket.value?.close();
+          if (requestVModel.value.reportId === data.reportId) {
+            requestVModel.value.executeLoading = false;
+            requestVModel.value.isExecute = false;
+          }
+        }
+      },
+    });
+    await createSocket();
+    websocket.value = _websocket.value;
+  }
 
   const saveModalForm = ref({
     name: '',
-    moduleId: 'root',
+    // TODO：在ms的设计中，弹窗中似乎是可以选择模块的，所以在存储接口定义前，会用modal的部分值覆盖原request中的值，这部分逻辑在realsave中
+    //  如果后续sql也支持在弹窗中覆盖模块id，这里要做对应的修改
+    //  除了moduleid外还有tag等值
+    // moduleId: 'root',
   });
+
+  /**
+   * 生成请求参数
+   * @param executeType 执行类型，执行时传入
+   */
+  // async function makeRequestParams(executeType?: 'localExec' | 'serverExec') {
+  async function makeRequestParams(executeType?: 'serverExec') {
+    const isExecute = executeType === 'serverExec';
+    const { sqlContent } = requestVModel.value.body;
+
+    let parseRequestBodyResult;
+    // TODO：写死SQL的协议为MsSqlCaseElement，对于后端来说目前只有MYSQL的实现
+    // 但是如果以后要实现pg协议等，具体的实现可以在后端MsSqlCaseElement类中加一个protocol
+    // 也可以重新定义一个新的类型比如MsPgSqlCaseElement，这个方案可以等到具体实现的时候再定
+    const polymorphicName = 'MsSqlCaseElement';
+    const requestParams = {
+      polymorphicName,
+      body: {
+        ...requestVModel.value.body,
+      },
+    };
+    // 这里需要对输入的字符串进行解析，比如替换变量 $table，该部分内容待完成
+    reportId.value = getGenerateId();
+    requestVModel.value.reportId = reportId.value; // 存储报告ID
+    // 创建websocket连接，作用是同步sql的执行结果，编码过程参考了apiTest的实现
+    if (isExecute && !props.isCase) {
+      await debugSocket(executeType); // 开启websocket
+    }
+    let requestName = '';
+    let requestModuleId = '';
+    let apiDefinitionParams: Record<string, any> = {};
+
+    if (props.isDefinition) {
+      // 接口定义有响应内容定义
+      // TODO：这里需要检查一下，如果当前sql没有response，报错不让保存
+      requestName = requestVModel.value.name;
+      requestModuleId = requestVModel.value.moduleId;
+
+      apiDefinitionParams = {
+        tags: requestVModel.value.tags,
+        description: requestVModel.value.description,
+        status: requestVModel.value.status,
+        response: requestVModel.value.response?.data,
+      };
+    } else {
+      requestName = requestVModel.value.isNew ? saveModalForm.value.name : requestVModel.value.name;
+      requestModuleId = requestVModel.value.isNew ? saveModalForm.value.moduleId : requestVModel.value.moduleId;
+    }
+
+    // TODO：
+    // ms的接口测试中此处为处理断言参数，但是对于sql测试，这里需要保存完整的sql请求结果（包括headerList和data）
+    // const { assertionConfig } = requestVModel.value.children[0];
+    return {
+      id: requestVModel.value.id.toString(),
+      reportId: reportId.value,
+      // environmentId: appStore.currentEnvConfig?.id || '',
+      name: requestName,
+      moduleId: requestModuleId,
+      num: requestVModel.value.num,
+      ...apiDefinitionParams,
+      // TODO：sqlMethod，临时写死
+      sqlMethod: "DDL",
+      request: {
+        ...requestParams,
+        name: requestName,
+      },
+      frontendDebug: false,
+      isNew: requestVModel.value.isNew,
+      dataSourceId: 1,
+      projectId: appStore.currentProjectId,
+    };
+  }
 
   /**
    * TODO:
@@ -225,62 +376,59 @@
    * @param silence 是否静默保存（接口定义另存为用例时要先静默保存接口）
    */
   async function realSave(fullParams?: Record<string, any>, silence?: boolean) {
-    // try {
-    //   if (!props.createApi) return;
-    //   if (!silence) {
-    //     saveLoading.value = true;
-    //   }
-    //   let params;
-    //   const requestParams = await makeRequestParams();
-    //   if (props.isDefinition) {
-    //     params = {
-    //       ...(fullParams || requestParams),
-    //       ...props.otherParams,
-    //     };
-    //   } else {
-    //     params = {
-    //       ...(fullParams || requestParams),
-    //       ...saveModalForm.value,
-    //       path: isHttpProtocol.value ? saveModalForm.value.path : undefined,
-    //       ...props.otherParams,
-    //     };
-    //   }
-    //   const res = await props.createApi(params);
-    //   if (!silence) {
-    //     Message.success(t('common.saveSuccess'));
-    //   }
-    //   requestVModel.value.id = res.id;
-    //   requestVModel.value.num = res.num;
-    //   requestVModel.value.isNew = false;
-    //   requestVModel.value.unSaved = false;
-    //   requestVModel.value.name = res.name;
-    //   requestVModel.value.label = res.name;
-    //   requestVModel.value.url = res.path;
-    //   requestVModel.value.path = res.path;
-    //   requestVModel.value.moduleId = res.moduleId;
-    //   if (!isHttpProtocol.value) {
-    //     requestVModel.value = {
-    //       ...requestVModel.value,
-    //       ...fApi.value?.formData(), // 存储插件表单数据
-    //       uploadFileIds: requestParams.uploadFileIds,
-    //       linkFileIds: requestParams.linkFileIds,
-    //     };
-    //   } else {
-    //     requestVModel.value.uploadFileIds = requestParams.uploadFileIds;
-    //     requestVModel.value.linkFileIds = requestParams.linkFileIds;
-    //   }
-    //   if (!props.isDefinition) {
-    //     saveModalVisible.value = false;
-    //   }
-    //   if (!silence) {
-    //     saveLoading.value = false;
-    //     emit('addDone');
-    //   }
-    // } catch (error) {
-    //   // eslint-disable-next-line no-console
-    //   console.log(error);
-    //   saveLoading.value = false;
-    // }
+    try {
+      if (!props.createApi) return;
+      // TODO：
+      // if (!silence) {
+      //   saveLoading.value = true;
+      // }
+      const requestParams = await makeRequestParams();
+      let params;
+
+      if (props.isDefinition) {
+        params = {
+          ...(fullParams || requestParams),
+          ...saveModalForm.value,
+        };
+      } else {
+        params = {
+          ...(fullParams || requestParams),
+        };
+      }
+
+      const res = await props.createApi(params);
+
+      requestVModel.value.id = res.id;
+      requestVModel.value.num = res.num;
+      requestVModel.value.isNew = false;
+      requestVModel.value.unSaved = false;
+      requestVModel.value.name = res.name;
+      requestVModel.value.label = res.name;
+      requestVModel.value.url = res.path;
+      requestVModel.value.path = res.path;
+      requestVModel.value.moduleId = res.moduleId;
+
+      saveModalVisible.value = false;
+      // TODO：
+      // if (!silence) {
+      //   saveLoading.value = false;
+      //   emit('addDone');
+      // }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.log(error);
+      saveLoading.value = false;
+    }
+  }
+
+  function handleSave(done: (closed: boolean) => void) {
+    saveModalFormRef.value?.validate(async (errors) => {
+      if (!errors) {
+        await realSave();
+        done(true);
+      }
+    });
+    done(false);
   }
 
   /**
@@ -290,24 +438,12 @@
     try {
       // TODO：
       // 检查全部的校验信息
-      // if (getFlattenedMessages()?.length) {
-      //   showMessage();
-      //   return;
-      // }
       if (!requestVModel.value.isNew) {
         // 更新接口不需要弹窗，直接更新保存
         await updateRequest();
-        return;
-      }
-      if (!props.isDefinition) {
-        // 接口调试需要弹窗保存
-        saveModalForm.value = {
-          name: requestVModel.value.name || '',
-          moduleId: 'root',
-        };
-        saveModalVisible.value = true;
       } else {
-        realSave();
+        // 原版这里直接保存，但是SQL定义页面实在找不到存放name的合适位置，因此使用对话框形式存储，需要先弹窗，然后输入name字段后保存
+        saveModalVisible.value = true;
       }
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -321,18 +457,15 @@
     }
   }
 
+  const isNameError = ref(false);
+
   async function handleSelect(value: string | number | Record<string, any> | undefined) {
-    // TODO：
-    // if (requestVModel.value.url === '' && requestVModel.value.protocol === 'HTTP') {
-    //   isUrlError.value = true;
-    //   return;
-    // }
     // if (requestVModel.value.name === '') {
+    //   console.log("handleSelect");
     //   isNameError.value = true;
     //   return;
     // }
-    // isUrlError.value = false;
-    // isNameError.value = false;
+    // TODO：api 调试页面，另存为接口的功能，后面做另存为用例的时候可以参考
     // if (value === 'saveAsApi') {
     //   const params = await makeRequestParams();
     //   tempApiDetail.value = {
@@ -343,6 +476,17 @@
     //   saveNewApiModalVisible.value = true;
     //   return;
     // }
+    // TODO：一些表单数据的验证，先略过
+    switch (value) {
+      case 'save':
+        handleSaveShortcut();
+        break;
+      case 'saveAsCase':
+        // saveNewDefinition();
+        break;
+      default:
+        break;
+    }
     // apiBaseFormRef.value?.formRef?.validate(async (errors) => {
     //   if (errors) {
     //     requestVModel.value.activeTab = RequestComposition.BASE_INFO;
@@ -385,124 +529,6 @@
       registerCatchSaveShortcut();
     }
   });
-
-  const reportId = ref('');
-
-  const temporaryResponseMap: Record<string, any> = {}; // 缓存websocket返回的报告内容，避免执行接口后切换tab导致报告丢失
-  const websocket = ref<WebSocket>();
-
-  /**
-   * TODO：暂只支持serverExec的执行
-   * 开启websocket监听，接收执行结果
-   */
-  // async function debugSocket(executeType?: 'localExec' | 'serverExec') {
-  async function debugSocket(executeType?: 'serverExec') {
-    const { createSocket, websocket: _websocket } = useSqlWebsocket({
-      reportId: reportId.value,
-      socketUrl: '',
-      host: '',
-      onMessage: (event) => {
-        const data = JSON.parse(event.data);
-        if (data.msgType === 'SQL_EXEC_RESULT') {
-          if (requestVModel.value.reportId === data.reportId) {
-            // 判断当前查看的tab是否是当前返回的报告的tab，是的话直接赋值
-            requestVModel.value.response = data.taskResult;
-            requestVModel.value.executeLoading = false;
-            requestVModel.value.isExecute = false;
-          } else {
-            // 不是则需要把报告缓存起来，等切换到对应的tab再赋值
-            temporaryResponseMap[data.reportId] = data.taskResult;
-          }
-        } else if (data.msgType === 'SQL_EXEC_END') {
-          // 执行结束，关闭websocket
-          websocket.value?.close();
-          if (requestVModel.value.reportId === data.reportId) {
-            requestVModel.value.executeLoading = false;
-            requestVModel.value.isExecute = false;
-          }
-        }
-      },
-    });
-    await createSocket();
-    websocket.value = _websocket.value;
-  }
-
-  /**
-   * 生成请求参数
-   * @param executeType 执行类型，执行时传入
-   */
-  // async function makeRequestParams(executeType?: 'localExec' | 'serverExec') {
-  async function makeRequestParams(executeType?: 'serverExec') {
-    const isExecute = executeType === 'serverExec';
-    const { sqlContent } = requestVModel.value.body;
-
-    let parseRequestBodyResult;
-    const requestParams = {
-      body: {
-        ...requestVModel.value.body,
-      },
-    };
-    // 这里需要对输入的字符串进行解析，比如替换变量 $table，该部分内容待完成
-    reportId.value = getGenerateId();
-    requestVModel.value.reportId = reportId.value; // 存储报告ID
-    // 创建websocket连接，作用是同步sql的执行结果，编码过程参考了apiTest的实现
-    if (isExecute && !props.isCase) {
-      await debugSocket(executeType); // 开启websocket
-    }
-    let requestName = '';
-    let requestModuleId = '';
-    const apiDefinitionParams: Record<string, any> = {};
-    if (props.isDefinition) {
-      // TODO：
-      // 接口定义有响应内容定义
-      // requestName = requestVModel.value.name;
-      // requestModuleId = requestVModel.value.moduleId;
-      // apiDefinitionParams = {
-      //   tags: requestVModel.value.tags,
-      //   description: requestVModel.value.description,
-      //   status: requestVModel.value.status,
-      //   response: requestVModel.value.responseDefinition?.map((e) => ({
-      //     ...e,
-      //     headers: filterKeyValParams(e.headers, defaultKeyValueParamItem, isExecute).validParams,
-      //     body: {
-      //       ...e.body,
-      //       jsonBody: {
-      //         jsonValue: e.body.jsonBody.jsonValue,
-      //         enableJsonSchema: jsonBody.enableJsonSchema,
-      //         jsonSchema: e.body.jsonBody.jsonSchemaTableData
-      //             ? parseTableDataToJsonSchema(e.body.jsonBody.jsonSchemaTableData[0])
-      //             : undefined,
-      //       },
-      //     },
-      //   })),
-      // };
-    } else {
-      requestName = requestVModel.value.isNew ? saveModalForm.value.name : requestVModel.value.name;
-      requestModuleId = requestVModel.value.isNew ? saveModalForm.value.moduleId : requestVModel.value.moduleId;
-    }
-
-    // TODO：
-    // 处理断言参数
-    // const { assertionConfig } = requestVModel.value.children[0];
-    return {
-      id: requestVModel.value.id.toString(),
-      reportId: reportId.value,
-      // environmentId: appStore.currentEnvConfig?.id || '',
-      name: requestName,
-      moduleId: requestModuleId,
-      num: requestVModel.value.num,
-      ...apiDefinitionParams,
-      // method: isHttpProtocol.value ? requestVModel.value.method : requestVModel.value.protocol,
-      // path: isHttpProtocol.value ? requestVModel.value.url || requestVModel.value.path : undefined,
-      request: {
-        ...requestParams,
-        name: requestName,
-      },
-      frontendDebug: false,
-      isNew: requestVModel.value.isNew,
-      dataSourceId: 1,
-    };
-  }
 
   /**
    * 执行调试，这里沿用了ms的api debug逻辑，点击服务端执行后，发起的executeApi请求并不会返回

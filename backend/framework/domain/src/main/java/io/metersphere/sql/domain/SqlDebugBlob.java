@@ -1,19 +1,16 @@
 package io.metersphere.sql.domain;
 
-import io.metersphere.validation.groups.Created;
-import io.metersphere.validation.groups.Updated;
+import io.metersphere.validation.groups.*;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import lombok.Data;
-
+import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import lombok.Data;
 
 @Data
 public class SqlDebugBlob implements Serializable {
-    @Schema(description = "SQLfk/ 一对一关系", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "SQL fk/ 一对一关系", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "{sql_debug_blob.id.not_blank}", groups = {Updated.class})
     @Size(min = 1, max = 50, message = "{sql_debug_blob.id.length_range}", groups = {Created.class, Updated.class})
     private String id;

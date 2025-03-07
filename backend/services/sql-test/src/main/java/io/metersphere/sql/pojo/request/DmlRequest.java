@@ -1,6 +1,6 @@
 package io.metersphere.sql.pojo.request;
 
-import io.metersphere.sql.controller.data.source.request.DataSourceBaseRequest;
+import io.metersphere.sql.pojo.data.source.DataSourceBaseRequest;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 

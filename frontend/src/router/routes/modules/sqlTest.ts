@@ -6,7 +6,7 @@ import type { AppRouteRecordRaw } from '../types';
 const SqlTest: AppRouteRecordRaw = {
   path: '/sql-test',
   name: SqlTestRouteEnum.SQL_TEST,
-  redirect: '/sql-test/debug',
+  redirect: '/sql-test/sql-case',
   component: DEFAULT_LAYOUT,
   meta: {
     locale: 'menu.sqlTest',
@@ -35,9 +35,9 @@ const SqlTest: AppRouteRecordRaw = {
       },
     },
     {
-      path: 'sal-case',
+      path: 'sql-case',
       name: SqlTestRouteEnum.SQL_TEST_CASE,
-      component: () => import('@/views/sql-test/case/index.vue'),
+      component: () => import('@/views/sql-test/caseManagement/index.vue'),
       meta: {
         locale: 'menu.sqlTest.sqlCase',
         roles: ['PROJECT_API_DEBUG:READ'],

@@ -1,15 +1,12 @@
 package io.metersphere.sql.service.common.impl;
 
 
-import com.alibaba.druid.pool.DruidPooledConnection;
 import io.metersphere.sdk.constants.KafkaTopicConstants;
 import io.metersphere.sdk.constants.MsgType;
 import io.metersphere.sdk.dto.SocketMsgDTO;
 import io.metersphere.sdk.util.JSON;
 import io.metersphere.sql.aspect.ConnectionInfoHandler;
 import io.metersphere.sql.context.Chat2DBContext;
-import io.metersphere.sql.context.Chat2dbConnectInfo;
-import io.metersphere.sql.controller.data.source.request.DataSourceBaseRequest;
 import io.metersphere.sql.converter.CommandConverter;
 import io.metersphere.sql.pojo.model.Command;
 import io.metersphere.sql.pojo.model.ExecuteResult;
@@ -17,7 +14,6 @@ import io.metersphere.sql.pojo.params.DlExecuteParam;
 import io.metersphere.sql.service.common.DlTemplateService;
 import io.metersphere.sql.spi.model.Header;
 import io.metersphere.sql.spi.service.CommandExecutor;
-import io.metersphere.sql.utils.ConnectionPool;
 import io.metersphere.sql.wrapper.result.ListResult;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +24,6 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
-import java.sql.Connection;
 import java.util.List;
 
 import static io.metersphere.sdk.constants.KafkaTopicConstants.SQL_REPORT_DEBUG_TASK_RESULT_TOPIC;
@@ -78,7 +73,7 @@ public class DlTemplateServiceImpl implements DlTemplateService {
         // 通过不同的协议来获取处理器类型，使用合适的CommandExecutor类型来执行，当前只有mysql，后续可能会因为支持pg协议等增加更多内容
         CommandExecutor executor = Chat2DBContext.getMetaData(command.getProtocol()).getCommandExecutor();
 
-        Long dataSourceId = command.getDataSourceId();
+        Integer dataSourceId = command.getDataSourceId();
         Chat2DBContext.putContext(connectionInfoHandler.toInfo(dataSourceId));
 
         List<ExecuteResult> results = executor.executeDirect(command);

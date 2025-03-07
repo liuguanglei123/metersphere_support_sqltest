@@ -10,10 +10,10 @@ export enum RequestMethods {
   CONNECT = 'CONNECT',
 }
 
-// 接口请求方法
-export enum SQLRequestMethods {
-  SQL = 'SQL',
-}
+// SQL请求方法，使用sqlEnum.ts代替
+// export enum SQLRequestMethods {
+//   SQL = 'SQL',
+// }
 
 // 接口组成部分
 export enum RequestComposition {

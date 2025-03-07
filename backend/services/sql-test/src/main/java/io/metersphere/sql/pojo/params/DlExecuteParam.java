@@ -1,5 +1,6 @@
 package io.metersphere.sql.pojo.params;
 
+import io.metersphere.sql.pojo.dto.SqlRequestParams;
 import io.metersphere.sql.pojo.dto.debug.SqlDebugRunRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -72,7 +73,7 @@ public class DlExecuteParam {
 
     @NotNull
     @Schema(description = "请求内容，唯一内容为sql-string")
-    private SqlDebugRunRequest.RequestParams request;
+    private SqlRequestParams request;
 
     @Schema(description = "项目ID")
     private String projectId;

@@ -1,5 +1,6 @@
 package io.metersphere.sql.converter;
 
+import io.metersphere.sql.pojo.dto.SqlRequestParams;
 import io.metersphere.sql.pojo.dto.debug.SqlDebugRunRequest;
 import io.metersphere.sql.pojo.model.ExecuteResult;
 import io.metersphere.sql.pojo.request.DmlRequest;
@@ -36,9 +37,9 @@ public abstract class RdbWebConverter {
      */
     public abstract List<ExecuteResultVO> dto2vo(List<ExecuteResult> dtos);
 
-    public abstract SqlDebugRunRequest.RequestParams requestParams2params(SqlDebugRunRequest.RequestParams requestParams);
+    public abstract SqlRequestParams requestParams2params(SqlRequestParams requestParams);
 
-    public abstract SqlDebugRunRequest.SqlExecuteBody SqlExecuteBody2body(SqlDebugRunRequest.SqlExecuteBody requestBody);
+    public abstract SqlRequestParams.SqlExecuteBody SqlExecuteBody2body(SqlRequestParams.SqlExecuteBody requestBody);
 
 
 }

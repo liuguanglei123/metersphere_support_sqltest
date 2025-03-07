@@ -5,6 +5,6 @@ import io.metersphere.sql.domain.UserConnectionInfo;
 public interface UserConnectionInfoService {
     Long createUserConnectionInfo(UserConnectionInfo userConnectionInfo);
 
-    UserConnectionInfo getUserConnectionInfo(Long id);
+    UserConnectionInfo getUserConnectionInfo(Integer id);
 
 }

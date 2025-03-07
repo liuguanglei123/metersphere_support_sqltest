@@ -1,4 +1,4 @@
-package io.metersphere.sql.controller.data.source.request;
+package io.metersphere.sql.pojo.data.source;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -14,7 +14,7 @@ public class DataSourceBaseRequest{
      * user-connection-info表中的id值
      */
     @NotNull
-    private Long dataSourceId;
+    private Integer dataSourceId;
 
     /**
      * DB name

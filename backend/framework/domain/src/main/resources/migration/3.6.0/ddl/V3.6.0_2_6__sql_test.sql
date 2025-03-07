@@ -1,0 +1,42 @@
+CREATE TABLE `sql_definition` (
+    `id` varchar(50) NOT NULL COMMENT 'SQL pk',
+    `name` varchar(255) NOT NULL COMMENT 'SQL用例名称',
+    `sql_protocol` varchar(20) NOT NULL COMMENT 'SQL协议,如mysql pg等',
+    `sql_method` varchar(20)  DEFAULT NULL COMMENT 'sql语句类型，比如DDL DQL DML等',
+    `status` varchar(50)  NOT NULL COMMENT '用例状态/进行中/已完成',
+    `num` bigint NULL COMMENT '自定义id',
+    `tags` varchar(1000)  DEFAULT NULL COMMENT '标签',
+    `pos` bigint DEFAULT NULL COMMENT '自定义排序',
+    `project_id` varchar(50)  NOT NULL COMMENT '项目fk',
+    `module_id` varchar(50)  NOT NULL DEFAULT 'root' COMMENT '模块fk',
+    `latest` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否为最新版本 0:否，1:是',
+    `version_id` varchar(50)  DEFAULT NULL COMMENT '版本fk',
+    `ref_id` varchar(50)  NOT NULL COMMENT '版本引用fk',
+    `description` varchar(1000)  DEFAULT NULL COMMENT '描述',
+    `create_time` bigint NOT NULL COMMENT '创建时间',
+    `create_user` varchar(50)  NOT NULL COMMENT '创建人',
+    `update_time` bigint NOT NULL COMMENT '修改时间',
+    `update_user` varchar(50)  NOT NULL COMMENT '修改人',
+    `delete_user` varchar(50)  DEFAULT NULL COMMENT '删除人',
+    `delete_time` bigint DEFAULT NULL COMMENT '删除时间',
+    `deleted` bit(1) NOT NULL DEFAULT b'0' COMMENT '删除状态',
+    PRIMARY KEY (`id`),
+    KEY `idx_project_id` (`project_id`),
+    KEY `idx_module_id` (`module_id`),
+    KEY `idx_ref_id` (`ref_id`),
+    KEY `idx_version_id` (`version_id`),
+    KEY `idx_status` (`status`),
+    KEY `idx_pos` (`pos`),
+    KEY `idx_protocol` (`sql_protocol`),
+    KEY `idx_create_time` (`create_time` DESC),
+    KEY `idx_name` (`name`),
+    KEY `idx_project_id_delete_create_time_create_user` (`project_id`,`deleted`,`create_time`,`create_user`),
+    KEY `idx_project_id_delete_create_time` (`project_id`,`deleted`,`create_time`)
+) COMMENT='SQL用例定义';
+
+CREATE TABLE `sql_definition_blob` (
+    `id` varchar(50) NOT NULL COMMENT 'SQL fk/ 与sql_definition表一对一关系',
+    `request` longblob COMMENT '请求内容',
+    `response` longblob COMMENT '响应内容',
+    PRIMARY KEY (`id`)
+) COMMENT='SQL用例定义详情内容'

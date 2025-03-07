@@ -2,7 +2,7 @@ package io.metersphere.sql.controller;
 
 import io.metersphere.sql.aspect.ConnectionInfoAspect;
 import io.metersphere.sql.context.Chat2DBContext;
-import io.metersphere.sql.controller.data.source.request.DataSourceBaseRequest;
+import io.metersphere.sql.pojo.data.source.DataSourceBaseRequest;
 import io.metersphere.sql.domain.UserConnectionInfo;
 import io.metersphere.sql.service.common.UserConnectionInfoService;
 import io.metersphere.system.utils.SessionUtils;

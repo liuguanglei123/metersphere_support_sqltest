@@ -26,7 +26,7 @@
                   @close="handleDebugTabClose"
                 >
                   <template #label="{ tab }">
-                    <sqlMethodName :method="SQLRequestMethods.SQL" class="mr-[4px]" />
+                    <sqlMethodName :method="SQLRequestMethods.DDL" class="mr-[4px]" />
                     <a-tooltip :content="tab.name || tab.label" :mouse-enter-delay="500">
                       <div class="one-line-text max-w-[144px]">
                         {{ tab.name || tab.label }}
@@ -93,7 +93,7 @@
   import { hasAnyPermission } from '@/utils/permission';
 
   import { ModuleTreeNode } from '@/models/common';
-  import { SQLRequestMethods, SqlResponseComposition } from '@/enums/apiEnum';
+  import { SQLRequestMethods, SqlResponseComposition } from '@/enums/sqlEnum';
 
   import {defaultSqlBodyParams, defaultSqlResponse} from '@/views/sql-test/components/config';
 

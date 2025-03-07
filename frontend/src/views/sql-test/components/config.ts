@@ -18,7 +18,7 @@ import {
   ResponseDefinition,
 } from '@/models/apiTest/common';
 import type { MockParams } from '@/models/apiTest/mock';
-import {IManageResultData, SqlExecuteBody, SqlRequestTaskResult} from '@/models/sqlTest/common';
+import {IManageResultData, SqlExecuteBody, SqlRequestTaskResult, SqlResponseDefinition} from '@/models/sqlTest/common';
 import {
   FullResponseAssertionType,
   RequestAssertionCondition,
@@ -82,37 +82,22 @@ export const defaultRequestParamsItem: ExecuteRequestCommonParam = {
 };
 
 // 请求的响应 response 默认的响应信息项
-export const defaultResponseItem: ResponseDefinition = {
+export const defaultSqlResponseItem: SqlResponseDefinition = {
   id: new Date().getTime(),
-  name: 'apiTestManagement.response',
-  label: 'apiTestManagement.response',
+  name: 'sqlTestManagement.response',
+  label: 'sqlTestManagement.response',
   closable: false,
-  statusCode: 200,
+  status: null,
   defaultFlag: true,
+  // TODO：showPopConfirm showRenamePopConfirm 暂不确定用途
   showPopConfirm: false,
   showRenamePopConfirm: false,
-  responseActiveTab: ResponseComposition.BODY,
-  headers: [],
+  errorCode: null,
+  errorMessage: null,
+  affectedRows: null,
   body: {
-    bodyType: ResponseBodyFormat.JSON,
-    jsonBody: {
-      jsonValue: '',
-      enableJsonSchema: true,
-      enableTransition: false,
-      jsonSchemaTableData: [],
-      jsonSchemaTableSelectedRowKeys: [],
-    },
-    xmlBody: {
-      value: '',
-    },
-    rawBody: {
-      value: '',
-    },
-    binaryBody: {
-      description: '',
-      file: undefined,
-      sendAsBody: false,
-    },
+    headerList:[],
+    tableData:[],
   },
 };
 
@@ -467,6 +452,7 @@ export const lastReportStatusListOptions = computed(() => {
 });
 
 // api下的创建用例弹窗也用到了defaultCaseParams
+// TODO：需要更新defaultCaseParams以适配sql测试
 const initDefaultId = `case-${Date.now()}`;
 export const defaultCaseParams: SqlRequestParam = {
   id: initDefaultId,
@@ -527,8 +513,8 @@ export const defaultCaseParams: SqlRequestParam = {
     autoRedirects: false,
   },
   responseActiveTab: ResponseComposition.BODY,
-  response: cloneDeep(defaultResponse),
-  responseDefinition: [cloneDeep(defaultResponseItem)],
+  response: cloneDeep(defaultSqlResponse),
+  responseDefinition: [cloneDeep(defaultSqlResponseItem)],
   isNew: true,
   unSaved: false,
   executeLoading: false,

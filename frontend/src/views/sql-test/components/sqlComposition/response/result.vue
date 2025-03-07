@@ -101,10 +101,8 @@
   watch(
       () => props.requestResult,
       (newValue) => {
-        console.log("newValue1");
-        console.log(newValue);
         newValue?.forEach( (e) => {
-          console.log(e);
+          // TODO：
           // console.log(e instanceof IManageResultData);
         });
   });

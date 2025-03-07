@@ -434,6 +434,8 @@ export interface SqlRequestResult {
 export interface ITableHeaderItem {
   dataType: DataType;
   name: string;
+  // 以下内容是chat2db在编辑表结构时用到的字段，如果仅仅是数据查询，基本时用不到了
+  // 只有ms平台增加表结构编辑功能的话，才会用到如下字段
   autoIncrement: boolean | null; // 是否自增
   columnSize: number | null; // 字段长度
   comment: string | null; // 字段注释
@@ -468,21 +470,47 @@ export interface SqlRequestTaskResult {
   errorCode: string | null;
   errorMessage: string | null;
 }
-// 响应定义-body
-export interface SqlResponseDefinitionBody {
+
+// api响应定义-body
+export interface ResponseDefinitionBody {
   bodyType: ResponseBodyFormat;
   jsonBody: SqlExecuteJsonBody;
   xmlBody: SqlExecuteValueBody;
   rawBody: SqlExecuteValueBody;
   binaryBody: SqlExecuteBinaryBody;
 }
+
 // 响应定义
-export interface SqlResponseDefinition {
+export interface ResponseDefinition {
   id: string | number;
-  statusCode: string | number;
+  status: string | number;
+  errorCode: string | number;
+  errorMessage: string | number;
+  affectedRows: string | number;
   defaultFlag: boolean; // 默认响应标志
   name: string; // 响应名称
-  headers: SqlKeyValueParam[];
+  body: ResponseDefinitionBody;
+  [key: string]: any; // 用于前端渲染时填充的自定义信息，后台无此字段
+}
+
+// SQL响应定义-body
+// 思考过程:关于前端是否要存储响应table中每个字段的类型（int varchar等），感觉没有必要，因为所有的比对都是后端完成的，前端只需要将比对结果展示出来即可
+// 因此这里只保存了headerList（包含字段name和类型，方便前端展示），和无数据类型的tableData，默认所有数据都是string类型即可
+// TODO：将来编写SqlResponseDefinitionBody比对时，需要注意ITableHeaderItem类中只需要比对dataType和name字段就可以，其他字段不用比对
+export interface SqlResponseDefinitionBody {
+  headerList: ITableHeaderItem[];
+  tableData: string[][];
+}
+
+// SQL响应定义
+export interface SqlResponseDefinition {
+  id: string | number;
+  status: 'success' | 'failed' | null; // success 或者 failed
+  errorCode: string | null;
+  errorMessage: string | null;
+  affectedRows: string | null;
+  defaultFlag: boolean; // 默认响应标志
+  name: string; // 响应名称
   body: SqlResponseDefinitionBody;
   [key: string]: any; // 用于前端渲染时填充的自定义信息，后台无此字段
 }

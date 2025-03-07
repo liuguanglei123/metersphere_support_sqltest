@@ -12,13 +12,13 @@ public interface UserConnectionInfoMapper {
 
     int deleteByPrimaryKey(Integer id);
 
-    long insert(UserConnectionInfo record);
+    int insert(UserConnectionInfo record);
 
     int insertSelective(UserConnectionInfo record);
 
     List<UserConnectionInfo> selectByExample(UserConnectionInfoExample example);
 
-    UserConnectionInfo selectByPrimaryKey(Long id);
+    UserConnectionInfo selectByPrimaryKey(Integer id);
 
     int updateByExampleSelective(@Param("record") UserConnectionInfo record, @Param("example") UserConnectionInfoExample example);
 

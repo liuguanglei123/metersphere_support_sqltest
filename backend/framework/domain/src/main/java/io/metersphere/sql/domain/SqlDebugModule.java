@@ -1,41 +1,37 @@
 package io.metersphere.sql.domain;
 
-import io.metersphere.validation.groups.Created;
-import io.metersphere.validation.groups.Updated;
+import io.metersphere.validation.groups.*;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.Data;
-
+import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import lombok.Data;
 
 @Data
 public class SqlDebugModule implements Serializable {
     @Schema(description = "SQL模块pk", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotBlank(message = "{api_debug_module.id.not_blank}", groups = {Updated.class})
-    @Size(min = 1, max = 50, message = "{api_debug_module.id.length_range}", groups = {Created.class, Updated.class})
+    @NotBlank(message = "{sql_debug_module.id.not_blank}", groups = {Updated.class})
+    @Size(min = 1, max = 50, message = "{sql_debug_module.id.length_range}", groups = {Created.class, Updated.class})
     private String id;
 
     @Schema(description = "模块名称", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotBlank(message = "{api_debug_module.name.not_blank}", groups = {Created.class})
-    @Size(min = 1, max = 255, message = "{api_debug_module.name.length_range}", groups = {Created.class, Updated.class})
+    @NotBlank(message = "{sql_debug_module.name.not_blank}", groups = {Created.class})
+    @Size(min = 1, max = 255, message = "{sql_debug_module.name.length_range}", groups = {Created.class, Updated.class})
     private String name;
 
     @Schema(description = "父级fk", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotBlank(message = "{api_debug_module.parent_id.not_blank}", groups = {Created.class})
-    @Size(min = 1, max = 50, message = "{api_debug_module.parent_id.length_range}", groups = {Created.class, Updated.class})
+    @NotBlank(message = "{sql_debug_module.parent_id.not_blank}", groups = {Created.class})
+    @Size(min = 1, max = 50, message = "{sql_debug_module.parent_id.length_range}", groups = {Created.class, Updated.class})
     private String parentId;
 
     @Schema(description = "项目fk", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotBlank(message = "{api_debug_module.project_id.not_blank}", groups = {Created.class})
-    @Size(min = 1, max = 50, message = "{api_debug_module.project_id.length_range}", groups = {Created.class, Updated.class})
+    @NotBlank(message = "{sql_debug_module.project_id.not_blank}", groups = {Created.class})
+    @Size(min = 1, max = 50, message = "{sql_debug_module.project_id.length_range}", groups = {Created.class, Updated.class})
     private String projectId;
 
     @Schema(description = "排序", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull(message = "{api_debug_module.pos.not_blank}", groups = {Created.class})
+    @NotNull(message = "{sql_debug_module.pos.not_blank}", groups = {Created.class})
     private Long pos;
 
     @Schema(description = "创建时间")

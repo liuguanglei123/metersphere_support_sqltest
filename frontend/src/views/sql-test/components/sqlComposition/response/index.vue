@@ -89,13 +89,11 @@
 <script setup lang="ts">
   import MsButton from '@/components/pure/ms-button/index.vue';
   import type { Direction } from '@/components/pure/ms-split-box/index.vue';
-  import edit, { ResponseItem } from './edit.vue';
-  import responseCodeTimeSize from './responseCodeTimeSize.vue';
   import result from './result.vue';
+  import {SqlResponseItem} from "@/views/sql-test/components/sqlComposition/response/edit.vue";
 
   import { useI18n } from '@/hooks/useI18n';
 
-  import { RequestResult } from '@/models/apiTest/common';
   import {IManageResultData} from "@/models/sqlTest/common";
   import { ResponseBodyFormat, ResponseComposition } from '@/enums/apiEnum';
 
@@ -137,7 +135,7 @@
   const activeTab = defineModel<ResponseComposition>('activeTab', {
     required: true,
   });
-  const responseDefinition = defineModel<ResponseItem[]>('responseDefinition', {
+  const responseDefinition = defineModel<SqlResponseItem[]>('responseDefinition', {
     default: [],
   });
   const innerIsExpanded = defineModel<boolean>('isExpanded', {
@@ -160,7 +158,7 @@
   watchEffect(() => {
     // 过滤无效数据后的有效响应数据；当接口导入时会存在部分字段为 null 的数据，需要设置默认值
     let hasInvalid = false;
-    let validResponseDefinition: ResponseItem[] = [];
+    let validResponseDefinition: SqlResponseItem[] = [];
     if (responseDefinition.value.length > 0) {
       validResponseDefinition = responseDefinition.value.map((item, i) => {
         // 某些字段在导入时接口返回 null，需要设置默认值
@@ -172,37 +170,11 @@
           item.id = new Date().getTime() + i;
           hasInvalid = true;
         }
-        if (item.body.bodyType === ResponseBodyFormat.NONE) {
-          item.body.bodyType = ResponseBodyFormat.RAW;
-          hasInvalid = true;
-        }
-        if (!item.body.binaryBody) {
-          item.body.binaryBody = {
-            description: '',
-            file: undefined,
-            sendAsBody: false,
-          };
-          hasInvalid = true;
-        }
-        if (!item.body.jsonBody) {
-          item.body.jsonBody = {
-            jsonValue: '',
-            enableJsonSchema: true,
-            enableTransition: false,
-            jsonSchemaTableData: [],
-          };
-          if (!item.body.xmlBody) {
-            item.body.xmlBody = {
-              value: '',
-            };
-          }
-          if (!item.body.rawBody) {
-            item.body.rawBody = {
-              value: '',
-            };
-          }
-          hasInvalid = true;
-        }
+        // TODO：
+        // if (item.body.bodyType === ResponseBodyFormat.NONE) {
+        //   item.body.bodyType = ResponseBodyFormat.RAW;
+        //   hasInvalid = true;
+        // }
         return item;
       });
     }

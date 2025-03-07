@@ -23,6 +23,8 @@ export enum StatusType {
   FAIL = 'fail',
 }
 
+// TODO:目前datatype肯定还需要再继续补充，比如multiset和array
+//  展示的时候可以按照默认类型展示，但是比对的时候就比较麻烦了
 export type DataType =
   | 'BOOLEAN'
   | 'NUMERIC'

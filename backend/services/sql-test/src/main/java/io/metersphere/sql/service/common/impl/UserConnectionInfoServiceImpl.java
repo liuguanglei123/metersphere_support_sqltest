@@ -13,10 +13,10 @@ public class UserConnectionInfoServiceImpl implements UserConnectionInfoService 
     UserConnectionInfoMapper userConnectionInfoMapper;
 
     public Long createUserConnectionInfo(UserConnectionInfo userConnectionInfo) {
-        return userConnectionInfoMapper.insert(userConnectionInfo);
+        return (long) userConnectionInfoMapper.insert(userConnectionInfo);
     }
 
-    public UserConnectionInfo getUserConnectionInfo(Long id) {
+    public UserConnectionInfo getUserConnectionInfo(Integer id) {
         return userConnectionInfoMapper.selectByPrimaryKey(id);
     }
 

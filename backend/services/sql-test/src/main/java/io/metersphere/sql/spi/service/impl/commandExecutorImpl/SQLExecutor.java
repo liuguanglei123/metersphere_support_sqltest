@@ -309,23 +309,26 @@ public class SQLExecutor implements CommandExecutor {
 
     private void addRowNumber(ExecuteResult executeResult, int pageNo, int pageSize) {
         List<Header> headers = executeResult.getHeaderList();
+        // TODO:这里把CHAT2DB_ROW_NUMBER第一列行号删掉了，很明显这里是chat2db的逻辑，感觉不需要这一列信息
+        //  但是删除这里有个坏处，chat2db原来是选中第一列可以进行整行的操作，现在删除了可能就需要换种方法对整行进行操作了
         Header rowNumberHeader = Header.builder()
                 .name(I18nUtils.getMessage("sqlResult.rowNumber"))
                 .dataType(DataTypeEnum.CHAT2DB_ROW_NUMBER
                         .getCode()).build();
-        executeResult.setHeaderList(EasyCollectionUtils.union(Arrays.asList(rowNumberHeader), headers));
+//        executeResult.setHeaderList(EasyCollectionUtils.union(Arrays.asList(rowNumberHeader), headers));
+        executeResult.setHeaderList(headers);
 
-        // Add row number
-        if (executeResult.getDataList() != null) {
-            int rowNumberIncrement = 1 + Math.max(pageNo - 1, 0) * pageSize;
-            for (int i = 0; i < executeResult.getDataList().size(); i++) {
-                List<String> row = executeResult.getDataList().get(i);
-                List<String> newRow = Lists.newArrayListWithExpectedSize(row.size() + 1);
-                newRow.add(Integer.toString(i + rowNumberIncrement));
-                newRow.addAll(row);
-                executeResult.getDataList().set(i, newRow);
-            }
-        }
+        // TODO：Add row number
+//        if (executeResult.getDataList() != null) {
+//            int rowNumberIncrement = 1 + Math.max(pageNo - 1, 0) * pageSize;
+//            for (int i = 0; i < executeResult.getDataList().size(); i++) {
+//                List<String> row = executeResult.getDataList().get(i);
+//                List<String> newRow = Lists.newArrayListWithExpectedSize(row.size() + 1);
+//                newRow.add(Integer.toString(i + rowNumberIncrement));
+//                newRow.addAll(row);
+//                executeResult.getDataList().set(i, newRow);
+//            }
+//        }
     }
 
     private void setPageInfo(ExecuteResult executeResult, SqlTypeEnum sqlType, int pageNo, int pageSize) {

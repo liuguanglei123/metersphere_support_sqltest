@@ -7,6 +7,7 @@ import io.metersphere.system.controller.handler.result.MsHttpResultCode;
 import io.metersphere.system.utils.ServiceUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.lang.ShiroException;
@@ -25,7 +26,7 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
-
+@Slf4j
 @RestControllerAdvice
 public class RestControllerExceptionHandler {
 
@@ -115,6 +116,7 @@ public class RestControllerExceptionHandler {
 
     @ExceptionHandler({Exception.class})
     public ResponseEntity<ResultHolder> handleException(Exception e) {
+        log.error(e.getMessage(), e);
         return ResponseEntity.internalServerError()
                 .body(ResultHolder.error(MsHttpResultCode.FAILED.getCode(),
                         e.getMessage(), getStackTraceAsString(e)));

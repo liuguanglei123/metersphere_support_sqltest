@@ -2,11 +2,10 @@ package io.metersphere.sql.aspect;
 
 import io.metersphere.sql.context.Chat2DBContext;
 import io.metersphere.sql.context.Chat2dbConnectInfo;
-import io.metersphere.sql.controller.data.source.request.DataSourceBaseRequest;
+import io.metersphere.sql.pojo.data.source.DataSourceBaseRequest;
 import io.metersphere.sql.domain.UserConnectionInfo;
 import io.metersphere.sql.mapper.UserConnectionInfoMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -36,7 +35,7 @@ public class ConnectionInfoHandler {
                 for (int i = 0; i < params.length; i++) {
                     Object param = params[i];
                     if (param instanceof DataSourceBaseRequest) {
-                        Long dataSourceId = ((DataSourceBaseRequest) param).getDataSourceId();
+                        Integer dataSourceId = ((DataSourceBaseRequest) param).getDataSourceId();
                         Chat2DBContext.putContext(toInfo(dataSourceId));
                     }
                 }
@@ -48,7 +47,7 @@ public class ConnectionInfoHandler {
         }
     }
 
-    public Chat2dbConnectInfo toInfo(Long dataSourceId) {
+    public Chat2dbConnectInfo toInfo(Integer dataSourceId) {
         UserConnectionInfo userConnectionInfo = userConnectionInfoMapper.selectByPrimaryKey(dataSourceId);
         if (userConnectionInfo == null) {
             throw new ParamBusinessException("userConnectionInfo not exist!");

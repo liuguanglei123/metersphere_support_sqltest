@@ -180,7 +180,6 @@
   };
 
   const changeTab = (key: string | number | null) => {
-    console.error(key);
     internalActiveTab.value = key;
   };
 </script>

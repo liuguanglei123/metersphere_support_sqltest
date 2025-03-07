@@ -2,11 +2,8 @@ package io.metersphere.sql.mapper;
 
 import io.metersphere.sql.domain.SqlDebugModule;
 import io.metersphere.sql.domain.SqlDebugModuleExample;
-import io.metersphere.sql.domain.SqlDebugModule;
-import io.metersphere.sql.domain.SqlDebugModuleExample;
-import org.apache.ibatis.annotations.Param;
-
 import java.util.List;
+import org.apache.ibatis.annotations.Param;
 
 public interface SqlDebugModuleMapper {
     long countByExample(SqlDebugModuleExample example);
@@ -34,5 +31,4 @@ public interface SqlDebugModuleMapper {
     int batchInsert(@Param("list") List<SqlDebugModule> list);
 
     int batchInsertSelective(@Param("list") List<SqlDebugModule> list, @Param("selective") SqlDebugModule.Column ... selective);
-
 }

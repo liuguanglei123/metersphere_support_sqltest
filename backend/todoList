@@ -1,0 +1,3 @@
+TODO:
+1.全局SQL相关的权限设计
+2.SQL执行后返回的headerlist类型不完整，目前只有numeric string等基本类型，float等还不支持，包括前端的显示可能也要同步修改

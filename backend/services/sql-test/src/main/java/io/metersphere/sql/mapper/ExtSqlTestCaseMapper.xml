@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.metersphere.sql.mapper.ExtSqlTestCaseMapper">
+    <select id="selectSqlIdByProjectAndProtocol" resultType="java.lang.String">
+        SELECT distinct api.id
+        FROM api_test_case apiCase
+        INNER JOIN api_definition api ON apiCase.api_definition_id = api.id
+        WHERE apiCase.deleted is FALSE
+        AND api.deleted is FALSE
+        AND api.project_id = #{projectId}
+<!--        AND api.protocol IN-->
+<!--        <foreach collection="protocols" item="protocol" separator="," open="(" close=")">-->
+<!--            #{protocol}-->
+<!--        </foreach>-->
+    </select>
+</mapper>

@@ -153,8 +153,6 @@
         // TODO:这里chat2db定义了一些点击和右键方法，还绑定了一些classname，后续再做
       };
     });
-    console.log("columns result is");
-    console.log(result);
     return result;
   });
 
@@ -189,9 +187,6 @@
         }else{
           const newTableData = dataListTransformTableData(queryResultData.value.dataList);
           tableData.value=newTableData;
-          console.log("tableData.value");
-          console.log(newTableData);
-          // console.log(tableData.value);
           allDataReady.value=true;
         }
       },

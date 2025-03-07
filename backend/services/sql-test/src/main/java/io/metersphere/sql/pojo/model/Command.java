@@ -1,5 +1,6 @@
 package io.metersphere.sql.pojo.model;
 
+import io.metersphere.sql.pojo.dto.SqlRequestParams;
 import io.metersphere.sql.pojo.dto.debug.SqlDebugRunRequest;
 import io.metersphere.sql.pojo.params.DlExecuteParam;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -28,7 +29,7 @@ public class Command implements Serializable {
      * Data source id
      */
     @NotNull
-    private Long dataSourceId;
+    private Integer dataSourceId;
 
     /**
      * DB name
@@ -77,7 +78,7 @@ public class Command implements Serializable {
 
     @NotNull
     @Schema(description = "请求内容，唯一内容为sql-string")
-    private SqlDebugRunRequest.RequestParams request;
+    private SqlRequestParams request;
 
     @Schema(description = "项目ID")
     private String projectId;

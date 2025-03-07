@@ -1,12 +1,15 @@
 package io.metersphere.sql.pojo.vo;
 
 import io.metersphere.sql.spi.model.Header;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.util.List;
 
 @Data
 public class ExecuteResultVO {
+
+    private String id;
 
     /**
      * executed sql

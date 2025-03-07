@@ -75,7 +75,7 @@
     </where>
   </sql>
   <sql id="Base_Column_List">
-    id, `host`, port, username, `password`, protocol, driver_file_name, project_id, create_time,
+    id, `host`, port, username, `password`, protocol, driver_file_name, project_id, create_time, 
     create_user, update_time, user_id, driver_class_name
   </sql>
   <select id="selectByExample" parameterType="io.metersphere.sql.domain.UserConnectionInfoExample" resultMap="BaseResultMap">
@@ -92,7 +92,7 @@
       order by ${orderByClause}
     </if>
   </select>
-  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
     from user_connection_info
@@ -114,7 +114,7 @@
       driver_file_name, project_id, create_time, 
       create_user, update_time, user_id, 
       driver_class_name)
-    values (#{id,jdbcType=INTEGER}, #{host,jdbcType=VARCHAR}, #{port,jdbcType=INTEGER},
+    values (#{id,jdbcType=INTEGER}, #{host,jdbcType=VARCHAR}, #{port,jdbcType=INTEGER}, 
       #{username,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, #{protocol,jdbcType=VARCHAR}, 
       #{driverFileName,jdbcType=VARCHAR}, #{projectId,jdbcType=VARCHAR}, #{createTime,jdbcType=BIGINT}, 
       #{createUser,jdbcType=VARCHAR}, #{updateTime,jdbcType=BIGINT}, #{userId,jdbcType=VARCHAR}, 

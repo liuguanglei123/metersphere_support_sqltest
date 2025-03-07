@@ -2,9 +2,8 @@ package io.metersphere.sql.mapper;
 
 import io.metersphere.sql.domain.SqlDebug;
 import io.metersphere.sql.domain.SqlDebugExample;
-import org.apache.ibatis.annotations.Param;
-
 import java.util.List;
+import org.apache.ibatis.annotations.Param;
 
 public interface SqlDebugMapper {
     long countByExample(SqlDebugExample example);

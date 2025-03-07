@@ -1,31 +1,28 @@
 package io.metersphere.sql.domain;
 
-import io.metersphere.validation.groups.Created;
-import io.metersphere.validation.groups.Updated;
+import io.metersphere.validation.groups.*;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import lombok.Data;
-
+import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import lombok.Data;
 
 @Data
 public class SqlDebug implements Serializable {
     @Schema(description = "SQLpk", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotBlank(message = "{api_debug.id.not_blank}", groups = {Updated.class})
-    @Size(min = 1, max = 50, message = "{api_debug.id.length_range}", groups = {Created.class, Updated.class})
+    @NotBlank(message = "{sql_debug.id.not_blank}", groups = {Updated.class})
+    @Size(min = 1, max = 50, message = "{sql_debug.id.length_range}", groups = {Created.class, Updated.class})
     private String id;
 
     @Schema(description = "SQL名称", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotBlank(message = "{api_debug.name.not_blank}", groups = {Created.class})
-    @Size(min = 1, max = 255, message = "{api_debug.name.length_range}", groups = {Created.class, Updated.class})
+    @NotBlank(message = "{sql_debug.name.not_blank}", groups = {Created.class})
+    @Size(min = 1, max = 255, message = "{sql_debug.name.length_range}", groups = {Created.class, Updated.class})
     private String name;
 
     @Schema(description = "SQL协议", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotBlank(message = "{api_debug.protocol.not_blank}", groups = {Created.class})
-    @Size(min = 1, max = 20, message = "{api_debug.protocol.length_range}", groups = {Created.class, Updated.class})
+    @NotBlank(message = "{sql_debug.protocol.not_blank}", groups = {Created.class})
+    @Size(min = 1, max = 20, message = "{sql_debug.protocol.length_range}", groups = {Created.class, Updated.class})
     private String protocol;
 
     @Schema(description = "http协议类型post/get/其它协议则是协议名(mqtt)")
@@ -34,14 +31,18 @@ public class SqlDebug implements Serializable {
     @Schema(description = "http协议路径/其它协议则为空")
     private String path;
 
+    @Schema(description = "自定义排序", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull(message = "{sql_debug.pos.not_blank}", groups = {Created.class})
+    private Long pos;
+
     @Schema(description = "项目fk", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotBlank(message = "{api_debug.project_id.not_blank}", groups = {Created.class})
-    @Size(min = 1, max = 50, message = "{api_debug.project_id.length_range}", groups = {Created.class, Updated.class})
+    @NotBlank(message = "{sql_debug.project_id.not_blank}", groups = {Created.class})
+    @Size(min = 1, max = 50, message = "{sql_debug.project_id.length_range}", groups = {Created.class, Updated.class})
     private String projectId;
 
     @Schema(description = "模块fk", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotBlank(message = "{api_debug.module_id.not_blank}", groups = {Created.class})
-    @Size(min = 1, max = 50, message = "{api_debug.module_id.length_range}", groups = {Created.class, Updated.class})
+    @NotBlank(message = "{sql_debug.module_id.not_blank}", groups = {Created.class})
+    @Size(min = 1, max = 50, message = "{sql_debug.module_id.length_range}", groups = {Created.class, Updated.class})
     private String moduleId;
 
     @Schema(description = "创建时间")
@@ -56,9 +57,6 @@ public class SqlDebug implements Serializable {
     @Schema(description = "修改人")
     private String updateUser;
 
-    @Schema(description = "")
-    private Long pos;
-
     private static final long serialVersionUID = 1L;
 
     public enum Column {
@@ -67,13 +65,13 @@ public class SqlDebug implements Serializable {
         protocol("protocol", "protocol", "VARCHAR", false),
         method("method", "method", "VARCHAR", true),
         path("path", "path", "VARCHAR", true),
+        pos("pos", "pos", "BIGINT", false),
         projectId("project_id", "projectId", "VARCHAR", false),
         moduleId("module_id", "moduleId", "VARCHAR", false),
         createTime("create_time", "createTime", "BIGINT", false),
         createUser("create_user", "createUser", "VARCHAR", false),
         updateTime("update_time", "updateTime", "BIGINT", false),
-        updateUser("update_user", "updateUser", "VARCHAR", false),
-        pos("pos", "pos", "BIGINT", false);
+        updateUser("update_user", "updateUser", "VARCHAR", false);
 
         private static final String BEGINNING_DELIMITER = "`";
 

@@ -212,5 +212,6 @@ export default {
   'sqlTestDebug.realSql': '原始SQL请求',
   'sqlTestDebug.console': '控制台',
   'common.text.executionResul': '结果',
+  'sqlTestDebug.newSql': '新建SQL请求',
 
 };
