@@ -44,6 +44,26 @@ const SqlTest: AppRouteRecordRaw = {
         isTopMenu: true,
       },
     },
+    {
+      path: 'sql-case-run',
+      name: SqlTestRouteEnum.SQL_TEST_CASE_RUN,
+      component: () => import('@/views/sql-test/scenario/index.vue'),
+      meta: {
+        locale: 'menu.sqlTest.sqlCaseRun',
+        roles: ['PROJECT_API_DEBUG:READ'],
+        isTopMenu: true,
+      },
+    },
+    {
+      path: 'sql-report',
+      name: SqlTestRouteEnum.SQL_TEST_REPORT,
+      component: () => import('@/views/sql-test/report/index.vue'),
+      meta: {
+        locale: 'menu.sqlTest.sqlReport',
+        roles: ['PROJECT_API_DEBUG:READ'],
+        isTopMenu: true,
+      },
+    },
   ],
 };
 

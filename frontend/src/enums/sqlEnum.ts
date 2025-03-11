@@ -95,6 +95,14 @@ export enum ApiScenarioStatus {
   UNDERWAY = 'UNDERWAY',
   COMPLETED = 'COMPLETED',
 }
+
+// 接口场景状态
+export enum SqlScenarioStatus {
+  DEPRECATED = 'DEPRECATED',
+  UNDERWAY = 'UNDERWAY',
+  COMPLETED = 'COMPLETED',
+}
+
 // 接口导入支持格式
 export enum RequestImportFormat {
   SWAGGER = 'Swagger3',
@@ -377,4 +385,60 @@ export enum ProtocolKeyEnum {
   API_NEW_PROTOCOL = 'API_NEW_PROTOCOL',
   API_DEBUG_NEW_PROTOCOL = 'API_DEBUG_NEW_PROTOCOL',
   CASE_MANAGEMENT_ASSOCIATE_PROTOCOL = 'CASE_MANAGEMENT_ASSOCIATE_PROTOCOL', // 功能用例关联用例
+}
+
+// SQL执行步骤类型
+// TODO：暂时先保留SQL_CASE这一种操作，后面再考虑增加其他类型
+export enum SqlScenarioStepType {
+  SQL_CASE = 'SQL_CASE', // 接口用例
+  // LOOP_CONTROLLER = 'LOOP_CONTROLLER', // 循环控制器
+  // API = 'API', // 接口定义
+  // TEST_PLAN_API_CASE = 'TEST_PLAN_API_CASE', // 测试计划接口用例
+  // JMETER_COMPONENT = 'JMETER_COMPONENT', // Jmeter组件
+  // CUSTOM_REQUEST = 'CUSTOM_REQUEST', // 自定义请求
+  // API_SCENARIO = 'API_SCENARIO', // 场景
+  // IF_CONTROLLER = 'IF_CONTROLLER', // 条件控制器
+  // ONCE_ONLY_CONTROLLER = 'ONCE_ONLY_CONTROLLER', // 一次控制器
+  // CONSTANT_TIMER = 'CONSTANT_TIMER', // 等待控制器
+  // SCRIPT = 'SCRIPT', // 脚本
+}
+
+// SQL执行步骤引入类型
+// TODO：目前也只做完全引用吧，不做任何修改，数据全部复用CASE中的内容
+export enum SqlScenarioStepRefType {
+  // COPY = 'COPY', // 复制
+  // DIRECT = 'DIRECT', // 在场景中直接创建的步骤 例如 自定义请求，逻辑控制器
+  // PARTIAL_REF = 'PARTIAL_REF', // 部分引用
+  REF = 'REF', // 完全引用
+}
+
+// 场景执行状态
+export enum SqlScenarioExecuteStatus {
+  SUCCESS = 'SUCCESS',
+  EXECUTING = 'EXECUTING',
+  FAILED = 'FAILED',
+  STOP = 'STOP',
+  UN_EXECUTE = 'UN_EXECUTE',
+  FAKE_ERROR = 'FAKE_ERROR',
+}
+
+// 创建接口场景组成部分
+export enum SqlScenarioCreateComposition {
+  STEP = 'STEP',
+  PARAMS = 'PARAMS',
+  PRE_POST = 'PRE_POST',
+  ASSERTION = 'ASSERTION',
+  SETTING = 'SETTING',
+}
+
+// 场景添加步骤操作类型
+export enum SqlScenarioAddStepActionType {
+  IMPORT_SYSTEM_SQL = 'IMPORT_SYSTEM_SQL',
+  // TODO
+  // CUSTOM_API = 'CUSTOM_API',
+  // LOOP_CONTROL = 'LOOP_CONTROL',
+  // CONDITION_CONTROL = 'CONDITION_CONTROL',
+  // ONLY_ONCE_CONTROL = 'ONLY_ONCE_CONTROL',
+  // SCRIPT_OPERATION = 'SCRIPT_OPERATION',
+  // WAIT_TIME = 'WAIT_TIME',
 }

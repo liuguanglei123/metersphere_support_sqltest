@@ -1,45 +1,29 @@
 <template>
   <div>
+    <div>1</div>
     <a-dropdown
       v-model:popup-visible="visible"
       :position="props.position || 'bottom'"
       :popup-translate="props.popupTranslate"
       class="scenario-action-dropdown"
-      @select="(val) => handleCreateActionSelect(val as ScenarioAddStepActionType)"
+      @select="(val) => handleCreateActionSelect(val as SqlScenarioAddStepActionType)"
     >
       <slot></slot>
       <template #content>
         <a-dgroup :title="t('apiScenario.requestScenario')">
           <a-doption
             v-permission="['PROJECT_API_SCENARIO:READ+IMPORT']"
-            :value="ScenarioAddStepActionType.IMPORT_SYSTEM_API"
+            :value="SqlScenarioAddStepActionType.IMPORT_SYSTEM_SQL"
           >
             {{ t('apiScenario.importSystemApi') }}
           </a-doption>
-          <a-doption :value="ScenarioAddStepActionType.CUSTOM_API">
-            {{ t('apiScenario.customApi') }}
-          </a-doption>
         </a-dgroup>
-        <a-dgroup :title="t('apiScenario.logicControl')">
-          <a-doption :value="ScenarioAddStepActionType.LOOP_CONTROL">
-            <div class="flex w-full items-center justify-between">
-              {{ t('apiScenario.loopControl') }}
-              <MsButton type="text" @click="openTutorial">{{ t('apiScenario.tutorial') }}</MsButton>
-            </div>
-          </a-doption>
-          <a-doption :value="ScenarioAddStepActionType.CONDITION_CONTROL">
-            {{ t('apiScenario.conditionControl') }}
-          </a-doption>
-          <a-doption :value="ScenarioAddStepActionType.ONLY_ONCE_CONTROL">
-            {{ t('apiScenario.onlyOnceControl') }}
-          </a-doption>
-        </a-dgroup>
-        <a-dgroup :title="t('apiScenario.other')">
-          <a-doption :value="ScenarioAddStepActionType.SCRIPT_OPERATION">
-            {{ t('apiScenario.scriptOperation') }}
-          </a-doption>
-          <a-doption :value="ScenarioAddStepActionType.WAIT_TIME">{{ t('apiScenario.waitTime') }}</a-doption>
-        </a-dgroup>
+<!--        <a-dgroup :title="t('apiScenario.other')">-->
+<!--          <a-doption :value="SqlScenarioAddStepActionType.SCRIPT_OPERATION">-->
+<!--            {{ t('apiScenario.scriptOperation') }}-->
+<!--          </a-doption>-->
+<!--          <a-doption :value="SqlScenarioAddStepActionType.WAIT_TIME">{{ t('apiScenario.waitTime') }}</a-doption>-->
+<!--        </a-dgroup>-->
       </template>
     </a-dropdown>
   </div>
@@ -55,11 +39,11 @@
   import useAppStore from '@/store/modules/app';
   import { findNodeByKey } from '@/utils';
 
-  import { CreateStepAction, ScenarioStepItem } from '@/models/apiTest/scenario';
-  import { ScenarioAddStepActionType, ScenarioStepRefType, ScenarioStepType } from '@/enums/apiEnum';
+  import {CreateStepAction, ScenarioStepItem} from '@/models/apiTest/scenario';
+  import {SqlScenarioStepItem} from "@/models/sqlTest/scenario";
+  import {SqlScenarioAddStepActionType} from "@/enums/sqlEnum";
 
   import useCreateActions from './useCreateActions';
-  import { defaultStepItemCommon } from '@/views/api-test/scenario/components/config';
   import { DropdownPosition } from '@arco-design/web-vue/es/dropdown/interface';
 
   const props = defineProps<{
@@ -72,12 +56,12 @@
     (
       e: 'otherCreate',
       type:
-        | ScenarioAddStepActionType.IMPORT_SYSTEM_API
-        | ScenarioAddStepActionType.CUSTOM_API
-        | ScenarioAddStepActionType.SCRIPT_OPERATION,
-      step?: ScenarioStepItem
+        | SqlScenarioAddStepActionType.IMPORT_SYSTEM_SQL,
+        // | SqlScenarioAddStepActionType.CUSTOM_API
+        // | SqlScenarioAddStepActionType.SCRIPT_OPERATION,
+      step?: SqlScenarioStepItem
     ): void;
-    (e: 'addDone', newStep: ScenarioStepItem): void;
+    (e: 'addDone', newStep: SqlScenarioStepItem): void;
   }>();
 
   const appStore = useAppStore();
@@ -86,13 +70,13 @@
   const visible = defineModel<boolean>('visible', {
     default: false,
   });
-  const steps = defineModel<ScenarioStepItem[]>('steps', {
+  const steps = defineModel<SqlScenarioStepItem[]>('steps', {
     required: true,
   });
   const selectedKeys = defineModel<(string | number)[]>('selectedKeys', {
     required: true,
   });
-  const step = defineModel<ScenarioStepItem>('step', {
+  const step = defineModel<SqlScenarioStepItem>('step', {
     default: undefined,
   });
 
@@ -102,75 +86,13 @@
    * 处理创建步骤操作
    * @param val 创建步骤类型
    */
-  function handleCreateActionSelect(val: ScenarioAddStepActionType) {
+  function handleCreateActionSelect(val: SqlScenarioAddStepActionType) {
     switch (val) {
-      case ScenarioAddStepActionType.LOOP_CONTROL:
-        const defaultLoopStep = buildInsertStepInfos(
-          [cloneDeep(defaultStepItemCommon)],
-          ScenarioStepType.LOOP_CONTROLLER,
-          ScenarioStepRefType.DIRECT,
-          steps.value.length + 1,
-          appStore.currentProjectId
-        )[0];
-        if (step.value && props.createStepAction) {
-          handleCreateStep(defaultLoopStep, step.value, steps.value, props.createStepAction, selectedKeys.value);
-        } else {
-          steps.value.push(defaultLoopStep);
-        }
-        emit('addDone', defaultLoopStep);
-        break;
-      case ScenarioAddStepActionType.CONDITION_CONTROL:
-        const defaultConditionStep = buildInsertStepInfos(
-          [cloneDeep(defaultStepItemCommon)],
-          ScenarioStepType.IF_CONTROLLER,
-          ScenarioStepRefType.DIRECT,
-          steps.value.length + 1,
-          appStore.currentProjectId
-        )[0];
-        if (step.value && props.createStepAction) {
-          handleCreateStep(defaultConditionStep, step.value, steps.value, props.createStepAction, selectedKeys.value);
-        } else {
-          steps.value.push(defaultConditionStep);
-        }
-        emit('addDone', defaultConditionStep);
-        break;
-      case ScenarioAddStepActionType.ONLY_ONCE_CONTROL:
-        const defaultOnlyOnceStep = buildInsertStepInfos(
-          [cloneDeep(defaultStepItemCommon)],
-          ScenarioStepType.ONCE_ONLY_CONTROLLER,
-          ScenarioStepRefType.DIRECT,
-          steps.value.length + 1,
-          appStore.currentProjectId
-        )[0];
-        if (step.value && props.createStepAction) {
-          handleCreateStep(defaultOnlyOnceStep, step.value, steps.value, props.createStepAction, selectedKeys.value);
-        } else {
-          steps.value.push(defaultOnlyOnceStep);
-        }
-        emit('addDone', defaultOnlyOnceStep);
-        break;
-      case ScenarioAddStepActionType.WAIT_TIME:
-        const defaultWaitTimeStep = buildInsertStepInfos(
-          [cloneDeep(defaultStepItemCommon)],
-          ScenarioStepType.CONSTANT_TIMER,
-          ScenarioStepRefType.DIRECT,
-          steps.value.length + 1,
-          appStore.currentProjectId
-        )[0];
-        if (step.value && props.createStepAction) {
-          handleCreateStep(defaultWaitTimeStep, step.value, steps.value, props.createStepAction, selectedKeys.value);
-        } else {
-          steps.value.push(defaultWaitTimeStep);
-        }
-        emit('addDone', defaultWaitTimeStep);
-        break;
-      case ScenarioAddStepActionType.IMPORT_SYSTEM_API:
-      case ScenarioAddStepActionType.CUSTOM_API:
-      case ScenarioAddStepActionType.SCRIPT_OPERATION:
+      case SqlScenarioAddStepActionType.IMPORT_SYSTEM_SQL:
         if (step.value) {
-          const realStep = findNodeByKey<ScenarioStepItem>(steps.value, step.value.uniqueId, 'uniqueId');
+          const realStep = findNodeByKey<SqlScenarioStepItem>(steps.value, step.value.uniqueId, 'uniqueId');
           if (realStep) {
-            emit('otherCreate', val, realStep as ScenarioStepItem);
+            emit('otherCreate', val, realStep as SqlScenarioStepItem);
           }
         } else {
           emit('otherCreate', val);

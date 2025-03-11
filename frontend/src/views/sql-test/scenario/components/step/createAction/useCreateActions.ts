@@ -3,15 +3,14 @@ import { cloneDeep } from 'lodash-es';
 import { useI18n } from '@/hooks/useI18n';
 import { getGenerateId, insertNodes, TreeNode } from '@/utils';
 
-import { CreateStepAction, ScenarioStepItem } from '@/models/apiTest/scenario';
+import { CreateStepAction } from '@/models/apiTest/scenario';
+import {SqlScenarioStepItem} from "@/models/sqlTest/scenario";
 import { ScenarioStepRefType, ScenarioStepType } from '@/enums/apiEnum';
+import {SqlScenarioStepRefType, SqlScenarioStepType} from "@/enums/sqlEnum";
 
 import {
-  defaultConditionController,
-  defaultLoopController,
   defaultScenarioStepConfig,
   defaultStepItemCommon,
-  defaultTimeController,
 } from '../../config';
 
 export default function useCreateActions() {
@@ -25,8 +24,8 @@ export default function useCreateActions() {
    */
   function selectedIfNeed(
     selectedKeys: (string | number)[],
-    steps: (ScenarioStepItem | TreeNode<ScenarioStepItem>)[],
-    parent?: TreeNode<ScenarioStepItem>
+    steps: (SqlScenarioStepItem | TreeNode<SqlScenarioStepItem>)[],
+    parent?: TreeNode<SqlScenarioStepItem>
   ) {
     if (parent && selectedKeys.includes(parent.uniqueId)) {
       // 添加子节点时，当前节点已选中，则需要把新节点也需要选中（因为父级选中子级也会展示选中状态）
@@ -44,8 +43,8 @@ export default function useCreateActions() {
    */
   function handleCreateStep(
     defaultStepInfo: Record<string, any>,
-    step: ScenarioStepItem,
-    steps: ScenarioStepItem[],
+    step: SqlScenarioStepItem,
+    steps: SqlScenarioStepItem[],
     createStepAction: CreateStepAction,
     selectedKeys: (string | number)[]
   ) {
@@ -56,7 +55,7 @@ export default function useCreateActions() {
       uniqueId: id,
       ...defaultStepInfo,
     };
-    insertNodes<ScenarioStepItem>(
+    insertNodes<SqlScenarioStepItem>(
       step.parent?.children || steps,
       step.uniqueId,
       newStep,
@@ -74,47 +73,48 @@ export default function useCreateActions() {
    */
   function buildInsertStepInfos(
     newSteps: Record<string, any>[],
-    stepType: ScenarioStepType,
-    refType: ScenarioStepRefType,
+    stepType: SqlScenarioStepType,
+    refType: SqlScenarioStepRefType,
     startOrder: number,
     projectId: string
-  ): ScenarioStepItem[] {
+  ): SqlScenarioStepItem[] {
     let name: string;
-    switch (stepType) {
-      case ScenarioStepType.LOOP_CONTROLLER:
-        name = t('apiScenario.loopControl');
-        break;
-      case ScenarioStepType.IF_CONTROLLER:
-        name = t('apiScenario.conditionControl');
-        break;
-      case ScenarioStepType.ONCE_ONLY_CONTROLLER:
-        name = t('apiScenario.onlyOnceControl');
-        break;
-      case ScenarioStepType.CONSTANT_TIMER:
-        name = t('apiScenario.waitTime');
-        break;
-      case ScenarioStepType.CUSTOM_REQUEST:
-        name = t('apiScenario.customApi');
-        break;
-      case ScenarioStepType.SCRIPT:
-        name = t('apiScenario.scriptOperation');
-        break;
-      default:
-        break;
-    }
+    // switch (stepType) {
+    //   case SqlScenarioStepType.LOOP_CONTROLLER:
+    //     name = t('apiScenario.loopControl');
+    //     break;
+    //   case SqlScenarioStepType.IF_CONTROLLER:
+    //     name = t('apiScenario.conditionControl');
+    //     break;
+    //   case SqlScenarioStepType.ONCE_ONLY_CONTROLLER:
+    //     name = t('apiScenario.onlyOnceControl');
+    //     break;
+    //   case SqlScenarioStepType.CONSTANT_TIMER:
+    //     name = t('apiScenario.waitTime');
+    //     break;
+    //   case SqlScenarioStepType.CUSTOM_REQUEST:
+    //     name = t('apiScenario.customApi');
+    //     break;
+    //   case SqlScenarioStepType.SCRIPT:
+    //     name = t('apiScenario.scriptOperation');
+    //     break;
+    //   default:
+    //     break;
+    // }
     return newSteps.map((item, index) => {
       const id = getGenerateId();
       let resourceField = {};
       let config = {};
-      if (stepType === ScenarioStepType.LOOP_CONTROLLER) {
-        config = cloneDeep(defaultLoopController);
-      } else if (stepType === ScenarioStepType.IF_CONTROLLER) {
-        config = cloneDeep(defaultConditionController);
-      } else if (stepType === ScenarioStepType.CONSTANT_TIMER) {
-        config = cloneDeep(defaultTimeController);
-      } else if (stepType === ScenarioStepType.API_SCENARIO) {
-        config = cloneDeep(defaultScenarioStepConfig);
-      }
+      // if (stepType === ScenarioStepType.LOOP_CONTROLLER) {
+      //   config = cloneDeep(defaultLoopController);
+      // } else if (stepType === ScenarioStepType.IF_CONTROLLER) {
+      //   config = cloneDeep(defaultConditionController);
+      // } else if (stepType === ScenarioStepType.CONSTANT_TIMER) {
+      //   config = cloneDeep(defaultTimeController);
+      // } else
+      //   if (stepType === SqlScenarioStepType.SQL_SCENARIO) {
+      //   config = cloneDeep(defaultScenarioStepConfig);
+      // }
       if (item.resourceId || item.id) {
         // 引用复制接口、用例、场景时的源资源信息
         resourceField = {
@@ -139,7 +139,8 @@ export default function useCreateActions() {
           ...defaultStepItemCommon.config,
           ...config,
         },
-        draggable: stepType !== ScenarioStepType.API_SCENARIO ? !item.config?.isQuoteScenarioStep : true, // 引用场景下的任何子步骤不可拖拽，除了场景本身
+        // draggable: stepType !== SqlScenarioStepType.API_SCENARIO ? !item.config?.isQuoteScenarioStep : true, // 引用场景下的任何子步骤不可拖拽，除了场景本身
+        draggable: true, // 引用场景下的任何子步骤不可拖拽，除了场景本身
         isQuoteScenarioStep: item.config?.isQuoteScenarioStep || false,
         isRefScenarioStep: item.config?.isRefScenarioStep || false,
         children: item.children || [],
@@ -165,13 +166,13 @@ export default function useCreateActions() {
    * @param selectedKeys 选中的步骤 id 集合
    */
   function handleCreateSteps(
-    step: ScenarioStepItem,
-    readyInsertSteps: ScenarioStepItem[],
-    steps: ScenarioStepItem[],
+    step: SqlScenarioStepItem,
+    readyInsertSteps: SqlScenarioStepItem[],
+    steps: SqlScenarioStepItem[],
     createStepAction: CreateStepAction,
     selectedKeys: (string | number)[]
   ) {
-    insertNodes<ScenarioStepItem>(
+    insertNodes<SqlScenarioStepItem>(
       step.parent?.children || steps,
       step.uniqueId,
       readyInsertSteps,

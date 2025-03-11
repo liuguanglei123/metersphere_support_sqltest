@@ -14,6 +14,8 @@ export enum SqlTestRouteEnum {
   SQL_TEST_DEBUG_MANAGEMENT = 'sqlTestDebug',
   SQL_TEST_CASE = 'sqlTestCase',
   SQL_TEST_SCENARIO_RECYCLE = 'sqlTestScenarioRecycle',
+  SQL_TEST_REPORT = 'sqlTestReport',
+  SQL_TEST_CASE_RUN = 'sqlTestCaseRun',
 }
 
 export enum BugManagementRouteEnum {

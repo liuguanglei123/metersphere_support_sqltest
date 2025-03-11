@@ -381,7 +381,6 @@
   // const isAdvancedSearchMode = computed(() => msAdvanceFilterRef.value?.isAdvancedSearchMode);
 
   async function getModuleIds() {
-    debugger;
     let moduleIds: string[] = [];
     if (props.activeModule !== 'all') {
       moduleIds = [props.activeModule];

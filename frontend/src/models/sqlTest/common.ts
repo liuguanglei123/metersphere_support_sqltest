@@ -1,7 +1,7 @@
 import { Language } from '@/components/pure/ms-code-editor/types';
 import type { JsonSchema, JsonSchemaTableItem } from '@/components/pure/ms-json-schema/types';
 
-import {ExecuteBody, RequestResult} from "@/models/apiTest/common";
+import {DataType, TableDataType} from "@/models/sqlTest/constants/table";
 import {
   type FullResponseAssertionType,
   RequestAssertionCondition,
@@ -24,7 +24,6 @@ import {
   ResponseBodyXPathAssertionFormat,
   ScenarioExecuteStatus,
 } from '@/enums/apiEnum';
-import {DataType, TableDataType} from "@/models/sqlTest/constants/table";
 
 // 获取插件表单选项参数
 export interface SqlGetPluginOptionsParams {
