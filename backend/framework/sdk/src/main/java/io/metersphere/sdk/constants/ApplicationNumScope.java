@@ -8,6 +8,11 @@ public enum ApplicationNumScope {
     API_SCENARIO,
     API_IMPORT,
 
+    // SQL
+    SQL_DEFINITION,
+    SQL_SCENARIO,
+    SQL_IMPORT,
+
     // Test Plan
     TEST_PLAN,
     TEST_PLAN_FUNCTION_CASE,

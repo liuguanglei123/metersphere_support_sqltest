@@ -1,7 +1,7 @@
 <template>
   <div class="report-container">
     <!-- 报告参数开始 -->
-    <ReportDetailHeader :detail="detail" show-type="API" />
+    <ReportDetailHeader :detail="detail" show-type="SQL" />
     <!-- 报告参数结束 -->
     <!-- 报告分析，报告步骤分析和请求分析开始 -->
     <div class="analyze mb-1">
@@ -74,19 +74,20 @@
   import { useI18n } from '@/hooks/useI18n';
   import { formatDuration } from '@/utils';
 
-  import type { LegendData, ReportDetail } from '@/models/apiTest/report';
+  import type { LegendData } from '@/models/apiTest/report';
+  import {SqlReportDetail} from "@/models/sqlTest/report";
   import type { ReportMetricsItemModel } from '@/models/testPlan/testPlanReport';
 
   import { getIndicators } from '../utils';
 
   const { t } = useI18n();
   const props = defineProps<{
-    detailInfo?: ReportDetail;
+    detailInfo?: SqlReportDetail;
     getReportStepDetail?: (...args: any) => Promise<any>; // 获取步骤的详情内容接口
     isExport?: boolean; // 是否是导出pdf预览
   }>();
 
-  const detail = ref<ReportDetail>({
+  const detail = ref<SqlReportDetail>({
     id: '',
     name: '', // 报告名称
     testPlanId: '',
@@ -345,57 +346,60 @@
     }
   });
 </script>
-
 <style scoped lang="less">
-  .report-container {
-    background: var(--color-text-n9);
-    .report-header {
-      padding: 0 16px;
-      height: 54px;
+.report-container {
+  background: var(--color-text-n9);
+  .report-header {
+    padding: 0 16px;
+    height: 54px;
+    border-radius: 4px;
+    background: var(--color-text-fff);
+  @apply mb-4;
+
+    background-color: var(--color-text-fff);
+  }
+  .analyze {
+    height: 196px;
+    border-radius: 4px;
+  @apply mb-4 flex justify-between;
+    .analyze-item {
+      padding: 16px;
+      width: 33%;
       border-radius: 4px;
-      background: white;
-      @apply mb-4 bg-white;
+    @apply h-full;
+
+      background-color: var(--color-text-fff);
     }
-    .analyze {
-      height: 196px;
-      border-radius: 4px;
-      @apply mb-4 flex justify-between;
-      .analyze-item {
-        padding: 16px;
-        width: 33%;
-        border-radius: 4px;
-        @apply h-full bg-white;
-      }
-      .request-analyze {
-        @apply ml-4 flex-grow;
-        .chart-legend {
-          .chart-legend-item {
-            @apply grid grid-cols-3;
-          }
-          .chart-flag {
-            @apply flex items-center;
-            .count {
-              color: var(--color-text-1);
-            }
+    .request-analyze {
+    @apply ml-4 flex-grow;
+      .chart-legend {
+        .chart-legend-item {
+        @apply grid grid-cols-3;
+        }
+        .chart-flag {
+        @apply flex items-center;
+          .count {
+            color: var(--color-text-1);
           }
         }
       }
     }
-    .report-info {
-      padding: 16px;
-      border-radius: 4px;
-      @apply bg-white;
-    }
   }
-  .block-title {
-    @apply mb-4 font-medium;
+  .report-info {
+    padding: 16px;
+    border-radius: 4px;
+    background-color: var(--color-text-fff);
   }
-  .charts {
-    top: 30%;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 99;
-    margin: auto;
-  }
+}
+.block-title {
+@apply mb-4 font-medium;
+}
+.charts {
+  top: 30%;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 99;
+  margin: auto;
+}
 </style>

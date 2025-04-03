@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.metersphere.sdk.dto.result.ListResult;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -130,4 +131,19 @@ public class JSON {
             throw new RuntimeException(e);
         }
     }
+
+    public static <T> ListResult<T> parseListResult(
+            Object sourceMap,
+            TypeReference<ListResult<T>> typeRef
+    ) {
+        try {
+            return objectMapper.convertValue(
+                    sourceMap,
+                    typeRef
+            );
+        }catch (IllegalArgumentException e){
+            throw new RuntimeException(e);
+        }
+    }
+
 }

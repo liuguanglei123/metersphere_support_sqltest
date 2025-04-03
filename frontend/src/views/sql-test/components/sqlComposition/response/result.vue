@@ -1,5 +1,5 @@
 <template>
-<!--  <div v-show="props.requestResult?.responseResult.responseCode" class="h-full">-->
+  <!--  <div v-show="props.requestResult?.responseResult.responseCode" class="h-full">-->
   <div class="h-full">
     <div class="flex items-center" :class="$slots.tabRight ? 'border-b border-[var(--color-text-n8)]' : ''">
       <a-tabs v-model:active-key="activeTab" class="no-content flex-1">
@@ -7,12 +7,19 @@
       </a-tabs>
       <slot name="tabRight"></slot>
     </div>
-    <div v-if="!props.loading" class="response-container">
+    <div v-if="!props.loading && props.requestResult && props.requestResult?.length > 0" class="response-container">
       <Table
         v-if="activeTab === SqlResponseComposition.TABLE"
         ref="resBodyRef"
         :request-result="props.requestResult"
         @copy="copyScript"
+        style="height:100%"
+        class-name="serchdiv"
+        conceal-tab-header
+        execute-sql-params=""
+        is-active
+        sql=""
+        view-table
       />
       <!--        :request-result="props.requestResult"-->
 
@@ -25,18 +32,10 @@
       <!--        :active-tab="activeTab"-->
       <!--        :request-result="props.requestResult"-->
       <!--      />-->
-      <!-- 提取变量，暂时不需要
-      <ExtractTable
-        v-else-if="activeTab === SqlResponseComposition.EXTRACT"
-        :request-result="props.requestResult"
-        :scroll="{ x: '100%' }"
-      /> -->
-      <!-- 数据校验，暂时不需要
-      <ResAssertion
-        v-else-if="activeTab === SqlResponseComposition.ASSERTION"
-        :request-result="props.requestResult"
-        :scroll="{ x: '100%' }"
-      /> -->
+    </div>
+    <div v-else class="noData">
+      <img :src="emptyImg" />
+      <p>{{ t('common.text.noData') }}</p>
     </div>
   </div>
   <!-- TODO:这里的默认状态暂时隐藏了，后面需要放开，目前还不知道v-show的条件怎么写，所以先注释掉
@@ -62,7 +61,6 @@
     </div>
   </a-empty> -->
 </template>
-
 <script setup lang="ts">
   import { useClipboard } from '@vueuse/core';
   import { Message } from '@arco-design/web-vue';
@@ -77,6 +75,8 @@
 
   import { IManageResultData } from '@/models/sqlTest/common';
   import { SqlResponseComposition } from '@/enums/apiEnum';
+
+  const emptyImg = `${import.meta.env.BASE_URL}images/empty.svg`;
 
   const props = withDefaults(
     defineProps<{
@@ -97,15 +97,6 @@
   const emit = defineEmits(['execute']);
 
   const { t } = useI18n();
-
-  watch(
-      () => props.requestResult,
-      (newValue) => {
-        newValue?.forEach( (e) => {
-          // TODO：
-          // console.log(e instanceof IManageResultData);
-        });
-  });
 
   const noDataSvg = `${import.meta.env.BASE_URL}images/noResponse.svg`;
   const sqlResponseCompositionTabList = [
@@ -159,18 +150,31 @@
   }
 </script>
 
-<style lang="less" scoped>
+<style lang="less">
   .response-container {
     margin-top: 8px;
     height: calc(100% - 58px);
   }
+
   :deep(.arco-table-th) {
     background-color: var(--color-text-n9);
   }
+
   :deep(.arco-tabs-tab) {
     @apply leading-none;
   }
+
   .no-content :deep(.arco-tabs-content) {
     display: none;
+  }
+
+  .noData {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    overflow: hidden;
   }
 </style>

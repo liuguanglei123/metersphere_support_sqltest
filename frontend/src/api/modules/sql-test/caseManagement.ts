@@ -1,15 +1,23 @@
 import MSR from '@/api/http/index';
 import {
     AddModuleUrl,
-    AddSqlCaseDefinitionUrl, GetModuleOnlyTreeUrl, GetModuleTreeUrl,
-    SqlDebugDefinitionUrl, SqlDefinitionPageUrl,
+    AddSqlCaseDefinitionUrl,
+    DeleteDefinitionUrl,
+    DeleteModuleUrl,
+    GetDefinitionDetailUrl, GetModuleCountUrl,
+    GetModuleOnlyTreeUrl,
+    GetModuleTreeUrl, GetPoolId,
+    SqlDebugDefinitionUrl,
+    SqlDefinitionPageUrl,
+    UpdateDefinitionUrl,
+    UpdateModuleUrl,
 } from '@/api/requrls/sql-test/caseManagement';
 
 import {AddModuleParams, CommonList, ModuleTreeNode} from "@/models/common";
 import {
     SqlDefinitionCreateParams, SqlDefinitionDetail,
     SqlDefinitionGetModuleParams,
-    SqlDefinitionPageParams
+    SqlDefinitionPageParams, SqlDefinitionUpdateModuleParams, SqlDefinitionUpdateParams
 } from "@/models/sqlTest/caseManagement";
 import { SqlExecuteRequestParams } from "@/models/sqlTest/common";
 
@@ -41,4 +49,39 @@ export function addModule(data: AddModuleParams) {
 // 获取SQL定义列表
 export function getSqlDefinitionPage(data: SqlDefinitionPageParams) {
     return MSR.post<CommonList<SqlDefinitionDetail>>({ url: SqlDefinitionPageUrl, data });
+}
+
+// 删除定义
+export function deleteSqlDefinition(id: string) {
+    return MSR.get({ url: DeleteDefinitionUrl, params: id });
+}
+
+// 删除模块
+export function deleteModule(id: string) {
+    return MSR.get({ url: DeleteModuleUrl, params: id });
+}
+
+// 更新模块
+export function updateModule(data: SqlDefinitionUpdateModuleParams) {
+    return MSR.post({ url: UpdateModuleUrl, data });
+}
+
+// 更新接口定义
+export function updateDefinition(data: SqlDefinitionUpdateParams) {
+    return MSR.post({ url: UpdateDefinitionUrl, data });
+}
+
+// 获取接口定义详情
+export function getDefinitionDetail(id: string | number) {
+    return MSR.get<SqlDefinitionDetail>({ url: GetDefinitionDetailUrl, params: id });
+}
+
+// 获取接口定义列表
+export function getDefinitionPage(data: SqlDefinitionPageParams) {
+    return MSR.post<CommonList<SqlDefinitionDetail>>({ url: SqlDefinitionPageUrl, data });
+}
+
+// 获取模块统计数量
+export function getModuleCount(data: SqlDefinitionGetModuleParams) {
+    return MSR.post({ url: GetModuleCountUrl, data });
 }

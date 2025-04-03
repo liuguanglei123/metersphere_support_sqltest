@@ -1,0 +1,10 @@
+export const GetProtocolListUrl = '/sql/test/protocol'; // 获取协议列表
+export const GetPluginOptionsUrl = '/sql/test/plugin/form/option'; // 获取插件表单选项
+export const GetPluginScriptUrl = '/sql/test/plugin/script'; // 获取插件配置脚本
+export const LocalExecuteSqlDebugUrl = '/sql/debug'; // 本地执行调试
+export const GetEnvListUrl = '/sql/test/env-list'; // 获取接口测试环境列表
+export const GetEnvironmentUrl = '/sql/test/environment'; // 获取接口测试环境详情
+export const StopExecuteUrl = '/task/center/sql/project/stop'; // 停止执行
+export const StopLocalExecuteUrl = '/sql/stop'; // 停止本地执行
+export const ImportCurlUrl = '/sql/debug/import-curl'; // 导入curl
+export const GetEnvListUrl = '/sql/test/env-list'; // 获取接口测试环境列表

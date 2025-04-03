@@ -15,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Tag(name = "SQL测试-SQL用例管理-模块")
 @RestController
@@ -35,15 +36,31 @@ public class SqlDefinitionModuleController {
     @PostMapping("/only/tree")
     @Operation(summary = "接口测试-接口管理-模块-不包含请求数据的模块树")
     @RequiresPermissions(PermissionConstants.PROJECT_API_DEFINITION_READ)
-    @CheckOwner(resourceId = "#request.projectId", resourceType = "project")
+//    @CheckOwner(resourceId = "#request.projectId", resourceType = "project")
     public List<BaseTreeNode> getTree(@RequestBody @Validated SqlModuleRequest request) {
         return sqlDefinitionModuleService.getTree(request, false, false);
     }
 
     @PostMapping("/add")
-    @Operation(summary = "接口测试-接口管理-模块-添加模块")
+    @Operation(summary = "SQL测试-SQL用例管理-模块-添加模块")
     @RequiresPermissions(PermissionConstants.PROJECT_API_DEFINITION_ADD)
     public String add(@RequestBody @Validated ModuleCreateRequest request) {
         return sqlDefinitionModuleService.add(request, SessionUtils.getUserId());
+    }
+
+    @GetMapping("/delete/{id}")
+    @Operation(summary = "SQL测试-SQL用例管理-模块-删除模块")
+    @RequiresPermissions(PermissionConstants.PROJECT_API_DEFINITION_DELETE)
+// TODO：    @CheckOwner(resourceId = "#id", resourceType = "api_definition_module")
+    public void deleteNode(@PathVariable String id) {
+        sqlDefinitionModuleService.deleteModule(id, SessionUtils.getUserId());
+    }
+
+    @PostMapping("/count")
+    @Operation(summary = "接口测试-接口管理-模块-统计模块数量")
+    @RequiresPermissions(PermissionConstants.PROJECT_API_DEFINITION_READ)
+// TODO：   @CheckOwner(resourceId = "#request.projectId", resourceType = "project")
+    public Map<String, Long> moduleCount(@Validated @RequestBody SqlModuleRequest request) {
+        return sqlDefinitionModuleService.moduleCount(request, false);
     }
 }

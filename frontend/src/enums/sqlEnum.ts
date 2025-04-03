@@ -1,68 +1,14 @@
-// 接口请求方法
+// TODO：删除无用的枚举值
+// SQL请求方法
 export enum SqlRequestMethods {
   DDL = 'DDL',
   DQL = 'DQL',
   DML = 'DML',
   DCL = 'DCL',
   NEGATIVE = 'NEGATIVE',
-}
-
-// 接口请求方法
-export enum SQLRequestMethods {
-  DDL = 'DDL',
-  DML = 'DML',
-  DQL = 'DQL',
-  DCL = 'DCL',
-  TCL = 'TCL',// 事务控制语句 commit等
   OTHER = 'OTHER',
 }
 
-// 接口组成部分
-export enum RequestComposition {
-  BASE_INFO = 'BASE_INFO',
-  PLUGIN = 'PLUGIN',
-  HEADER = 'HEADER',
-  BODY = 'BODY',
-  QUERY = 'QUERY',
-  REST = 'REST',
-  PRECONDITION = 'PRECONDITION',
-  POST_CONDITION = 'POST_CONDITION',
-  ASSERTION = 'ASSERTION',
-  AUTH = 'AUTH',
-  SETTING = 'SETTING',
-}
-// 接口请求体格式
-export enum RequestBodyFormat {
-  NONE = 'NONE',
-  FORM_DATA = 'FORM_DATA',
-  WWW_FORM = 'WWW_FORM',
-  JSON = 'JSON',
-  XML = 'XML',
-  RAW = 'RAW',
-  BINARY = 'BINARY',
-}
-// 接口响应头格式
-export enum RequestContentTypeEnum {
-  JSON = 'application/json',
-  TEXT = 'application/text',
-  OGG = 'application/ogg',
-  PDF = 'application/pdf',
-  JAVASCRIPT = 'application/javascript',
-  OCTET_STREAM = 'application/octet-stream',
-  VND_API_JSON = 'application/vnd.api+json',
-  ATOM_XML = 'application/atom+xml',
-  ECMASCRIPT = 'application/ecmascript',
-}
-// 接口响应组成部分
-export enum ResponseComposition {
-  BODY = 'BODY',
-  HEADER = 'HEADER',
-  REAL_REQUEST = 'REAL_REQUEST', // 实际请求
-  CONSOLE = 'CONSOLE',
-  EXTRACT = 'EXTRACT',
-  ASSERTION = 'ASSERTION',
-  CODE = 'CODE',
-}
 // SQL响应组成部分
 export enum SqlResponseComposition {
   TABLE = 'table',
@@ -73,27 +19,13 @@ export enum SqlResponseComposition {
   ASSERTION = 'ASSERTION',
   CODE = 'CODE',
 }
-// 接口响应体格式
-export enum ResponseBodyFormat {
-  NONE = 'NONE',
-  JSON = 'JSON',
-  XML = 'XML',
-  RAW = 'RAW',
-  BINARY = 'BINARY',
-}
+
 // 接口定义状态
-export enum RequestDefinitionStatus {
+export enum SqlRequestDefinitionStatus {
   DEPRECATED = 'DEPRECATED',
   PROCESSING = 'PROCESSING',
   DEBUGGING = 'DEBUGGING',
   DONE = 'DONE',
-}
-
-// 接口场景状态
-export enum ApiScenarioStatus {
-  DEPRECATED = 'DEPRECATED',
-  UNDERWAY = 'UNDERWAY',
-  COMPLETED = 'COMPLETED',
 }
 
 // 接口场景状态
@@ -247,7 +179,7 @@ export enum RequestExtractResultMatchingRule {
   SPECIFIC = 'SPECIFIC', // 指定匹配
 }
 // 接口用例状态
-export enum RequestCaseStatus {
+export enum SqlRequestCaseStatus {
   DEPRECATED = 'DEPRECATED',
   PROCESSING = 'PROCESSING',
   DONE = 'DONE',
@@ -261,48 +193,15 @@ export enum ScenarioCreateComposition {
   SETTING = 'SETTING',
 }
 // 接口场景详情组成部分
-export enum ScenarioDetailComposition {
+export enum SqlScenarioDetailComposition {
   BASE_INFO = 'BASE_INFO',
   STEP = 'STEP',
-  PARAMS = 'PARAMS',
-  PRE_POST = 'PRE_POST',
-  ASSERTION = 'ASSERTION',
-  SETTING = 'SETTING',
   EXECUTE_HISTORY = 'EXECUTE_HISTORY',
   CHANGE_HISTORY = 'CHANGE_HISTORY',
   DEPENDENCY = 'DEPENDENCY',
   QUOTE = 'QUOTE',
 }
-// 场景执行状态
-export enum ScenarioExecuteStatus {
-  SUCCESS = 'SUCCESS',
-  EXECUTING = 'EXECUTING',
-  FAILED = 'FAILED',
-  STOP = 'STOP',
-  UN_EXECUTE = 'UN_EXECUTE',
-  FAKE_ERROR = 'FAKE_ERROR',
-}
 
-// 场景步骤类型
-export enum ScenarioStepType {
-  API_CASE = 'API_CASE', // 接口用例
-  LOOP_CONTROLLER = 'LOOP_CONTROLLER', // 循环控制器
-  API = 'API', // 接口定义
-  TEST_PLAN_API_CASE = 'TEST_PLAN_API_CASE', // 测试计划接口用例
-  JMETER_COMPONENT = 'JMETER_COMPONENT', // Jmeter组件
-  CUSTOM_REQUEST = 'CUSTOM_REQUEST', // 自定义请求
-  API_SCENARIO = 'API_SCENARIO', // 场景
-  IF_CONTROLLER = 'IF_CONTROLLER', // 条件控制器
-  ONCE_ONLY_CONTROLLER = 'ONCE_ONLY_CONTROLLER', // 一次控制器
-  CONSTANT_TIMER = 'CONSTANT_TIMER', // 等待控制器
-  SCRIPT = 'SCRIPT', // 脚本
-}
-export enum ScenarioStepRefType {
-  COPY = 'COPY', // 复制
-  DIRECT = 'DIRECT', // 在场景中直接创建的步骤 例如 自定义请求，逻辑控制器
-  PARTIAL_REF = 'PARTIAL_REF', // 部分引用
-  REF = 'REF', // 完全引用
-}
 // 场景添加步骤操作类型
 export enum ScenarioAddStepActionType {
   IMPORT_SYSTEM_API = 'IMPORT_SYSTEM_API',
@@ -390,13 +289,13 @@ export enum ProtocolKeyEnum {
 // SQL执行步骤类型
 // TODO：暂时先保留SQL_CASE这一种操作，后面再考虑增加其他类型
 export enum SqlScenarioStepType {
-  SQL_CASE = 'SQL_CASE', // 接口用例
+  SQL = 'SQL', // 接口用例
   // LOOP_CONTROLLER = 'LOOP_CONTROLLER', // 循环控制器
   // API = 'API', // 接口定义
   // TEST_PLAN_API_CASE = 'TEST_PLAN_API_CASE', // 测试计划接口用例
   // JMETER_COMPONENT = 'JMETER_COMPONENT', // Jmeter组件
   // CUSTOM_REQUEST = 'CUSTOM_REQUEST', // 自定义请求
-  // API_SCENARIO = 'API_SCENARIO', // 场景
+  SQL_SCENARIO = 'SQL_SCENARIO', // 场景
   // IF_CONTROLLER = 'IF_CONTROLLER', // 条件控制器
   // ONCE_ONLY_CONTROLLER = 'ONCE_ONLY_CONTROLLER', // 一次控制器
   // CONSTANT_TIMER = 'CONSTANT_TIMER', // 等待控制器
@@ -406,9 +305,9 @@ export enum SqlScenarioStepType {
 // SQL执行步骤引入类型
 // TODO：目前也只做完全引用吧，不做任何修改，数据全部复用CASE中的内容
 export enum SqlScenarioStepRefType {
-  // COPY = 'COPY', // 复制
-  // DIRECT = 'DIRECT', // 在场景中直接创建的步骤 例如 自定义请求，逻辑控制器
-  // PARTIAL_REF = 'PARTIAL_REF', // 部分引用
+  COPY = 'COPY', // 复制
+  DIRECT = 'DIRECT', // 在场景中直接创建的步骤 例如 自定义请求，逻辑控制器
+  PARTIAL_REF = 'PARTIAL_REF', // 部分引用
   REF = 'REF', // 完全引用
 }
 
@@ -441,4 +340,13 @@ export enum SqlScenarioAddStepActionType {
   // ONLY_ONCE_CONTROL = 'ONLY_ONCE_CONTROL',
   // SCRIPT_OPERATION = 'SCRIPT_OPERATION',
   // WAIT_TIME = 'WAIT_TIME',
+}
+
+// 接口组成部分
+export enum SqlRequestComposition {
+  BASE_INFO = 'BASE_INFO',
+  PRECONDITION = 'PRECONDITION',
+  POST_CONDITION = 'POST_CONDITION',
+  ASSERTION = 'ASSERTION',
+  SETTING = 'SETTING',
 }

@@ -35,7 +35,7 @@ public abstract class RdbWebConverter {
      * @param dtos
      * @return
      */
-    public abstract List<ExecuteResultVO> dto2vo(List<ExecuteResult> dtos);
+    public abstract List<ExecuteResultVO> dto2vo(List<? extends ExecuteResult> dtos);
 
     public abstract SqlRequestParams requestParams2params(SqlRequestParams requestParams);
 

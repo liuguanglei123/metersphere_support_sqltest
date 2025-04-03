@@ -218,7 +218,6 @@ export function getValidRequestTableParams(requestVModel: RequestParam) {
     response:
       requestVModel.responseDefinition?.map((e) => ({
         ...e,
-        headers: filterKeyValParams(e.headers || [], defaultKeyValueParamItem).validParams,
       })) || [],
   };
 }
@@ -283,50 +282,6 @@ export function filterAssertions(assertionConfig: ExecuteAssertionConfig, isExec
 export function parseCurlBody(bodyType: RequestBodyFormat, body: Record<string, any> | string) {
   const requestBody = cloneDeep(defaultBodyParams);
   switch (bodyType) {
-    case RequestBodyFormat.JSON:
-      requestBody.bodyType = bodyType;
-      requestBody.jsonBody = {
-        ...cloneDeep(defaultBodyParams.jsonBody),
-        enableJsonSchema: false,
-        jsonValue: JSON.stringify(body),
-      };
-      break;
-    case RequestBodyFormat.XML:
-      requestBody.bodyType = bodyType;
-      requestBody.xmlBody = {
-        ...cloneDeep(defaultBodyParams.xmlBody),
-        value: body as string,
-      };
-      break;
-    case RequestBodyFormat.RAW:
-      requestBody.bodyType = bodyType;
-      requestBody.rawBody = {
-        ...cloneDeep(defaultBodyParams.rawBody),
-        value: body as string,
-      };
-      break;
-    case RequestBodyFormat.FORM_DATA:
-      requestBody.bodyType = bodyType;
-      requestBody.formDataBody = {
-        ...cloneDeep(defaultBodyParams.formDataBody),
-        formValues: Object.keys(body).map((e) => ({
-          ...defaultBodyParamsItem,
-          key: e,
-          value: (body as Record<string, any>)[e],
-        })),
-      };
-      break;
-    case RequestBodyFormat.WWW_FORM:
-      requestBody.bodyType = bodyType;
-      requestBody.wwwFormBody = {
-        ...cloneDeep(defaultBodyParams.wwwFormBody),
-        formValues: Object.keys(body).map((e) => ({
-          ...defaultBodyParamsItem,
-          key: e,
-          value: (body as Record<string, any>)[e],
-        })),
-      };
-      break;
     default:
       break;
   }

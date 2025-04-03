@@ -2,6 +2,7 @@ package io.metersphere.sql.pojo.dto.definition;
 
 import io.metersphere.api.domain.ApiDefinitionCustomField;
 import io.metersphere.sdk.constants.ModuleConstants;
+import io.metersphere.sdk.dto.result.ListResult;
 import io.metersphere.sdk.valid.EnumValue;
 import io.metersphere.sql.constant.SqlDefinitionStatus;
 import io.metersphere.sql.pojo.dto.SqlRequestParams;
@@ -77,10 +78,10 @@ public class SqlDefinitionAddRequest implements Serializable {
     @NotNull
     private Object request;
 
-    @Schema(description = "响应内容")
+    @Schema(description = "响应内容定义")
     @NotNull
     @Valid
-    private List<ExecuteResultVO> response;
+    private ListResult<ExecuteResultVO> response;
 
     // TODO：
 //    @Schema(description = "自定义字段集合")

@@ -4,9 +4,6 @@
   <resultMap id="BaseResultMap" type="io.metersphere.sql.domain.SqlDebug">
     <id column="id" jdbcType="VARCHAR" property="id" />
     <result column="name" jdbcType="VARCHAR" property="name" />
-    <result column="protocol" jdbcType="VARCHAR" property="protocol" />
-    <result column="method" jdbcType="VARCHAR" property="method" />
-    <result column="path" jdbcType="VARCHAR" property="path" />
     <result column="pos" jdbcType="BIGINT" property="pos" />
     <result column="project_id" jdbcType="VARCHAR" property="projectId" />
     <result column="module_id" jdbcType="VARCHAR" property="moduleId" />
@@ -74,8 +71,7 @@
     </where>
   </sql>
   <sql id="Base_Column_List">
-    id, `name`, protocol, `method`, `path`, pos, project_id, module_id, create_time, 
-    create_user, update_time, update_user
+    id, `name`, pos, project_id, module_id, create_time, create_user, update_time, update_user
   </sql>
   <select id="selectByExample" parameterType="io.metersphere.sql.domain.SqlDebugExample" resultMap="BaseResultMap">
     select
@@ -108,14 +104,14 @@
     </if>
   </delete>
   <insert id="insert" parameterType="io.metersphere.sql.domain.SqlDebug">
-    insert into sql_debug (id, `name`, protocol, 
-      `method`, `path`, pos, project_id, 
-      module_id, create_time, create_user, 
-      update_time, update_user)
-    values (#{id,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}, #{protocol,jdbcType=VARCHAR}, 
-      #{method,jdbcType=VARCHAR}, #{path,jdbcType=VARCHAR}, #{pos,jdbcType=BIGINT}, #{projectId,jdbcType=VARCHAR}, 
-      #{moduleId,jdbcType=VARCHAR}, #{createTime,jdbcType=BIGINT}, #{createUser,jdbcType=VARCHAR}, 
-      #{updateTime,jdbcType=BIGINT}, #{updateUser,jdbcType=VARCHAR})
+    insert into sql_debug (id, `name`, pos, 
+      project_id, module_id, create_time, 
+      create_user, update_time, update_user
+      )
+    values (#{id,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}, #{pos,jdbcType=BIGINT}, 
+      #{projectId,jdbcType=VARCHAR}, #{moduleId,jdbcType=VARCHAR}, #{createTime,jdbcType=BIGINT}, 
+      #{createUser,jdbcType=VARCHAR}, #{updateTime,jdbcType=BIGINT}, #{updateUser,jdbcType=VARCHAR}
+      )
   </insert>
   <insert id="insertSelective" parameterType="io.metersphere.sql.domain.SqlDebug">
     insert into sql_debug
@@ -125,15 +121,6 @@
       </if>
       <if test="name != null">
         `name`,
-      </if>
-      <if test="protocol != null">
-        protocol,
-      </if>
-      <if test="method != null">
-        `method`,
-      </if>
-      <if test="path != null">
-        `path`,
       </if>
       <if test="pos != null">
         pos,
@@ -163,15 +150,6 @@
       </if>
       <if test="name != null">
         #{name,jdbcType=VARCHAR},
-      </if>
-      <if test="protocol != null">
-        #{protocol,jdbcType=VARCHAR},
-      </if>
-      <if test="method != null">
-        #{method,jdbcType=VARCHAR},
-      </if>
-      <if test="path != null">
-        #{path,jdbcType=VARCHAR},
       </if>
       <if test="pos != null">
         #{pos,jdbcType=BIGINT},
@@ -211,15 +189,6 @@
       <if test="record.name != null">
         `name` = #{record.name,jdbcType=VARCHAR},
       </if>
-      <if test="record.protocol != null">
-        protocol = #{record.protocol,jdbcType=VARCHAR},
-      </if>
-      <if test="record.method != null">
-        `method` = #{record.method,jdbcType=VARCHAR},
-      </if>
-      <if test="record.path != null">
-        `path` = #{record.path,jdbcType=VARCHAR},
-      </if>
       <if test="record.pos != null">
         pos = #{record.pos,jdbcType=BIGINT},
       </if>
@@ -250,9 +219,6 @@
     update sql_debug
     set id = #{record.id,jdbcType=VARCHAR},
       `name` = #{record.name,jdbcType=VARCHAR},
-      protocol = #{record.protocol,jdbcType=VARCHAR},
-      `method` = #{record.method,jdbcType=VARCHAR},
-      `path` = #{record.path,jdbcType=VARCHAR},
       pos = #{record.pos,jdbcType=BIGINT},
       project_id = #{record.projectId,jdbcType=VARCHAR},
       module_id = #{record.moduleId,jdbcType=VARCHAR},
@@ -269,15 +235,6 @@
     <set>
       <if test="name != null">
         `name` = #{name,jdbcType=VARCHAR},
-      </if>
-      <if test="protocol != null">
-        protocol = #{protocol,jdbcType=VARCHAR},
-      </if>
-      <if test="method != null">
-        `method` = #{method,jdbcType=VARCHAR},
-      </if>
-      <if test="path != null">
-        `path` = #{path,jdbcType=VARCHAR},
       </if>
       <if test="pos != null">
         pos = #{pos,jdbcType=BIGINT},
@@ -306,9 +263,6 @@
   <update id="updateByPrimaryKey" parameterType="io.metersphere.sql.domain.SqlDebug">
     update sql_debug
     set `name` = #{name,jdbcType=VARCHAR},
-      protocol = #{protocol,jdbcType=VARCHAR},
-      `method` = #{method,jdbcType=VARCHAR},
-      `path` = #{path,jdbcType=VARCHAR},
       pos = #{pos,jdbcType=BIGINT},
       project_id = #{projectId,jdbcType=VARCHAR},
       module_id = #{moduleId,jdbcType=VARCHAR},
@@ -320,12 +274,11 @@
   </update>
   <insert id="batchInsert" parameterType="map">
     insert into sql_debug
-    (id, `name`, protocol, `method`, `path`, pos, project_id, module_id, create_time, 
-      create_user, update_time, update_user)
+    (id, `name`, pos, project_id, module_id, create_time, create_user, update_time, update_user
+      )
     values
     <foreach collection="list" item="item" separator=",">
-      (#{item.id,jdbcType=VARCHAR}, #{item.name,jdbcType=VARCHAR}, #{item.protocol,jdbcType=VARCHAR}, 
-        #{item.method,jdbcType=VARCHAR}, #{item.path,jdbcType=VARCHAR}, #{item.pos,jdbcType=BIGINT}, 
+      (#{item.id,jdbcType=VARCHAR}, #{item.name,jdbcType=VARCHAR}, #{item.pos,jdbcType=BIGINT}, 
         #{item.projectId,jdbcType=VARCHAR}, #{item.moduleId,jdbcType=VARCHAR}, #{item.createTime,jdbcType=BIGINT}, 
         #{item.createUser,jdbcType=VARCHAR}, #{item.updateTime,jdbcType=BIGINT}, #{item.updateUser,jdbcType=VARCHAR}
         )
@@ -346,15 +299,6 @@
         </if>
         <if test="'name'.toString() == column.value">
           #{item.name,jdbcType=VARCHAR}
-        </if>
-        <if test="'protocol'.toString() == column.value">
-          #{item.protocol,jdbcType=VARCHAR}
-        </if>
-        <if test="'method'.toString() == column.value">
-          #{item.method,jdbcType=VARCHAR}
-        </if>
-        <if test="'path'.toString() == column.value">
-          #{item.path,jdbcType=VARCHAR}
         </if>
         <if test="'pos'.toString() == column.value">
           #{item.pos,jdbcType=BIGINT}

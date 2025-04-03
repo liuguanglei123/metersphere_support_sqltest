@@ -1358,6 +1358,7 @@
           await initProtocolList();
         }
         if (props.request) {
+          console.log(9999);
           // 查看自定义请求、引用 api、复制 api
           requestVModel.value = cloneDeep({
             ...defaultApiParams,

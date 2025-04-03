@@ -176,6 +176,8 @@ export default function useModuleSelections<T>(
   }
   // 单独选择或取消行
   function rowSelectChange(record: Record<string, any>) {
+    console.log("rowSelectChange")
+    console.log(propsRes);
     const { moduleId } = record;
     setUnSelectNode(moduleId);
     updateSelectModule(moduleId, record.id);

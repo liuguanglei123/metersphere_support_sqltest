@@ -7,5 +7,6 @@ public enum ScheduleResourceType {
     TEST_PLAN_GROUP,
     CLEAN_REPORT,
     DEMAND_SYNC,
-    BUG_SYNC
+    BUG_SYNC,
+    SQL_SCENARIO,
 }

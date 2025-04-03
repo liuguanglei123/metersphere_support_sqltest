@@ -1,23 +1,30 @@
 package io.metersphere.sql.service.common.impl;
 
 
+import io.metersphere.plugin.api.spi.SqlAbstractMsTestElement;
 import io.metersphere.sdk.constants.KafkaTopicConstants;
 import io.metersphere.sdk.constants.MsgType;
 import io.metersphere.sdk.dto.SocketMsgDTO;
+import io.metersphere.sdk.dto.result.ListResult;
 import io.metersphere.sdk.util.JSON;
+import io.metersphere.sdk.util.LogUtils;
+import io.metersphere.sdk.util.WebSocketUtils;
 import io.metersphere.sql.aspect.ConnectionInfoHandler;
+import io.metersphere.sql.config.RedisLock;
 import io.metersphere.sql.context.Chat2DBContext;
 import io.metersphere.sql.converter.CommandConverter;
 import io.metersphere.sql.pojo.model.Command;
+import io.metersphere.sql.pojo.model.DiffExecuteResult;
 import io.metersphere.sql.pojo.model.ExecuteResult;
 import io.metersphere.sql.pojo.params.DlExecuteParam;
+import io.metersphere.sql.pojo.request.MsSqlCaseElement;
 import io.metersphere.sql.service.common.DlTemplateService;
 import io.metersphere.sql.spi.model.Header;
 import io.metersphere.sql.spi.service.CommandExecutor;
-import io.metersphere.sql.wrapper.result.ListResult;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -27,12 +34,14 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 import static io.metersphere.sdk.constants.KafkaTopicConstants.SQL_REPORT_DEBUG_TASK_RESULT_TOPIC;
+import static io.metersphere.sdk.constants.KafkaTopicConstants.SQL_SCENARIO_REPORT_TOPIC;
 
 @Slf4j
 @Service
 public class DlTemplateServiceImpl implements DlTemplateService {
 
     public static final String SQL_TASK_CONSUME_ID = "MS-SQL-TASK-CONSUME";
+    public static final String SQL_SCEANARIO_RUN_CONSUME_ID = "SQL_SCEANARIO_RUN_CONSUME_ID";
 
     @Autowired
     private CommandConverter commandConverter;
@@ -42,6 +51,9 @@ public class DlTemplateServiceImpl implements DlTemplateService {
 
     @Resource
     ConnectionInfoHandler connectionInfoHandler;
+
+    @Resource
+    RedisLock redisLock;
 
     @Override
     public void execute(DlExecuteParam param) {
@@ -56,7 +68,7 @@ public class DlTemplateServiceImpl implements DlTemplateService {
      * @return
      */
     @Override
-    public ListResult<ExecuteResult> executeDirect(DlExecuteParam param) {
+    public ListResult<? extends ExecuteResult> executeDirect(DlExecuteParam param) {
         CommandExecutor executor = Chat2DBContext.getMetaData().getCommandExecutor();
         Command command = commandConverter.param2model(param);
         List<ExecuteResult> results = executor.executeDirect(command);
@@ -77,7 +89,7 @@ public class DlTemplateServiceImpl implements DlTemplateService {
         Chat2DBContext.putContext(connectionInfoHandler.toInfo(dataSourceId));
 
         List<ExecuteResult> results = executor.executeDirect(command);
-        ListResult<ExecuteResult> executeResultListResult = reBuildHeader(results, command.getSchemaName(), command.getDatabaseName());
+        ListResult<? extends ExecuteResult> executeResultListResult = reBuildHeader(results, command.getSchemaName(), command.getDatabaseName());
 
         SocketMsgDTO socketMsgDTO = new SocketMsgDTO(command.getReportId(), "UNKNOW RUNMODE", MsgType.SQL_EXEC_RESULT.name(), executeResultListResult);
 
@@ -91,8 +103,39 @@ public class DlTemplateServiceImpl implements DlTemplateService {
         kafkaTemplate.send(SQL_REPORT_DEBUG_TASK_RESULT_TOPIC,command.getReportId(),JSON.toJSONString(socketMsgDTO2));
     }
 
-    private ListResult<ExecuteResult> reBuildHeader(List<ExecuteResult> results,String schemaName,String databaseName){
-        ListResult<ExecuteResult> listResult = ListResult.of(results);
+    @KafkaListener(id = SQL_SCEANARIO_RUN_CONSUME_ID, topics = KafkaTopicConstants.SQL_SCENARIO_RUN_TOPIC, groupId = SQL_SCEANARIO_RUN_CONSUME_ID + "_" + "${random.uuid}")
+    public void debugConsume(ConsumerRecord<?, String> record) {
+        try {
+            LogUtils.info("接收到执行结果：keys is {}, values is {}", record.key(),record.value());
+            MsSqlCaseElement command = JSON.parseObject(record.value(), MsSqlCaseElement.class);
+            // 通过不同的协议来获取处理器类型，使用合适的CommandExecutor类型来执行，当前只有mysql，后续可能会因为支持pg协议等增加更多内容
+            CommandExecutor executor = Chat2DBContext.getMetaData("MYSQL").getCommandExecutor();
+            // TODO：demo暂时写死databaseid
+            Integer dataSourceId = 1;
+            Chat2DBContext.putContext(connectionInfoHandler.toInfo(dataSourceId));
+
+            List<? extends ExecuteResult> results = executor.executeDirectAndDiff(command);
+
+            ListResult<? extends ExecuteResult> executeResultListResult = reBuildHeader(results, null, null);
+
+            SocketMsgDTO socketMsgDTO = new SocketMsgDTO(command.getReportId(), "UNKNOW RUNMODE", MsgType.SQL_EXEC_RESULT.name(), executeResultListResult);
+            kafkaTemplate.send(SQL_SCENARIO_REPORT_TOPIC,command.getReportId() + "+" + command.getStepId(),JSON.toJSONString(socketMsgDTO));
+
+            // TODO：在原版ms中，ws连接与前端交互有两个重要的消息通知，一个是EXEC_RESULT,另一个是EXEC_END，前者是将结果通知到前端，后者是告诉前端需要关闭连接
+            // 暂时先保留两个连接的逻辑，目前能想到的方案是，SQL_EXEC_RESULT用来通知结果，SQL_EXEC_END发送前则进行一些清理操作，当前现在都是在SQL_EXEC_RESULT就完成了
+            // 后续如果仅需要一个通知的话，可以对前端进行改造仅保留一个通知就够了。
+            SocketMsgDTO socketMsgDTO2 = new SocketMsgDTO(command.getReportId(), "UNKNOW RUNMODE", MsgType.SQL_EXEC_END.name(), JSON.toJSONString(executeResultListResult));
+
+            kafkaTemplate.send(SQL_SCENARIO_REPORT_TOPIC,command.getReportId() + "+" + command.getStepId(),JSON.toJSONString(socketMsgDTO2));
+            // TODO：这里目前是单线程限制，后续可以在前端传过来，写入到kafka消息中去
+//            redisLock.lock(command.getReportId(),command.getStepId(),1);
+        } catch (Exception e) {
+            LogUtils.error("{} 调试消息推送失败：{}", record.key(), e);
+        }
+    }
+
+    private ListResult<? extends ExecuteResult> reBuildHeader(List<? extends ExecuteResult> results, String schemaName, String databaseName){
+        ListResult<? extends ExecuteResult> listResult = ListResult.of(results);
         for (ExecuteResult executeResult : results) {
             List<Header> headers = executeResult.getHeaderList();
             if (executeResult.getSuccess() && executeResult.isCanEdit() && CollectionUtils.isNotEmpty(headers)) {

@@ -60,12 +60,12 @@
   import MsDetailDrawer from '@/components/business/ms-detail-drawer/index.vue';
   import ScenarioCom from './scenarioCom.vue';
 
-  import { getShareInfo, reportScenarioDetail } from '@/api/modules/api-test/report';
+  import { getShareInfo, reportScenarioDetail } from '@/api/modules/sql-test/report';
   import { useI18n } from '@/hooks/useI18n';
   import useOpenNewPage from '@/hooks/useOpenNewPage';
   import { useAppStore } from '@/store';
 
-  import type { ReportDetail } from '@/models/apiTest/report';
+  import type { SqlReportDetail } from '@/models/sqlTest/report';
   import { FullPageEnum, RouteEnum } from '@/enums/routeEnum';
 
   const appStore = useAppStore();
@@ -139,14 +139,14 @@
     console: '',
   };
 
-  const reportStepDetail = ref<ReportDetail>({
+  const reportStepDetail = ref<SqlReportDetail>({
     ...initReportStepDetail,
   });
 
   /**
    * 详情
    */
-  function loadedReport(detail: ReportDetail) {
+  function loadedReport(detail: SqlReportDetail) {
     innerReportId.value = detail.id;
     reportStepDetail.value = { ...initReportStepDetail };
     reportStepDetail.value = cloneDeep(detail);
@@ -193,8 +193,7 @@
       if (!val) {
         reportStepDetail.value = { ...initReportStepDetail };
       }
-    }
-  );
+    },{ immediate: true});
 </script>
 
 <style scoped lang="less">

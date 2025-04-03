@@ -1152,9 +1152,6 @@
       requestModuleId = requestVModel.value.isNew ? saveModalForm.value.moduleId : requestVModel.value.moduleId;
     }
 
-    console.log("requestVModel.value.responseDefinition");
-    console.log(requestVModel.value.responseDefinition);
-
     // 处理断言参数
     const { assertionConfig } = requestVModel.value.children[0];
     return {

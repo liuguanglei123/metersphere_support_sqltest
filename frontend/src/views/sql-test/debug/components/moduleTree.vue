@@ -23,7 +23,7 @@
           mode="add"
           :all-names="rootModulesName"
           parent-id="NONE"
-          :add-module-api="sqladdDebugModule"
+          :add-module-api="sqlAddDebugModule"
           @add-finish="handleAddFinish"
         >
           <MsButton type="icon" class="!mr-0 p-[2px]">
@@ -67,15 +67,15 @@
         @drop="handleDrop"
         @select="
           (keys, node) => {
-            if (node.type === 'API') {
-              emit('clickApiNode', node);
+            if (node.type === 'SQL') {
+              emit('clickSqlNode', node);
             }
           }
         "
       >
         <template #title="nodeData">
-          <div v-if="nodeData.type === 'API'" class="inline-flex w-full cursor-pointer gap-[4px]">
-            <apiMethodName :method="nodeData.attachInfo?.method || nodeData.attachInfo?.protocol" />
+          <div v-if="nodeData.type === 'SQL'" class="inline-flex w-full cursor-pointer gap-[4px]">
+            <sqlMethodName :method="nodeData.attachInfo?.method || nodeData.attachInfo?.protocol" />
             <div class="one-line-text w-full text-[var(--color-text-1)]">{{ nodeData.name }}</div>
           </div>
           <div v-else class="inline-flex w-full gap-[8px]">
@@ -92,8 +92,8 @@
             :field-config="{ field: renameFolderTitle }"
             :all-names="(nodeData.parent? nodeData.parent.children || [] : folderTree).filter((e: ModuleTreeNode) => e.id !== nodeData.id).map((e: ModuleTreeNode) => e.name || '')"
             :node-type="nodeData.type"
-            :update-module-api="sqlupdateDebugModule"
-            :update-api-node-api="sqlupdateDebug"
+            :update-module-api="sqlUpdateDebugModule"
+            :update-api-node-api="sqlUpdateDebug"
             @close="resetFocusNodeKey"
             @rename-finish="handleRenameFinish"
           >
@@ -101,11 +101,11 @@
           </popConfirm>
           <!-- 默认模块的 id 是root，默认模块不可编辑、不可添加子模块；API不可添加子模块 -->
           <popConfirm
-            v-if="nodeData.id !== 'root' && nodeData.type !== 'API' && hasAnyPermission(['PROJECT_API_DEBUG:READ+ADD'])"
+            v-if="nodeData.id !== 'root' && nodeData.type !== 'SQL' && hasAnyPermission(['PROJECT_API_DEBUG:READ+ADD'])"
             mode="add"
             :all-names="(nodeData.children || []).map((e: ModuleTreeNode) => e.name || '')"
             :parent-id="nodeData.id"
-            :add-module-api="sqladdDebugModule"
+            :add-module-api="sqlAddDebugModule"
             @close="resetFocusNodeKey"
             @add-finish="handleAddFinish"
           >
@@ -128,19 +128,19 @@
   import type { ActionsItem } from '@/components/pure/ms-table-more-action/types';
   import MsTree from '@/components/business/ms-tree/index.vue';
   import type { MsTreeNodeData } from '@/components/business/ms-tree/types';
-  import apiMethodName from '@/views/api-test/components/apiMethodName.vue';
   import popConfirm from '@/views/sql-test/components/popConfirm.vue';
+  import sqlMethodName from '@/views/sql-test/components/sqlMethodName.vue';
 
   import {
-    sqladdDebugModule,
-    sqldeleteDebug,
-    sqldeleteDebugModule,
-    sqldragDebug,
-    sqlgetDebugModuleCount,
-    sqlgetDebugModules,
-    sqlmoveDebugModule,
-    sqlupdateDebug,
-    sqlupdateDebugModule,
+    sqlAddDebugModule,
+    sqlDeleteDebug,
+    sqlDeleteDebugModule,
+    sqlDragDebug,
+    sqlGetDebugModuleCount,
+    sqlGetDebugModules,
+    sqlMoveDebugModule,
+    sqlUpdateDebug,
+    sqlUpdateDebugModule,
   } from '@/api/modules/sql-test/debug';
   import { dropPositionMap } from '@/config/common';
   import { useI18n } from '@/hooks/useI18n';
@@ -155,7 +155,7 @@
     isExpandAll?: boolean; // 是否展开所有节点
     activeNodeId?: string | number; // 当前选中节点 id
   }>();
-  const emit = defineEmits(['init', 'clickApiNode', 'newApi', 'import', 'updateApiNode', 'deleteFinish']);
+  const emit = defineEmits(['init', 'clickSqlNode', 'newSql', 'import', 'updateSqlNode', 'deleteFinish']);
 
   const appStore = useAppStore();
   const { t } = useI18n();
@@ -192,7 +192,7 @@
 
   function nodeSelectable(node: MsTreeNodeData) {
     // 只有 api 节点可选中
-    return node.type === 'API';
+    return node.type === 'SQL';
   }
 
   function setFocusNodeKey(node: MsTreeNodeData) {
@@ -221,7 +221,7 @@
   async function initModules() {
     try {
       loading.value = true;
-      const res = await sqlgetDebugModules();
+      const res = await sqlGetDebugModules();
       folderTree.value = mapTree<ModuleTreeNode>(res, (e) => {
         return {
           ...e,
@@ -241,8 +241,9 @@
   const modulesCount = ref<Record<string, number>>({});
   const allFileCount = computed(() => modulesCount.value.all || 0);
   async function initModuleCount() {
+    // TODO：count数据获取
     try {
-      const res = await sqlgetDebugModuleCount({
+      const res = await sqlGetDebugModuleCount({
         keyword: '',
       });
       modulesCount.value = res;
@@ -275,7 +276,7 @@
       maskClosable: false,
       onBeforeOk: async () => {
         try {
-          await sqldeleteDebugModule(node.id);
+          await sqlDeleteDebugModule(node.id);
           Message.success(t('apiTestDebug.deleteSuccess'));
           emit('deleteFinish', node);
           await initModules();
@@ -313,7 +314,7 @@
       maskClosable: false,
       onBeforeOk: async () => {
         try {
-          await sqldeleteDebug(node.id);
+          await sqlDeleteDebug(node.id);
           Message.success(t('apiTestDebug.deleteSuccess'));
           emit('deleteFinish', node);
           await initModules();
@@ -384,13 +385,13 @@
       }
       loading.value = true;
       if (dragNode.type === 'MODULE') {
-        await sqlmoveDebugModule({
+        await sqlMoveDebugModule({
           dragNodeId: dragNode.id as string,
           dropNodeId: dropNode.id || '',
           dropPosition,
         });
       } else {
-        await sqldragDebug({
+        await sqlDragDebug({
           projectId: appStore.currentProjectId,
           moveMode: dropPositionMap[dropPosition],
           moveId: dragNode.id,

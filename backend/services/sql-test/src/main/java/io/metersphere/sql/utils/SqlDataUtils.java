@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.json.JsonReadFeature;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,6 +13,7 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.type.CollectionType;
+import io.metersphere.sdk.dto.result.ListResult;
 import io.metersphere.sdk.exception.MSException;
 import io.metersphere.sql.pojo.request.MsSqlCaseElement;
 
@@ -66,6 +68,14 @@ public class SqlDataUtils {
     public static <T> T parseObject(InputStream src, Class<T> valueType) {
         try {
             return objectMapper.readValue(src, valueType);
+        } catch (IOException e) {
+            throw new MSException(e);
+        }
+    }
+
+    public static <T> ListResult<T> parseArray(String content, Class<T> valueType) {
+        try {
+            return objectMapper.readValue(content, new TypeReference<ListResult<T>>() {});
         } catch (IOException e) {
             throw new MSException(e);
         }

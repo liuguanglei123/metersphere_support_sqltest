@@ -25,7 +25,6 @@ export interface SqlDefinitionGetModuleParams {
   filter?: Record<string, any>;
   combine?: Record<string, any>;
   moduleIds: string[];
-  protocols: string[];
   projectId: string;
   versionId?: string;
   refId?: string;
@@ -103,7 +102,7 @@ export interface SqlDefinitionDetail extends SqlDefinitionCreateParams {
 }
 
 // 定义-更新模块参数
-export interface ApiDefinitionUpdateModuleParams {
+export interface SqlDefinitionUpdateModuleParams {
   id: string;
   name: string;
 }

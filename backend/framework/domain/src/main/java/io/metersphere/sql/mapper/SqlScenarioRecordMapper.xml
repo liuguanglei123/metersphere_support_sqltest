@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.metersphere.sql.mapper.SqlScenarioRecordMapper">
+  <resultMap id="BaseResultMap" type="io.metersphere.sql.domain.SqlScenarioRecord">
+    <id column="sql_scenario_report_id" jdbcType="VARCHAR" property="sqlScenarioReportId" />
+    <id column="sql_scenario_id" jdbcType="VARCHAR" property="sqlScenarioId" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List">
+    sql_scenario_report_id, sql_scenario_id
+  </sql>
+  <select id="selectByExample" parameterType="io.metersphere.sql.domain.SqlScenarioRecordExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from sql_scenario_record
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="map">
+    delete from sql_scenario_record
+    where sql_scenario_report_id = #{sqlScenarioReportId,jdbcType=VARCHAR}
+      and sql_scenario_id = #{sqlScenarioId,jdbcType=VARCHAR}
+  </delete>
+  <delete id="deleteByExample" parameterType="io.metersphere.sql.domain.SqlScenarioRecordExample">
+    delete from sql_scenario_record
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="io.metersphere.sql.domain.SqlScenarioRecord">
+    insert into sql_scenario_record (sql_scenario_report_id, sql_scenario_id
+      )
+    values (#{sqlScenarioReportId,jdbcType=VARCHAR}, #{sqlScenarioId,jdbcType=VARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="io.metersphere.sql.domain.SqlScenarioRecord">
+    insert into sql_scenario_record
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="sqlScenarioReportId != null">
+        sql_scenario_report_id,
+      </if>
+      <if test="sqlScenarioId != null">
+        sql_scenario_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="sqlScenarioReportId != null">
+        #{sqlScenarioReportId,jdbcType=VARCHAR},
+      </if>
+      <if test="sqlScenarioId != null">
+        #{sqlScenarioId,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="io.metersphere.sql.domain.SqlScenarioRecordExample" resultType="java.lang.Long">
+    select count(*) from sql_scenario_record
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map">
+    update sql_scenario_record
+    <set>
+      <if test="record.sqlScenarioReportId != null">
+        sql_scenario_report_id = #{record.sqlScenarioReportId,jdbcType=VARCHAR},
+      </if>
+      <if test="record.sqlScenarioId != null">
+        sql_scenario_id = #{record.sqlScenarioId,jdbcType=VARCHAR},
+      </if>
+    </set>
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map">
+    update sql_scenario_record
+    set sql_scenario_report_id = #{record.sqlScenarioReportId,jdbcType=VARCHAR},
+      sql_scenario_id = #{record.sqlScenarioId,jdbcType=VARCHAR}
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <insert id="batchInsert" parameterType="map">
+    insert into sql_scenario_record
+    (sql_scenario_report_id, sql_scenario_id)
+    values
+    <foreach collection="list" item="item" separator=",">
+      (#{item.sqlScenarioReportId,jdbcType=VARCHAR}, #{item.sqlScenarioId,jdbcType=VARCHAR}
+        )
+    </foreach>
+  </insert>
+  <insert id="batchInsertSelective" parameterType="map">
+    insert into sql_scenario_record (
+    <foreach collection="selective" item="column" separator=",">
+      ${column.escapedColumnName}
+    </foreach>
+    )
+    values
+    <foreach collection="list" item="item" separator=",">
+      (
+      <foreach collection="selective" item="column" separator=",">
+        <if test="'sql_scenario_report_id'.toString() == column.value">
+          #{item.sqlScenarioReportId,jdbcType=VARCHAR}
+        </if>
+        <if test="'sql_scenario_id'.toString() == column.value">
+          #{item.sqlScenarioId,jdbcType=VARCHAR}
+        </if>
+      </foreach>
+      )
+    </foreach>
+  </insert>
+</mapper>

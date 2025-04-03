@@ -8,7 +8,7 @@
           v-for="t in internalTabs"
           :key="t.key"
           mouse-enter-delay="0.8"
-          content="t.popover"
+          :content="t.popover"
           :class="['tabItem', { activeTab: t.key === internalActiveTab }]"
           @dblclick="onDoubleClick(t)"
         >
@@ -26,22 +26,6 @@
           </div>
         </a-popover>
       </div>
-
-      <!-- TODO：下面好像是右侧显示不开的tab的功能，先不做了，后面有需要再说 -->
-      <!--
-      <div class="rightBox">
-        <!- 更多标签下拉菜单 ->
-        <div v-if="showMoreTabs" class="moreTabs">
-          <Dropdown>
-            menu={{ items }}
-            trigger={['click']}
-          >
-            <a href="#" @click.prevent>
-              <Iconfont code="&#xe601;" />
-            </a>
-          </Dropdown>
-        </div>
-      </div> -->
     </div>
     <div v-if="true">
       <div :class="['tabsContent']">

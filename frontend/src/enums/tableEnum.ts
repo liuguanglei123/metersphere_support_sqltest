@@ -107,6 +107,8 @@ export enum TableKeyEnum {
   TEST_PLAN_REPORT_BUG_TABLE_DETAIL_GROUP = 'testPlanReportBugDetailTableGroup',
 
   SQL_TEST = 'sqlTest',
+  SQL_SCENARIO = 'sqlScenario',
+  SQL_TEST_REPORT = 'sqlTestReport',
 
 }
 

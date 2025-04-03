@@ -1,0 +1,16 @@
+export const ScenarioPageUrl = '/sql/scenario/page'; // 接口场景列表
+export const ScenarioTrashPageUrl = '/sql/scenario/trash/page';
+export const DebugScenarioUrl = '/sql/scenario/debug'; // 接口场景调试（不保存报告）
+export const ScenarioAssociateExportUrl = '/sql/scenario/associate/all'; // 接口场景管理-场景导入系统参数
+export const GetScenarioUrl = '/sql/scenario/get'; // 获取接口场景详情
+export const AddScenarioUrl = '/sql/scenario/add'; // 添加接口场景
+export const UpdateScenarioUrl = '/sql/scenario/update'; // 更新接口场景
+export const AddModuleUrl = '/sql/scenario/module/add'; // 添加模块
+export const DeleteModuleUrl = '/sql/scenario/module/delete'; // 删除模块
+export const MoveModuleUrl = '/sql/scenario/module/move'; // 移动模块
+export const UpdateModuleUrl = '/sql/scenario/module/update'; // 更新模块
+export const GetModuleTreeUrl = '/sql/scenario/module/tree'; // 查找模块
+export const GetModuleCountUrl = '/sql/scenario/module/count'; // 获取模块统计数量
+export const BatchRunScenarioUrl = '/sql/scenario/batch-operation/run'; // 批量执行接口场景
+export const ExecuteScenarioUrl = '/sql/scenario/run'; // 接口场景执行（保存报告）
+export const GetScenarioStepUrl = '/sql/scenario/step/get'; // 获取接口场景步骤详情

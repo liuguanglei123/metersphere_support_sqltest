@@ -3,10 +3,9 @@ import { cloneDeep } from 'lodash-es';
 import { useI18n } from '@/hooks/useI18n';
 import { getGenerateId, insertNodes, TreeNode } from '@/utils';
 
-import { CreateStepAction } from '@/models/apiTest/scenario';
-import {SqlScenarioStepItem} from "@/models/sqlTest/scenario";
-import { ScenarioStepRefType, ScenarioStepType } from '@/enums/apiEnum';
-import {SqlScenarioStepRefType, SqlScenarioStepType} from "@/enums/sqlEnum";
+import { SqlCreateStepAction } from '@/models/sqlTest/scenario';
+import { SqlScenarioStepItem } from "@/models/sqlTest/scenario";
+import { SqlScenarioStepRefType, SqlScenarioStepType } from "@/enums/sqlEnum";
 
 import {
   defaultScenarioStepConfig,
@@ -45,7 +44,7 @@ export default function useCreateActions() {
     defaultStepInfo: Record<string, any>,
     step: SqlScenarioStepItem,
     steps: SqlScenarioStepItem[],
-    createStepAction: CreateStepAction,
+    createStepAction: SqlCreateStepAction,
     selectedKeys: (string | number)[]
   ) {
     const id = getGenerateId();
@@ -79,28 +78,6 @@ export default function useCreateActions() {
     projectId: string
   ): SqlScenarioStepItem[] {
     let name: string;
-    // switch (stepType) {
-    //   case SqlScenarioStepType.LOOP_CONTROLLER:
-    //     name = t('apiScenario.loopControl');
-    //     break;
-    //   case SqlScenarioStepType.IF_CONTROLLER:
-    //     name = t('apiScenario.conditionControl');
-    //     break;
-    //   case SqlScenarioStepType.ONCE_ONLY_CONTROLLER:
-    //     name = t('apiScenario.onlyOnceControl');
-    //     break;
-    //   case SqlScenarioStepType.CONSTANT_TIMER:
-    //     name = t('apiScenario.waitTime');
-    //     break;
-    //   case SqlScenarioStepType.CUSTOM_REQUEST:
-    //     name = t('apiScenario.customApi');
-    //     break;
-    //   case SqlScenarioStepType.SCRIPT:
-    //     name = t('apiScenario.scriptOperation');
-    //     break;
-    //   default:
-    //     break;
-    // }
     return newSteps.map((item, index) => {
       const id = getGenerateId();
       let resourceField = {};
@@ -169,7 +146,7 @@ export default function useCreateActions() {
     step: SqlScenarioStepItem,
     readyInsertSteps: SqlScenarioStepItem[],
     steps: SqlScenarioStepItem[],
-    createStepAction: CreateStepAction,
+    createStepAction: SqlCreateStepAction,
     selectedKeys: (string | number)[]
   ) {
     insertNodes<SqlScenarioStepItem>(

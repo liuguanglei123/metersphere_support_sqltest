@@ -1,14 +1,15 @@
 import { useI18n } from '@/hooks/useI18n';
 
 import type { ScenarioItemType } from '@/models/apiTest/report';
+import type { SqlScenarioItemType } from '@/models/sqlTest/report';
 import { TriggerModeLabelEnum } from '@/enums/reportEnum';
 
 const { t } = useI18n();
-export function addFoldField(node: ScenarioItemType) {
+export function addFoldField(node: SqlScenarioItemType) {
   if (node.children && node.children.length > 0) {
     node.fold = true;
     node.index = node.sort;
-    node.children.forEach((child: ScenarioItemType) => {
+    node.children.forEach((child: SqlScenarioItemType) => {
       addFoldField(child);
     });
   } else {

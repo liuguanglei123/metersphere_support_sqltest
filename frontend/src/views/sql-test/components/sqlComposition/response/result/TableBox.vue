@@ -21,7 +21,7 @@
         <div v-if="concealTabHeader">
           <!--TODO:中间这里缺少了一些内容，暂不确定是关于什么的，先跳过，后面补充 -->
         </div>
-        <div v-if="isActive">
+        <div>
           <!-- TODO:原版这里有个RightClickMenu组件，不确定是干啥的，先跳过-->
           <div :class="['RightClickMenu']">
             <div
@@ -106,12 +106,27 @@
 
   const props = defineProps<{
     className?: string;
-    outerQueryResultData: IManageResultData;
+    outerQueryResultData?: IManageResultData;
     executeSqlParams: any;
-    tableBoxId: string;
+    tableBoxId?: string;
     isActive?: boolean;
     concealTabHeader?: boolean; // concealTabHeader 是否隐藏tab头部, 目前来说隐藏头部都是单表查询。需要显示筛选
   }>();
+
+  // TODO:是否需要一个默认值
+  const defaultActiveResultDataList: IManageResultData = {
+    dataList: [],
+    description: "",
+    duration: 0,
+    fuzzyTotal: "",
+    hasNextPage: false,
+    headerList: [],
+    message: undefined,
+    originalSql: "",
+    sql: undefined,
+    sqlType: 'SELECT',
+    success: false
+  };
 
   // tableData：带列标识的表数据 可以传给Table组件 进行渲染
   // 保存原始的表数据，用于撤销
@@ -119,7 +134,9 @@
   const tableLoading = ref<boolean>(false);
   // TODO:这里的allDataReady需要完善，目前只是默认定义为true
   const allDataReady = ref<boolean>(false);
-  const queryResultData = ref<IManageResultData>(props.outerQueryResultData);
+  const queryResultData = ref<IManageResultData>(
+    props.outerQueryResultData ? props.outerQueryResultData : defaultActiveResultDataList
+  );
 
   const preCode = '$$chat2db_';
 

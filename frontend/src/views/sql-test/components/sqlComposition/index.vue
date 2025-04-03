@@ -1,5 +1,4 @@
 <template>
-  <!-- TODO:全文 多语言支持，放到最后完成 -->
   <div class="request-composition flex h-full flex-col">
     <div v-if="!props.isCase" class="mb-[8px] px-[18px] pt-[8px]">
       <div class="flex flex-wrap items-baseline justify-between gap-[12px]">
@@ -7,7 +6,6 @@
           <a-checkbox v-model="isPreDataChecked" value="1">预置数据</a-checkbox>
           <a-button type="primary" :disabled="!isPreDataChecked">配置预置数据</a-button>
         </div>
-
         <div>
           <!-- SQL定义-调试模式下，可执行 -->
           <template v-if="props.permissionMap && hasAnyPermission([props.permissionMap.execute])">
@@ -59,7 +57,6 @@
             "
           >
             <!-- 接口调试-可保存或保存为新接口定义 -->
-            <!-- TODO:目前调试页面下的保存和另存为功能暂不支持 -->
             <a-dropdown-button
               v-if="
                 props.permissionMap &&
@@ -68,6 +65,7 @@
               "
               type="outline"
               class="arco-btn-group-outline--secondary"
+              :disabled="!requestVModel.body.sqlContent || saveLoading"
               @click="handleSaveShortcut"
             >
               <div class="flex items-center">
@@ -110,14 +108,13 @@
           v-model:active-layout="activeLayout"
           :loading="requestVModel.executeLoading"
           class="response"
-          :request-result="requestVModel.response ? requestVModel.response.data : []"
+          :request-result="requestVModel.response?.data"
         >
         </response>
       </div>
     </div>
   </div>
   <a-modal
-    v-if="!isCase"
     v-model:visible="saveModalVisible"
     :title="t('common.save')"
     :ok-loading="saveLoading"
@@ -140,16 +137,37 @@
           :placeholder="t('apiTestDebug.requestNamePlaceholder')"
         />
       </a-form-item>
+      <a-form-item :label="t('apiTestDebug.requestModule')" class="mb-0">
+        <a-tree-select
+          v-model:modelValue="saveModalForm.moduleId"
+          :data="selectTree as ModuleTreeNode[]"
+          :field-names="{ title: 'name', key: 'id', children: 'children' }"
+          :tree-props="{
+            virtualListProps: {
+              height: 200,
+              threshold: 200,
+            },
+          }"
+          :filter-tree-node="filterTreeNode"
+          allow-search
+        >
+          <template #tree-slot-title="node">
+            <a-tooltip :content="`${node.name}`" position="tl">
+              <div class="one-line-text w-[300px]">{{ node.name }}</div>
+            </a-tooltip>
+          </template>
+        </a-tree-select>
+      </a-form-item>
     </a-form>
   </a-modal>
 </template>
 
 <script setup lang="ts">
   // TODO:代码拆分，结构优化
-  import { FormInstance, InputInstance } from '@arco-design/web-vue';
+  import {FormInstance, InputInstance, Message} from '@arco-design/web-vue';
+  import { cloneDeep } from "lodash-es";
 
-  import { SQLTabItem } from '@/components/pure/ms-editable-tab/types';
-  import { parseTableDataToJsonSchema } from '@/components/pure/ms-json-schema/utils';
+  import { SqlTabItem } from '@/components/pure/ms-editable-tab/types';
   import response from './response/index.vue';
   import { SqlResponseItem } from '@/views/sql-test/components/sqlComposition/response/edit.vue';
 
@@ -157,14 +175,12 @@
   import useShortcutSave from '@/hooks/useShortcutSave';
   import { useSqlWebsocket } from '@/hooks/useWebsocket';
   import useAppStore from '@/store/modules/app';
-  import { getGenerateId } from '@/utils';
+  import { filterTree, filterTreeNode, getGenerateId} from '@/utils';
   import { hasAllPermission, hasAnyPermission } from '@/utils/permission';
 
+  import { ModuleTreeNode} from "@/models/common";
   import { ExecuteSqlRequestFullParams, SqlExecuteRequestParams, SqlRequestTaskResult } from '@/models/sqlTest/common';
-  import { RequestComposition } from '@/enums/apiEnum';
-
-  import { defaultKeyValueParamItem } from '@/views/api-test/components/config';
-  import { filterKeyValParams } from '@/views/api-test/components/utils';
+  import { SqlRequestComposition } from '@/enums/sqlEnum';
 
   const appStore = useAppStore();
 
@@ -172,6 +188,7 @@
   const showResponse = computed(() => {
     return true;
   });
+
 
   export interface RequestCustomAttr {
     mode?: 'definition' | 'debug'; // 接口定义时，展示的定义模式/调试模式（显示的 tab 不同）
@@ -185,15 +202,16 @@
   }
 
   export type SqlRequestParam = ExecuteSqlRequestFullParams & {
-    responseDefinition?: SqlResponseItem[];
-    response?: SqlRequestTaskResult;
+    // responseDefinition?: SqlResponseItem[];
+    response: SqlRequestTaskResult;
   } & RequestCustomAttr &
-    SQLTabItem;
+      SqlTabItem;
 
   const props = defineProps<{
     isCase?: boolean; // 是否是用例引用的组件,只显示请求参数和响应内容,响应内容默认为空且折叠
-    request: SqlRequestParam; // 请求sql
+    // request: SqlRequestParam; // 请求sql
     isDefinition?: boolean; // 是否是接口定义模式
+    moduleTree?: ModuleTreeNode[]; // 模块树
     permissionMap?: {
       execute: string;
       create: string;
@@ -215,6 +233,13 @@
   const isPreDataChecked = ref(false);
 
   const { t } = useI18n();
+
+  const emit = defineEmits<{
+    (e: 'execute', executeType: 'serverExec'): void;
+    (e: 'addDone'): void;
+    (e: 'requestTabClick'): void;
+    (e: 'import'): void;
+  }>();
 
   const nameInputRef = ref<InputInstance>();
 
@@ -252,6 +277,20 @@
   const websocket = ref<WebSocket>();
 
   const temporaryResponseMap: Record<string, any> = {}; // 缓存websocket返回的报告内容，避免执行接口后切换tab导致报告丢失
+
+  const selectTree = computed(() => {
+    if (
+        saveModalVisible.value || (!props.isCase && props.isDefinition && saveModalVisible.value)
+    ) {
+      // 切换到基础信息 tab、调试模式打开保存弹窗，或者是接口定义模式下打开保存弹窗才进行计算，避免大数据量导致进入时就计算卡顿
+      return filterTree(cloneDeep(props.moduleTree || []), (e) => {
+        e.draggable = false;
+        return e.type === 'MODULE';
+      });
+    }
+    return [];
+  });
+
 
   /**
    * TODO：暂只支持serverExec的执行
@@ -294,7 +333,8 @@
     // TODO：在ms的设计中，弹窗中似乎是可以选择模块的，所以在存储接口定义前，会用modal的部分值覆盖原request中的值，这部分逻辑在realsave中
     //  如果后续sql也支持在弹窗中覆盖模块id，这里要做对应的修改
     //  除了moduleid外还有tag等值
-    // moduleId: 'root',
+    // 这里的module为空是全部sql按钮，如果是root则为 为规划模块
+    moduleId: '',
   });
 
   /**
@@ -338,7 +378,7 @@
         tags: requestVModel.value.tags,
         description: requestVModel.value.description,
         status: requestVModel.value.status,
-        response: requestVModel.value.response?.data,
+        response: requestVModel.value.response,
       };
     } else {
       requestName = requestVModel.value.isNew ? saveModalForm.value.name : requestVModel.value.name;
@@ -383,21 +423,17 @@
       //   saveLoading.value = true;
       // }
       const requestParams = await makeRequestParams();
-      let params;
 
-      if (props.isDefinition) {
-        params = {
-          ...(fullParams || requestParams),
-          ...saveModalForm.value,
-        };
-      } else {
-        params = {
-          ...(fullParams || requestParams),
-        };
-      }
+      const params = {
+        ...(fullParams || requestParams),
+        ...saveModalForm.value,
+      };
 
       const res = await props.createApi(params);
-
+      // TODO：
+      //  if (!silence) {
+      //   Message.success(t('common.saveSuccess'));
+      // }
       requestVModel.value.id = res.id;
       requestVModel.value.num = res.num;
       requestVModel.value.isNew = false;
@@ -409,10 +445,12 @@
       requestVModel.value.moduleId = res.moduleId;
 
       saveModalVisible.value = false;
+
+      // saveModalVisible.value = false;
       // TODO：
       // if (!silence) {
       //   saveLoading.value = false;
-      //   emit('addDone');
+      emit('addDone');
       // }
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -435,22 +473,30 @@
    * 保存快捷键处理
    */
   async function handleSaveShortcut() {
+    if (!requestVModel.value.body.sqlContent) {
+      return;
+    }
+
     try {
-      // TODO：
-      // 检查全部的校验信息
       if (!requestVModel.value.isNew) {
         // 更新接口不需要弹窗，直接更新保存
-        await updateRequest();
-      } else {
-        // 原版这里直接保存，但是SQL定义页面实在找不到存放name的合适位置，因此使用对话框形式存储，需要先弹窗，然后输入name字段后保存
-        saveModalVisible.value = true;
+        updateRequest();
+        return;
       }
+      // 接口调试需要弹窗保存，在ms的api接口测试中，有些场景下不需要弹窗保存，但是对于sql测试来说，有些内容（比如用例名称）等实在找不到合适的位置防止input
+      // 所以对于sql测试的所有保存全部改为弹窗保存
+      saveModalForm.value = {
+        name: '',
+        moduleId: 'root',
+      };
+      saveModalVisible.value = true;
+
     } catch (error) {
       // eslint-disable-next-line no-console
       console.log(error);
       // 校验不通过则不进行保存
-      requestVModel.value.activeTab = RequestComposition.PLUGIN;
-      // TODO：
+      // requestVModel.value.activeTab = SqlRequestComposition.PLUGIN;
+      // TODO：错误异常处理，暂不清楚作用先跳过
       // nextTick(() => {
       //   scrollIntoView(document.querySelector('.arco-form-item-message'), { block: 'center' });
       // });
@@ -489,7 +535,7 @@
     }
     // apiBaseFormRef.value?.formRef?.validate(async (errors) => {
     //   if (errors) {
-    //     requestVModel.value.activeTab = RequestComposition.BASE_INFO;
+    //     requestVModel.value.activeTab = SqlRequestComposition.BASE_INFO;
     //   } else {
     //     // 检查全部的校验信息
     //     if (getFlattenedMessages()?.length) {
@@ -564,6 +610,10 @@
       }
     }
   );
+
+  defineExpose({
+    execute
+  });
 </script>
 
 <style lang="less" scoped>
@@ -618,12 +668,13 @@
   }
   .request-content-and-response {
     display: flex;
+    height: 80%;
     &.vertical {
       flex-direction: column;
       .response :deep(.response-head) {
         @apply sticky;
 
-        top: 46px; // 请求参数tab高度(不算border-bottom)
+        top: 0px; // 请求参数tab高度(不算border-bottom)
         z-index: 11;
         background-color: var(--color-text-fff);
       }

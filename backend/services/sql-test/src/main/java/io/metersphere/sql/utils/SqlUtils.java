@@ -9,6 +9,7 @@ import com.alibaba.druid.sql.ast.statement.SQLJoinTableSource;
 import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
 import com.alibaba.druid.sql.ast.statement.SQLTableSource;
 import com.alibaba.druid.sql.parser.SQLParserUtils;
+import com.alibaba.druid.util.JdbcConstants;
 import io.metersphere.sql.pojo.model.ExecuteResult;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.expression.Function;
@@ -19,10 +20,10 @@ import net.sf.jsqlparser.statement.create.procedure.CreateProcedure;
 import net.sf.jsqlparser.statement.select.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.mapstruct.ap.internal.util.Strings;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -96,7 +97,32 @@ public class SqlUtils {
         return list;
     }
 
+    /**
+     *
+     * @param sql
+     * @param dbType
+     * @return
+     */
+    public static List<Pair<String,String>> parseToPair(String sql, DbType dbType) {
+        // 需要保留原始的sql顺序不可打乱
+        List<Pair<String,String>> result = new ArrayList<>();
+        List<String> split = SQLParserUtils.split(sql, dbType);
 
+        String comment = null;
+        for (String e : split) {
+            // 正则匹配 "--" 开头的单行注释
+            Pattern pattern = Pattern.compile("^\\s*--\\s*(.*?)\\r?\\n", Pattern.MULTILINE);
+            Matcher matcher = pattern.matcher(e);
+
+            if (matcher.find()) {
+                comment = matcher.group(1).trim(); // 提取注释内容
+                e = e.substring(matcher.end()); // 移除注释部分
+            }
+
+            result.add(Pair.of(Strings.isEmpty(comment) ? "equals" : comment, e));
+        }
+        return result;
+    }
 
     private static List<String> splitWithCreateEvent(String str, DbType dbType) {
         List<String> list = new ArrayList<>();

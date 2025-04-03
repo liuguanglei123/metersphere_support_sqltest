@@ -84,7 +84,7 @@
   function changeApiExpand() {
     isExpandSql.value = !isExpandSql.value;
     nextTick(() => {
-      setLocalStorage(`SQL_EXPAND_API`, isExpandSql.value);
+      setLocalStorage("isExpandSql", isExpandSql.value);
       emit('changeApiExpand');
     });
   }
@@ -112,7 +112,7 @@
   );
 
   onBeforeMount(async () => {
-    isExpandSql.value = getLocalStorage(`SQL_EXPAND_API`) === 'true';
+    isExpandSql.value = getLocalStorage(`isExpandSql`) === 'true';
   });
 
   defineExpose({

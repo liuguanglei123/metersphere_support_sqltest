@@ -576,6 +576,8 @@ export default function useTableProps<T>(
     },
     // 表格行的选中/取消事件
     rowSelectChange: (record: MsTableDataItem<T>) => {
+      console.log("rowSelectChange1")
+      console.log(propsRes);
       const { rowKey, rowSelectionDisabledConfig } = propsRes.value;
       const key = record[rowKey || 'id'];
       const { selectedKeys, excludeKeys } = propsRes.value;

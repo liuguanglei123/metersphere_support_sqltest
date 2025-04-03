@@ -1,21 +1,17 @@
-import { ScenarioStepItem } from '@/models/apiTest/scenario';
-import { ScenarioStepRefType, ScenarioStepType } from '@/enums/apiEnum';
+import { SqlScenarioStepItem } from '@/models/sqlTest/scenario';
+import { SqlScenarioStepRefType, SqlScenarioStepType } from '@/enums/sqlEnum';
 
-export default function getStepType(step: ScenarioStepItem) {
-  const isCopyApi = step.stepType === ScenarioStepType.API && step.refType === ScenarioStepRefType.COPY;
-  const isQuoteApi = step.stepType === ScenarioStepType.API && step.refType === ScenarioStepRefType.REF;
-  const isCopyCase = step.stepType === ScenarioStepType.API_CASE && step.refType === ScenarioStepRefType.COPY;
-  const isQuoteCase = step.stepType === ScenarioStepType.API_CASE && step.refType === ScenarioStepRefType.REF;
-  const isCopyScenario = step.stepType === ScenarioStepType.API_SCENARIO && step.refType === ScenarioStepRefType.COPY;
+export default function getStepType(step: SqlScenarioStepItem) {
+  const isCopySql = step.stepType === SqlScenarioStepType.SQL && step.refType === SqlScenarioStepRefType.COPY;
+  const isQuoteSql = step.stepType === SqlScenarioStepType.SQL && step.refType === SqlScenarioStepRefType.REF;
+  const isCopyScenario = step.stepType === SqlScenarioStepType.SQL_SCENARIO && step.refType === SqlScenarioStepRefType.COPY;
   const isQuoteScenario =
-    step.stepType === ScenarioStepType.API_SCENARIO &&
-    [ScenarioStepRefType.REF, ScenarioStepRefType.PARTIAL_REF].includes(step.refType);
+    step.stepType === SqlScenarioStepType.SQL_SCENARIO &&
+    [SqlScenarioStepRefType.REF, SqlScenarioStepRefType.PARTIAL_REF].includes(step.refType);
 
   return {
-    isCopyApi,
-    isQuoteApi,
-    isCopyCase,
-    isQuoteCase,
+    isCopySql,
+    isQuoteSql,
     isCopyScenario,
     isQuoteScenario,
   };

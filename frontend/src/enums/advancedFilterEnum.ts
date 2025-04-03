@@ -48,4 +48,6 @@ export enum ViewTypeEnum {
   PLAN_API_CASE_DRAWER = 'plan-api-case-drawer',
   PLAN_API_DEFINITION_DRAWER = 'plan-api-definition-drawer',
   PLAN_FUNCTIONAL_CASE_DRAWER = 'plan-functional-case-drawer',
+  SQL_DEFINITION = 'sql-definition',
+  SQL_SCENARIO = 'sql-scenario',
 }

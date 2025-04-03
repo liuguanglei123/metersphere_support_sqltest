@@ -99,7 +99,7 @@ export default function useStepOperation({
       }
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.log(error);
+      console.error(error);
     } finally {
       appStore.hideLoading();
     }

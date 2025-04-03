@@ -12,12 +12,12 @@
     <div v-if="activeSqlTab.id !== 'all'" class="flex-1 overflow-hidden">
       <div class="mt-[8px] flex items-center justify-between px-[16px]">
         <MsTab
-            v-model:activeKey="activeSqlTab.definitionActiveKey"
-            :content-tab-list="contentTabList"
-            mode="button"
-            class="ms-api-tab-nav"
-            button-size="small"
-            @change="changeDefinitionActiveKey"
+          v-model:activeKey="activeSqlTab.definitionActiveKey"
+          :content-tab-list="contentTabList"
+          mode="button"
+          class="ms-api-tab-nav"
+          button-size="small"
+          @change="changeDefinitionActiveKey"
         />
         <!-- TODO:在预览页面的时候，tab的右边有几个按钮，后面需要补充下 -->
 <!--        <div v-if="activeApiTab.definitionActiveKey === 'preview'" class="flex gap-[12px]">-->
@@ -46,45 +46,49 @@
 <!--        </div>-->
       </div>
       <div class="h-[calc(100%-32px)]">
-          <preview
-            v-if="activeSqlTab.definitionActiveKey === 'preview'"
-          />
-          <sqlComposition
-            v-if="activeSqlTab.definitionActiveKey === 'definition'"
-            v-model:request="activeSqlTab"
-            :execute-api="sqlDebugDefinition"
-            is-definition
-            :permission-map="{
-              execute: 'PROJECT_API_DEFINITION:READ+EXECUTE',
-              update: 'PROJECT_API_DEFINITION:READ+UPDATE',
-              create: 'PROJECT_API_DEFINITION:READ+ADD',
-            }"
-            :create-api="addDefinition"
-          />
-        </div>
+        <preview v-if="activeSqlTab.definitionActiveKey === 'preview'"/>
+        <sqlComposition
+          v-if="activeSqlTab.definitionActiveKey === 'definition'"
+          v-model:request="activeSqlTab"
+          :execute-api="sqlDebugDefinition"
+          is-definition
+          :permission-map="{
+            execute: 'PROJECT_API_DEFINITION:READ+EXECUTE',
+            update: 'PROJECT_API_DEFINITION:READ+UPDATE',
+            create: 'PROJECT_API_DEFINITION:READ+ADD',
+          }"
+          :create-api="addDefinition"
+          :module-tree="props.moduleTree"
+          @add-done="handleAddDone"
+        />
+      </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-  import {cloneDeep} from "lodash-es";
+  import { cloneDeep } from "lodash-es";
 
-  import { SQLTabItem } from "@/components/pure/ms-editable-tab/types";
+  import { SqlTabItem } from "@/components/pure/ms-editable-tab/types";
   import MsTab from "@/components/pure/ms-tab/index.vue";
   import SqlTable from "@/views/sql-test/caseManagement/components/caseManagement/sql/sqlTable.vue";
   import { SqlRequestParam } from "@/views/sql-test/components/sqlComposition/index.vue";
 
-  import { addDefinition } from "@/api/modules/sql-test/caseManagement";
+  import { addDefinition, getDefinitionDetail } from "@/api/modules/sql-test/caseManagement";
   import { sqlDebugDefinition } from "@/api/modules/sql-test/caseManagement";
   import { useI18n } from '@/hooks/useI18n';
   import useCacheStore from '@/store/modules/cache/cache';
-  import { hasAnyPermission } from "@/utils/permission";
+  import { hasAnyPermission } from '@/utils/permission';
 
   import { ModuleTreeNode } from "@/models/common";
   import { SqlDefinitionDetail } from "@/models/sqlTest/caseManagement";
-  import {RequestComposition, RequestDefinitionStatus} from "@/enums/apiEnum";
-  import {SQLRequestMethods} from "@/enums/sqlEnum";
+  import { RequestDefinitionStatus } from "@/enums/apiEnum";
+  import { SqlRequestMethods } from "@/enums/sqlEnum";
 
-  import {defaultSqlResponse, defaultSqlResponseItem} from "@/views/sql-test/components/config";
+  import useAppStore from "../../../../../../store/modules/app";
+  import useUserStore from "../../../../../../store/modules/user";
+  import { defaultResponse, defaultSqlResponse, defaultSqlResponseItem } from "@/views/sql-test/components/config";
+  
+  const appStore = useAppStore();
 
   const preview = defineAsyncComponent(() => import('./preview/index.vue'));
 
@@ -130,16 +134,7 @@
     }
   }
 
-  // TODO:从目录树打开新的case，原方法内容太长了，稍后完成
-  async function openSqlTab(options: {
-    sqlInfo: ModuleTreeNode | SqlDefinitionDetail | string;
-    isCopy?: boolean;
-    isExecute?: boolean;
-    isEdit?: boolean;
-    isDebugMock?: boolean;
-  }) {
-    console.log("openSqlTab");
-  }
+  const loading = ref(false);
 
   const props = defineProps<{
     activeModule: string;
@@ -162,7 +157,7 @@
     // activeTab: RequestComposition.HEADER,
     label: t('sqlTestDebug.newSql'),
     closable: true,
-    method: SQLRequestMethods.DDL,
+    method: SqlRequestMethods.DDL,
     unSaved: false,
     body: {
       sqlContent:'select * from t1 limit 10;',
@@ -194,7 +189,12 @@
     errorMessageInfo: {},
   };
 
-  function addSqlTab(defaultProps?: Partial<SQLTabItem>) {
+  const userStore = useUserStore();
+
+  const sqlCompositionRef = ref<InstanceType<typeof sqlComposition>>();
+
+  
+  function addSqlTab(defaultProps?: Partial<SqlTabItem>) {
     const id = `definition-${Date.now()}`;
     sqlTabs.value.push({
       ...cloneDeep(defaultDefinitionParams),
@@ -202,14 +202,92 @@
       label: t('sqlTestDebug.newSql'),
       id,
       isNew: !defaultProps?.id, // 新开的tab标记为前端新增的调试，因为此时都已经有id了；但是如果是查看打开的会有携带id
-      definitionActiveKey: !defaultProps ? 'definition' : 'preview',
+      // TODO: 暂不支持preview，所以这里打开已有用例也是默认definition tab
+      definitionActiveKey: 'definition',
       ...defaultProps,
     });
     activeSqlTab.value = sqlTabs.value[sqlTabs.value.length - 1];
-    console.log("activeSqlTab");
-    console.log(activeSqlTab);
   }
 
+  async function openSqlTab(options: {
+    sqlInfo: ModuleTreeNode | SqlDefinitionDetail | string;
+    isCopy?: boolean;
+    isExecute?: boolean;
+    isEdit?: boolean;
+    isDebugMock?: boolean;
+  }) {
+    const { sqlInfo, isCopy = false, isExecute = false, isEdit = false } = options;
+
+    const isLoadedTabIndex = sqlTabs.value.findIndex(
+      (e) => e.id === (typeof sqlInfo === 'string' ? sqlInfo : sqlInfo.id)
+    );
+    if (isLoadedTabIndex > -1 && !isCopy) {
+      const preActiveSqlTabId = activeSqlTab.value.id;
+      const loadedSqlTab = sqlTabs.value[isLoadedTabIndex] as SqlRequestParam;
+      // 如果点击的请求在tab中已经存在，则直接切换到该tab
+      activeSqlTab.value = {
+        ...loadedSqlTab,
+        // TODO: 暂不支持preview，所以这里打开已有用例也是默认definition tab
+        definitionActiveKey: 'definition',
+        isExecute,
+        mode: isExecute ? 'debug' : 'definition',
+      };
+      // requestCompositionRef里监听的是id,所以id相等的时候需要单独调执行
+      if (preActiveSqlTabId === sqlTabs.value[isLoadedTabIndex].id) {
+        sqlCompositionRef.value?.execute('serverExec');
+      }
+      return;
+    }
+    try {
+      appStore.showLoading();
+      loading.value = true;
+      const res = await getDefinitionDetail(typeof sqlInfo === 'string' ? sqlInfo : sqlInfo.id);
+      appStore.hideLoading();
+      let name = isCopy ? `copy_${res.name}` : res.name;
+      if (name.length > 255) {
+        name = name.slice(0, 255);
+      }
+
+      const { request } = res;
+
+      addSqlTab({
+        label: name,
+        ...res,
+        ...request,
+        response: res.response,
+        // responseDefinition: res.response.map((e) => ({ ...e, responseActiveTab: ResponseComposition.BODY })),
+        name, // request里面还有个name但是是null
+        isNew: isCopy,
+        unSaved: isCopy,
+        isCopy,
+        id: isCopy ? new Date().getTime() : res.id,
+        isExecute,
+        // TODO: 暂不支持preview，所以这里打开已有用例也是默认definition tab
+        definitionActiveKey: 'definition',
+      });
+      nextTick(() => {
+        // 等待内容渲染出来再隐藏loading
+        loading.value = false;
+      });
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.log(error);
+      loading.value = false;
+      appStore.hideLoading();
+    }
+  }
+
+  const refreshModuleTree: (() => Promise<any>) | undefined = inject('refreshModuleTree');
+
+  function handleAddDone() {
+    console.log("handleAddDone1")
+    if (typeof refreshModuleTree === 'function') {
+      console.log("handleAddDone2")
+
+      refreshModuleTree();
+    }
+  }
+  
   defineExpose({
     addSqlTab,
     openSqlTab,

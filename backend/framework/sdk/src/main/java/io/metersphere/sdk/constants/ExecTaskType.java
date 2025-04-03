@@ -40,5 +40,13 @@ public enum ExecTaskType {
     /**
      * 测试计划组整体执行
      */
-    TEST_PLAN_GROUP
+    TEST_PLAN_GROUP,
+    /**
+     * 场景执行
+     */
+    SQL_SCENARIO,
+    /**
+     * 场景批量执行
+     */
+    SQL_SCENARIO_BATCH,
 }

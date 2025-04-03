@@ -171,7 +171,7 @@
     .menu-list-wrapper {
       .menu-list {
         position: sticky;
-        z-index: 999999;
+        //z-index: 999999;
         height: 40px;
         line-height: 40px;
         background: white;

@@ -30,7 +30,7 @@
               :class="['font-medium', activeResponseType === 'content' ? '' : '!text-[var(--color-text-n4)]', '!mr-0']"
               @click="() => setActiveResponse('content')"
             >
-              {{ t('apiTestDebug.responseContent') }}1
+              {{ t('apiTestDebug.responseContent') }}
             </MsButton>
             <a-divider direction="vertical" :margin="4"></a-divider>
             <MsButton
@@ -38,7 +38,7 @@
               :class="['font-medium', activeResponseType === 'result' ? '' : '!text-[var(--color-text-n4)]']"
               @click="() => setActiveResponse('result')"
             >
-              {{ t('apiTestManagement.executeResult') }}2
+              {{ t('apiTestManagement.executeResult') }}
             </MsButton>
           </div>
           <div v-else class="ml-[4px] mr-[24px] font-medium">{{ t('apiTestDebug.responseContent') }}</div>
@@ -49,8 +49,8 @@
             size="small"
             @change="(val) => emit('changeLayout', val as Direction)"
           >
-            <a-radio value="vertical">{{ t('apiTestDebug.vertical') }}上下</a-radio>
-            <a-radio value="horizontal">{{ t('apiTestDebug.horizontal') }}左右</a-radio>
+            <a-radio value="vertical">{{ t('apiTestDebug.vertical') }}</a-radio>
+            <a-radio value="horizontal">{{ t('apiTestDebug.horizontal') }}</a-radio>
           </a-radio-group>
         </div>
       </slot>
@@ -95,7 +95,7 @@
   import { useI18n } from '@/hooks/useI18n';
 
   import {IManageResultData} from "@/models/sqlTest/common";
-  import { ResponseBodyFormat, ResponseComposition } from '@/enums/apiEnum';
+  import {SqlResponseComposition} from "@/enums/sqlEnum";
 
   const props = withDefaults(
     defineProps<{
@@ -132,7 +132,7 @@
   const activeLayout = defineModel<Direction>('activeLayout', {
     default: 'vertical',
   });
-  const activeTab = defineModel<ResponseComposition>('activeTab', {
+  const activeTab = defineModel<SqlResponseComposition>('activeTab', {
     required: true,
   });
   const responseDefinition = defineModel<SqlResponseItem[]>('responseDefinition', {
@@ -208,7 +208,7 @@
   });
 </script>
 
-<style lang="less" scoped>
+<style lang="less">
   .response-head {
     @apply flex flex-wrap items-center justify-between border-b;
 

@@ -105,10 +105,6 @@
   }
 
   function handleNodeSelect(keys: string[], _offspringIds: string[]) {
-    console.log("keys");
-    console.log(keys);
-    console.log("_offspringIds");
-    console.log(_offspringIds);
     [activeModule.value] = keys;
     offspringIds.value = _offspringIds;
     managementRef.value?.changeActiveApiTabToFirst();

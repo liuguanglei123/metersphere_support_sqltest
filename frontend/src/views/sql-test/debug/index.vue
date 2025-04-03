@@ -9,8 +9,8 @@
               :active-node-id="activeDebug.id"
               @init="(val) => (folderTree = val)"
               @new-api="addDebugTab"
-              @click-api-node="openApiTab"
-              @update-api-node="handleApiUpdateFromModuleTree"
+              @click-sql-node="openSqlTab"
+              @update-api-node="handleSqlUpdateFromModuleTree"
               @delete-finish="handleDeleteFinish"
             />
           </template>
@@ -26,7 +26,6 @@
                   @close="handleDebugTabClose"
                 >
                   <template #label="{ tab }">
-                    <sqlMethodName :method="SQLRequestMethods.DDL" class="mr-[4px]" />
                     <a-tooltip :content="tab.name || tab.label" :mouse-enter-delay="500">
                       <div class="one-line-text max-w-[144px]">
                         {{ tab.name || tab.label }}
@@ -40,14 +39,11 @@
                   v-model:detail-loading="loading"
                   v-model:request="activeDebug"
                   :module-tree="folderTree"
-                  :create-api="addDebug"
-                  :update-api="updateDebug"
-                  :execute-api="sqlexecuteDebug"
+                  :create-api="sqlAddDebug"
+                  :update-api="sqlUpdateDebug"
+                  :execute-api="sqlExecuteDebug"
                   :local-execute-api="localExecuteApiDebug"
-                  :upload-temp-file-api="uploadTempFile"
                   :file-save-as-source-id="activeDebug.id"
-                  :file-save-as-api="transferFile"
-                  :file-module-options-api="getTransferOptions"
                   hide-json-schema
                   :permission-map="{
                     execute: 'PROJECT_API_DEBUG:READ+EXECUTE',
@@ -64,8 +60,10 @@
         </MsSplitBox>
       </MsCard>
     </a-tab-pane>
-    <a-tab-pane key="2" title="SQL场景调试"> SQL场景模式调试 </a-tab-pane>
-    <a-tab-pane key="3" title="命令行调试"> Linux命令行模式调试 </a-tab-pane>
+    <a-tab-pane key="2" title="命令行调试">
+      <terminal>
+      </terminal>
+    </a-tab-pane>
   </a-tabs>
 </template>
 
@@ -73,28 +71,23 @@
   import { cloneDeep } from 'lodash-es';
 
   import MsCard from '@/components/pure/ms-card/index.vue';
-  import { SQLTabItem } from '@/components/pure/ms-editable-tab/types';
+  import { SqlTabItem } from '@/components/pure/ms-editable-tab/types';
   import MsSplitBox from '@/components/pure/ms-split-box/index.vue';
   import MsSqlEditableTab from '@/components/pure/ms-sql-editable-tab/index.vue';
+  import terminal from '../components/terminal/index.vue';
   import moduleTree from './components/moduleTree.vue';
   import sqlComposition, { SqlRequestParam } from '@/views/sql-test/components/sqlComposition/index.vue';
 
   import { localExecuteApiDebug } from '@/api/modules/api-test/common';
-  import {
-    addDebug,
-    getTransferOptions,
-    transferFile,
-    updateDebug,
-    uploadTempFile,
-  } from '@/api/modules/api-test/debug';
-  import { sqlexecuteDebug } from "@/api/modules/sql-test/debug";
+  import {sqlAddDebug, sqlExecuteDebug, sqlGetDebugDetail, sqlUpdateDebug} from "@/api/modules/sql-test/debug";
   import { useI18n } from '@/hooks/useI18n';
   import useRequestCompositionStore from '@/store/modules/api/requestComposition';
   import { hasAnyPermission } from '@/utils/permission';
 
   import { ModuleTreeNode } from '@/models/common';
-  import { SQLRequestMethods, SqlResponseComposition } from '@/enums/sqlEnum';
+  import { SqlRequestMethods, SqlResponseComposition } from '@/enums/sqlEnum';
 
+  import {defaultResponse} from "@/views/api-test/components/config";
   import {defaultSqlBodyParams, defaultSqlResponse} from '@/views/sql-test/components/config';
 
   const requestCompositionStore = useRequestCompositionStore();
@@ -107,7 +100,7 @@
 
   const { t } = useI18n();
 
-  const defaultSQLDebugParams: SqlRequestParam = {
+  const defaultSqlDebugParams: SqlRequestParam = {
     isNew: true,
     body: {
       ...cloneDeep(defaultSqlBodyParams),
@@ -122,21 +115,23 @@
     response: cloneDeep(defaultSqlResponse),
   };
 
+  const moduleTreeRef = ref<InstanceType<typeof moduleTree>>();
+
   async function handleDebugAddDone() {
-    // await moduleTreeRef.value?.initModules();
-    // moduleTreeRef.value?.initModuleCount();
+    await moduleTreeRef.value?.initModules();
+    moduleTreeRef.value?.initModuleCount();
   }
 
-  const debugTabs = ref<SqlRequestParam[]>([cloneDeep(defaultSQLDebugParams)]);
+  const debugTabs = ref<SqlRequestParam[]>([cloneDeep(defaultSqlDebugParams)]);
   const activeDebug = ref<SqlRequestParam>(debugTabs.value[0]);
 
   const folderTree = ref<ModuleTreeNode[]>([]);
 
   // TODO:
-  function addDebugTab(defaultProps?: Partial<SQLTabItem>) {
+  function addDebugTab(defaultProps?: Partial<SqlTabItem>) {
     const id = `debug-${Date.now()}`;
     debugTabs.value.push({
-      ...cloneDeep(defaultSQLDebugParams),
+      ...cloneDeep(defaultSqlDebugParams),
       id,
       isNew: !defaultProps?.id, // 新开的tab标记为前端新增的调试，因为此时都已经有id了；但是如果是查看打开的会有携带id
       ...defaultProps,
@@ -144,9 +139,10 @@
     activeDebug.value = debugTabs.value[debugTabs.value.length - 1];
   }
 
-  async function openApiTab(apiInfo: ModuleTreeNode | string) {
-    const id = typeof apiInfo === 'string' ? apiInfo : apiInfo.id;
+  async function openSqlTab(sqlInfo: ModuleTreeNode | string) {
+    const id = typeof sqlInfo === 'string' ? sqlInfo : sqlInfo.id;
     const isLoadedTabIndex = debugTabs.value.findIndex((e) => e.id === id);
+
     if (isLoadedTabIndex > -1) {
       // 如果点击的请求在tab中已经存在，则直接切换到该tab
       activeDebug.value = debugTabs.value[isLoadedTabIndex];
@@ -155,15 +151,19 @@
     try {
       loading.value = true;
       // TODO:
-      // const res = await getDebugDetail(id);
-      const res = {
-        sql: 'this is new sql content!',
-        name: 'new sql',
-      };
-      let parseRequestBodyResult;
+      const res = await sqlGetDebugDetail(id);
+      // const res = {
+      //   sql: 'this is new sql content!',
+      //   name: 'new sql',
+      // };
 
       addDebugTab({
+        ...res,
+        response: cloneDeep(defaultSqlResponse),
+        ...res.request,
+        label: res.name,
         name: res.name, // request里面还有个name但是是null
+        moduleId: res.moduleId, // request里面还有个moduleId但是是null
       });
       nextTick(() => {
         // 等待内容渲染出来再隐藏loading
@@ -177,14 +177,32 @@
   }
 
   /**
-   * TODO 同步模块树的接口信息更新操作
+   * 同步模块树的接口信息更新操作
    */
-  function handleApiUpdateFromModuleTree(newInfo: {
+  function handleSqlUpdateFromModuleTree(newInfo: {
     id: string;
     name: string;
     moduleId?: string;
     [key: string]: any;
-  }) {}
+  }) {
+    debugTabs.value = debugTabs.value.map((item) => {
+      if (item.id === newInfo.id) {
+        item.label = newInfo.name;
+        item.name = newInfo.name;
+        if (newInfo.moduleId) {
+          item.moduleId = newInfo.moduleId;
+        }
+      }
+      return item;
+    });
+    if (activeDebug.value.id === newInfo.id) {
+      activeDebug.value.label = newInfo.name;
+      activeDebug.value.name = newInfo.name;
+      if (newInfo.moduleId) {
+        activeDebug.value.moduleId = newInfo.moduleId;
+      }
+    }
+  }
 
   /**
    * TODO 同步模块树的接口信息删除操作
@@ -193,7 +211,7 @@
    */
   function handleDeleteFinish(node: ModuleTreeNode) {}
 
-  function handleDebugTabClose(item: SQLTabItem) {
+  function handleDebugTabClose(item: SqlTabItem) {
     requestCompositionStore.removePluginFormMapItem(item.id);
     const closingIndex = debugTabs.value.findIndex((e) => e.id === item.id);
     if (closingIndex > -1) {

@@ -20,17 +20,6 @@ public class SqlDebug implements Serializable {
     @Size(min = 1, max = 255, message = "{sql_debug.name.length_range}", groups = {Created.class, Updated.class})
     private String name;
 
-    @Schema(description = "SQL协议", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotBlank(message = "{sql_debug.protocol.not_blank}", groups = {Created.class})
-    @Size(min = 1, max = 20, message = "{sql_debug.protocol.length_range}", groups = {Created.class, Updated.class})
-    private String protocol;
-
-    @Schema(description = "http协议类型post/get/其它协议则是协议名(mqtt)")
-    private String method;
-
-    @Schema(description = "http协议路径/其它协议则为空")
-    private String path;
-
     @Schema(description = "自定义排序", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "{sql_debug.pos.not_blank}", groups = {Created.class})
     private Long pos;
@@ -62,9 +51,6 @@ public class SqlDebug implements Serializable {
     public enum Column {
         id("id", "id", "VARCHAR", false),
         name("name", "name", "VARCHAR", true),
-        protocol("protocol", "protocol", "VARCHAR", false),
-        method("method", "method", "VARCHAR", true),
-        path("path", "path", "VARCHAR", true),
         pos("pos", "pos", "BIGINT", false),
         projectId("project_id", "projectId", "VARCHAR", false),
         moduleId("module_id", "moduleId", "VARCHAR", false),

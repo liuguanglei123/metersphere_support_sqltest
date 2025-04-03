@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.metersphere.sql.mapper.ExtSqlScenarioMapper">
+    <select id="countModuleIdByRequest" resultType="io.metersphere.project.dto.ModuleCountDTO">
+        SELECT sql_scenario.module_id AS moduleId, count(sql_scenario.id) AS dataCount
+        FROM sql_scenario
+        where sql_scenario.deleted =#{deleted}
+        <include refid="queryWhereCondition"/>
+        <if test="request.testPlanId != null and request.testPlanId != ''">
+            AND sql_scenario.id not in (
+            select test_plan_sql_scenario.sql_scenario_id from test_plan_sql_scenario where test_plan_sql_scenario.test_plan_id = #{request.testPlanId}
+            )
+        </if>
+        GROUP BY sql_scenario.module_id
+    </select>
+
+    <resultMap id="SqlScenarioDTO" type="io.metersphere.sql.pojo.dto.scenario.SqlScenarioDTO">
+        <result column="tags" jdbcType="VARCHAR" property="tags" typeHandler="io.metersphere.handler.ListTypeHandler" />
+    </resultMap>
+
+    <select id="list" resultMap="SqlScenarioDTO">
+        select
+        sql_scenario.id, sql_scenario.`name`,sql_scenario.priority,
+        sql_scenario.step_total,sql_scenario.request_pass_rate,sql_scenario.last_report_status,
+        sql_scenario.environment_id,
+        sql_scenario.last_report_id,sql_scenario.grouped,
+        sql_scenario.`status`, sql_scenario.num, sql_scenario.tags, sql_scenario.pos,
+        sql_scenario.project_id, sql_scenario.module_id, sql_scenario.latest, sql_scenario.version_id,
+        sql_scenario.ref_id, sql_scenario.create_time, sql_scenario.create_user,
+        sql_scenario.update_time, sql_scenario.update_user, sql_scenario.delete_user, sql_scenario.delete_time,
+        sql_scenario.deleted, project_version.name as version_name
+        from sql_scenario
+        LEFT JOIN project_version ON project_version.id = sql_scenario.version_id
+        where sql_scenario.deleted = #{request.deleted}
+        <include refid="queryWhereCondition"/>
+        <if test="request.excludeIds != null and request.excludeIds.size() > 0">
+            and sql_scenario.id not in
+            <foreach collection="request.excludeIds" item="excludeId" separator="," open="(" close=")">
+                #{excludeId}
+            </foreach>
+        </if>
+        <if test="!isRepeat and testPlanId != null">
+            AND sql_scenario.id not in (
+            select test_plan_sql_scenario.sql_scenario_id from test_plan_sql_scenario where test_plan_sql_scenario.test_plan_id = #{testPlanId}
+            )
+        </if>
+    </select>
+
+    <sql id="queryWhereCondition">
+        <if test="request.keyword != null and request.keyword != ''">
+            and (
+            sql_scenario.num like concat('%', #{request.keyword},'%')
+            or sql_scenario.name like concat('%', #{request.keyword},'%')
+            or sql_scenario.tags like concat('%', #{request.keyword},'%')
+            )
+        </if>
+        <if test="request.projectId != null and request.projectId != ''">
+            and sql_scenario.project_id = #{request.projectId}
+        </if>
+        <if test="request.scenarioId != null and request.scenarioId != ''">
+            and sql_scenario.id = #{request.scenarioId}
+        </if>
+        <if test="request.moduleIds != null and request.moduleIds.size() > 0">
+            and sql_scenario.module_id in
+            <foreach collection="request.moduleIds" item="nodeId" separator="," open="(" close=")">
+                #{nodeId}
+            </foreach>
+        </if>
+        <include refid="filters">
+            <property name="filter" value="request.filter"/>
+        </include>
+        <include refid="combine">
+            <property name="combineSearch" value="request.combineSearch"/>
+        </include>
+        <include refid="queryVersionCondition">
+            <property name="versionTable" value="sql_scenario"/>
+        </include>
+    </sql>
+
+    <sql id="filters">
+        <if test="${filter} != null and ${filter}.size() > 0">
+            <foreach collection="${filter}.entrySet()" index="key" item="values">
+                <if test="values != null and values.size() > 0">
+                    <choose>
+                        <when test="key=='lastReportStatus' and values.size() != 7 ">
+                            <!--    取值范围在7个状态（成功、失败、误报、停止、执行中、重跑中、排队中）内选。如果全部全选，则不用拼接这条语句-->
+                            <if test="values.contains('PENDING')">
+                                and (
+                                (sql_scenario.last_report_status is null or sql_scenario.last_report_status = '')
+                                or sql_scenario.last_report_status in
+                                <include refid="io.metersphere.system.mapper.BaseMapper.filterInWrapper"/>
+                                )
+                            </if>
+                            <if test="!values.contains('PENDING')">
+                                and sql_scenario.last_report_status in
+                                <include refid="io.metersphere.system.mapper.BaseMapper.filterInWrapper"/>
+                            </if>
+                        </when>
+                        <when test="key=='status'">
+                            and sql_scenario.status in
+                            <include refid="io.metersphere.system.mapper.BaseMapper.filterInWrapper"/>
+                        </when>
+                        <when test="key=='createUser'">
+                            and sql_scenario.create_user in
+                            <include refid="io.metersphere.system.mapper.BaseMapper.filterInWrapper"/>
+                        </when>
+                        <when test="key=='updateUser'">
+                            and sql_scenario.update_user in
+                            <include refid="io.metersphere.system.mapper.BaseMapper.filterInWrapper"/>
+                        </when>
+                        <when test="key=='deleteUser'">
+                            and sql_scenario.delete_user in
+                            <include refid="io.metersphere.system.mapper.BaseMapper.filterInWrapper"/>
+                        </when>
+                        <when test="key=='versionId'">
+                            and sql_scenario.version_id in
+                            <include refid="io.metersphere.system.mapper.BaseMapper.filterInWrapper"/>
+                        </when>
+                        <when test="key=='priority'">
+                            and sql_scenario.priority in
+                            <include refid="io.metersphere.system.mapper.BaseMapper.filterInWrapper"/>
+                        </when>
+                        <when test="key.startsWith('custom_single')">
+                            and sql_scenario.id in (
+                            select api_id from api_definition_custom_field where concat('custom_single_', field_id) =
+                            #{key}
+                            and trim(both '"' from `value`) in
+                            <include refid="io.metersphere.system.mapper.BaseMapper.filterInWrapper"/>
+                            )
+                        </when>
+                        <when test="key.startsWith('custom_multiple')">
+                            and sql_scenario.id in (
+                            select api_id from api_definition_custom_field where concat('custom_multiple_', field_id) =
+                            #{key}
+                            and
+                            <include refid="io.metersphere.system.mapper.BaseMapper.filterMultipleWrapper"/>
+                            )
+                        </when>
+                    </choose>
+                </if>
+            </foreach>
+        </if>
+    </sql>
+
+    <sql id="combine">
+        <trim prefix="AND">
+            <trim prefix="(" suffix=")" suffixOverrides="AND|OR">
+                <if test="${combineSearch} != null">
+                    <foreach collection="${combineSearch}.userViewConditions" item="condition">
+                        <if test="condition.name == 'createUser'">
+                            <include refid="io.metersphere.system.mapper.BaseMapper.condition">
+                                <property name="condition" value="condition"/>
+                                <property name="column" value="sql_scenario.create_user"/>
+                            </include>
+                        </if>
+                        <if test="condition.name == 'follower'">
+                            <include refid="io.metersphere.system.mapper.BaseMapper.associationCondition">
+                                <property name="mainIdColumn" value="sql_scenario.id"/>
+                                <property name="associationTable" value="sql_scenario_follower"/>
+                                <property name="associationIdColumn" value="sql_scenario_id"/>
+                                <property name="searchColumn" value="user_id"/>
+                                <property name="condition" value="condition"/>
+                            </include>
+                        </if>
+                        <include refid="io.metersphere.system.mapper.BaseMapper.queryType">
+                            <property name="searchMode" value="${combineSearch}.searchMode"/>
+                        </include>
+                    </foreach>
+                    <foreach collection="${combineSearch}.systemFieldConditions" item="condition">
+                        <include refid="io.metersphere.system.mapper.BaseMapper.commonSystemFieldConditions">
+                            <property name="condition" value="condition"/>
+                            <property name="tablePrefix" value="sql_scenario"/>
+                        </include>
+                        <if test="condition.name == 'belongTestPlan' and condition.operator == 'EQUALS'">
+                            sql_scenario.id in (
+                            select test_plan_sql_scenario.sql_scenario_id from test_plan_sql_scenario where
+                            test_plan_sql_scenario.test_plan_id = #{condition.value}
+                            )
+                        </if>
+                        <!-- 场景等级 -->
+                        <if test="condition.name == 'priority'">
+                            <include refid="io.metersphere.system.mapper.BaseMapper.condition">
+                                <property name="condition" value="condition"/>
+                                <property name="column" value="sql_scenario.priority"/>
+                            </include>
+                        </if>
+                        <!-- 状态 -->
+                        <if test="condition.name == 'status'">
+                            <include refid="io.metersphere.system.mapper.BaseMapper.condition">
+                                <property name="condition" value="condition"/>
+                                <property name="column" value="sql_scenario.status"/>
+                            </include>
+                        </if>
+                        <!-- 执行结果 -->
+                        <if test="condition.name == 'lastReportStatus'">
+                            <include refid="io.metersphere.system.mapper.BaseMapper.condition">
+                                <property name="condition" value="condition"/>
+                                <property name="column" value="sql_scenario.last_report_status"/>
+                            </include>
+                        </if>
+                        <!-- 步骤数 -->
+                        <if test="condition.name == 'stepTotal'">
+                            <include refid="io.metersphere.system.mapper.BaseMapper.condition">
+                                <property name="condition" value="condition"/>
+                                <property name="column" value="sql_scenario.step_total"/>
+                            </include>
+                        </if>
+                        <!-- 通过率 -->
+                        <if test="condition.name == 'requestPassRate'">
+                            <choose>
+                                <when test="condition.operator == 'NOT_EMPTY'">
+                                    sql_scenario.request_pass_rate is not null and sql_scenario.request_pass_rate != '' and sql_scenario.request_pass_rate != 'Calculating'
+                                </when>
+                                <when test="condition.operator == 'EMPTY'">
+                                    sql_scenario.request_pass_rate is null or sql_scenario.request_pass_rate = '' or sql_scenario.request_pass_rate = 'Calculating'
+                                </when>
+                                <when test="(condition.operator == 'LT' and condition.value == 0) or (condition.operator == 'GT' and condition.value &gt; 100 )">
+                                    1=2
+                                </when>
+                                <otherwise>
+                                    <include refid="io.metersphere.system.mapper.BaseMapper.condition">
+                                        <property name="condition" value="condition"/>
+                                        <property name="column" value="sql_scenario.request_pass_rate"/>
+                                    </include>
+                                </otherwise>
+                            </choose>
+                        </if>
+                        <!-- 环境 -->
+                        <if test="condition.name == 'environmentName'">
+                            <include refid="io.metersphere.system.mapper.BaseMapper.condition">
+                                <property name="condition" value="condition"/>
+                                <property name="column" value="sql_scenario.environment_id"/>
+                            </include>
+                        </if>
+                        <include refid="io.metersphere.system.mapper.BaseMapper.queryType">
+                            <property name="searchMode" value="${combineSearch}.searchMode"/>
+                        </include>
+                    </foreach>
+                </if>
+            </trim>
+        </trim>
+    </sql>
+
+    <sql id="queryVersionCondition">
+        <if test="request.versionId != null and request.versionId != ''">
+            and ${versionTable}.version_id = #{request.versionId}
+        </if>
+        <if test="request.refId != null and request.refId != ''">
+            and ${versionTable}.ref_id = #{request.refId}
+        </if>
+        <if test="request.versionId == null and request.refId == null and request.scenarioId == null">
+            AND ${versionTable}.latest = 1
+        </if>
+    </sql>
+</mapper>

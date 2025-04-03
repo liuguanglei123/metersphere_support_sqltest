@@ -7,7 +7,7 @@ export interface TabItem {
   [key: string]: any;
 }
 
-export interface SQLTabItem {
+export interface SqlTabItem {
   id: string | number;
   label?: string;
   closable?: boolean;

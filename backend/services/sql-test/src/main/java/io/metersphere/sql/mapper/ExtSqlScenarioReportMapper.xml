@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.metersphere.sql.mapper.ExtSqlScenarioReportMapper">
+    <select id="list" resultType="io.metersphere.sql.domain.SqlScenarioReport">
+        select
+        asr.*
+        from sql_scenario_report asr where asr.deleted = false
+        and asr.test_plan_scenario_id = 'NONE'
+        <if test="request.keyword != null and request.keyword != ''">
+            and (
+            asr.name like concat('%', #{request.keyword},'%')
+            )
+        </if>
+        <if test="request.projectId != null and request.projectId != ''">
+            and asr.project_id = #{request.projectId}
+        </if>
+        and status in ('SUCCESS', 'ERROR', 'FAKE_ERROR')
+    </select>
+
+    <select id="selectStepByReportId" resultType="io.metersphere.sql.pojo.dto.scenario.SqlScenarioReportStepDTO">
+        select sql_scenario_report_step.step_id,
+               sql_scenario_report_step.report_id,
+               sql_scenario_report_step.`name`,
+               sql_scenario_report_step.sort,
+               sql_scenario_report_step.step_type,
+               sql_scenario_report_step.parent_id
+        from sql_scenario_report_step
+        where sql_scenario_report_step.report_id = #{reportId}
+    </select>
+
+    <select id="selectStepDetailByReportId"
+            resultType="io.metersphere.sql.pojo.dto.scenario.SqlScenarioReportStepDTO">
+        select sql_scenario_report_detail.step_id,
+               sql_scenario_report_detail.report_id,
+               sql_scenario_report_detail.status,
+               sql_scenario_report_detail.fake_code,
+               sql_scenario_report_detail.request_name,
+               sql_scenario_report_detail.request_time,
+               sql_scenario_report_detail.code,
+               sql_scenario_report_detail.response_size,
+               sql_scenario_report_detail.script_identifier,
+               sql_scenario_report_detail.sort as loopIndex
+        from sql_scenario_report_detail
+        where sql_scenario_report_detail.report_id = #{id}
+    </select>
+</mapper>

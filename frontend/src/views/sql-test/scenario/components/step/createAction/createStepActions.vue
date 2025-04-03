@@ -1,6 +1,5 @@
 <template>
   <div>
-    <div>1</div>
     <a-dropdown
       v-model:popup-visible="visible"
       :position="props.position || 'bottom'"
@@ -31,17 +30,13 @@
 
 <script setup lang="ts">
   import { TriggerPopupTranslate } from '@arco-design/web-vue';
-  import { cloneDeep } from 'lodash-es';
-
-  import MsButton from '@/components/pure/ms-button/index.vue';
 
   import { useI18n } from '@/hooks/useI18n';
   import useAppStore from '@/store/modules/app';
   import { findNodeByKey } from '@/utils';
 
-  import {CreateStepAction, ScenarioStepItem} from '@/models/apiTest/scenario';
-  import {SqlScenarioStepItem} from "@/models/sqlTest/scenario";
-  import {SqlScenarioAddStepActionType} from "@/enums/sqlEnum";
+  import { SqlCreateStepAction, SqlScenarioStepItem } from "@/models/sqlTest/scenario";
+  import { SqlScenarioAddStepActionType } from "@/enums/sqlEnum";
 
   import useCreateActions from './useCreateActions';
   import { DropdownPosition } from '@arco-design/web-vue/es/dropdown/interface';
@@ -49,16 +44,15 @@
   const props = defineProps<{
     position?: DropdownPosition;
     popupTranslate?: TriggerPopupTranslate;
-    createStepAction?: CreateStepAction;
+    createStepAction?: SqlCreateStepAction;
   }>();
+
   const emit = defineEmits<{
     (e: 'close'): void;
     (
       e: 'otherCreate',
       type:
         | SqlScenarioAddStepActionType.IMPORT_SYSTEM_SQL,
-        // | SqlScenarioAddStepActionType.CUSTOM_API
-        // | SqlScenarioAddStepActionType.SCRIPT_OPERATION,
       step?: SqlScenarioStepItem
     ): void;
     (e: 'addDone', newStep: SqlScenarioStepItem): void;
@@ -90,6 +84,7 @@
     switch (val) {
       case SqlScenarioAddStepActionType.IMPORT_SYSTEM_SQL:
         if (step.value) {
+          // 暂不清楚 step.value的值，所以这部分逻辑可能走不进
           const realStep = findNodeByKey<SqlScenarioStepItem>(steps.value, step.value.uniqueId, 'uniqueId');
           if (realStep) {
             emit('otherCreate', val, realStep as SqlScenarioStepItem);

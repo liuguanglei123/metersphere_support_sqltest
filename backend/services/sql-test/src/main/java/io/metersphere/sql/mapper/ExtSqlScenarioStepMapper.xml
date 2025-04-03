@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.metersphere.sql.mapper.ExtSqlScenarioStepMapper">
+    <select id="getStepDTOByScenarioIds" resultType="io.metersphere.sql.pojo.dto.scenario.SqlScenarioStepDTO">
+        select
+        <include refid="io.metersphere.api.mapper.ApiScenarioStepMapper.Base_Column_List"/>
+        from sql_scenario_step where scenario_id in
+        <foreach collection="scenarioIds" item="scenarioId" open="(" separator="," close=")">
+            #{scenarioId}
+        </foreach>
+    </select>
+
+    <select id="getCsvStepByScenarioIds" resultType="io.metersphere.sql.domain.SqlScenarioCsvStep">
+        select
+        <include refid="io.metersphere.sql.mapper.SqlScenarioCsvStepMapper.Base_Column_List"/>
+        from sql_scenario_csv_step where scenario_id in
+        <foreach collection="scenarioIds" item="scenarioId" open="(" separator="," close=")">
+            #{scenarioId}
+        </foreach>
+    </select>
+
+</mapper>

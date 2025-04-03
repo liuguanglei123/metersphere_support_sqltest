@@ -4,6 +4,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import io.metersphere.api.domain.ApiDefinition;
 import io.metersphere.sdk.constants.PermissionConstants;
+import io.metersphere.sdk.dto.result.ListResult;
 import io.metersphere.sql.aspect.ConnectionInfoAspect;
 import io.metersphere.sql.converter.RdbWebConverter;
 import io.metersphere.sql.domain.SqlDefinition;
@@ -16,7 +17,6 @@ import io.metersphere.sql.service.common.DlTemplateService;
 import io.metersphere.sql.service.definition.SqlDefinitionLogService;
 import io.metersphere.sql.service.definition.SqlDefinitionNoticeService;
 import io.metersphere.sql.service.definition.SqlDefinitionService;
-import io.metersphere.sql.wrapper.result.ListResult;
 import io.metersphere.system.log.annotation.Log;
 import io.metersphere.system.log.constants.OperationLogType;
 import io.metersphere.system.notice.annotation.SendNotice;
@@ -86,5 +86,24 @@ public class SqlDefinitionController {
         Page<Object> page = PageHelper.startPage(request.getCurrent(), request.getPageSize(),
                 StringUtils.isNotBlank(request.getSortString("id")) ? request.getSortString("id") : request.getDeleted() ? "delete_time desc, id desc" : "pos desc, id desc");
         return PageUtils.setPageInfo(page, sqlDefinitionService.getApiDefinitionPage(request, SessionUtils.getUserId()));
+    }
+
+    // TODO：回收站功能没做，后续可以根据实际情况加一下
+    @GetMapping("/delete-to-gc/{id}")
+    @Operation(summary = "SQL测试-SQL用例管理-删除SQL用例到回收站")
+    @RequiresPermissions(PermissionConstants.PROJECT_API_DEFINITION_DELETE)
+    @Log(type = OperationLogType.DELETE, expression = "#msClass.moveToGcLog(#id)", msClass = SqlDefinitionLogService.class)
+// TODO：权限检查   @CheckOwner(resourceId = "#id", resourceType = "sql_definition")
+    @SendNotice(taskType = NoticeConstants.TaskType.SQL_DEFINITION_TASK, event = NoticeConstants.Event.DELETE, target = "#targetClass.getDeleteSqlDTO(#id)", targetClass = SqlDefinitionNoticeService.class)
+    public void deleteToGc(@PathVariable String id, @RequestParam(required = false) boolean deleteAllVersion) {
+        sqlDefinitionService.deleteToGc(id, deleteAllVersion, SessionUtils.getUserId());
+    }
+
+    @GetMapping(value = "/get-detail/{id}")
+    @Operation(summary = "SQL测试-SQL用例管理-获取用例详情")
+    @RequiresPermissions(PermissionConstants.PROJECT_API_DEFINITION_READ)
+// TODO：权限检查    @CheckOwner(resourceId = "#id", resourceType = "api_definition")
+    public SqlDefinitionDTO get(@PathVariable String id) {
+        return sqlDefinitionService.get(id, SessionUtils.getUserId());
     }
 }

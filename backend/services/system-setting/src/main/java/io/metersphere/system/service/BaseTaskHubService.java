@@ -16,6 +16,10 @@ import io.metersphere.project.mapper.ProjectMapper;
 import io.metersphere.sdk.constants.*;
 import io.metersphere.sdk.exception.MSException;
 import io.metersphere.sdk.util.*;
+import io.metersphere.sql.domain.SqlExecTask;
+import io.metersphere.sql.domain.SqlExecTaskItem;
+import io.metersphere.sql.mapper.SqlExecTaskItemMapper;
+import io.metersphere.sql.mapper.SqlExecTaskMapper;
 import io.metersphere.system.controller.handler.ResultHolder;
 import io.metersphere.system.domain.*;
 import io.metersphere.system.dto.BatchExecTaskReportDTO;
@@ -98,6 +102,10 @@ public class BaseTaskHubService {
     private ExecTaskMapper execTaskMapper;
     @Resource
     private ExecTaskItemMapper execTaskItemMapper;
+    @Resource
+    private SqlExecTaskMapper sqlExecTaskMapper;
+    @Resource
+    private SqlExecTaskItemMapper sqlExecTaskItemMapper;
     @Resource
     private ProjectMapper projectMapper;
     @Resource
@@ -286,6 +294,17 @@ public class BaseTaskHubService {
     public void insertExecTaskAndDetail(ExecTask task, ExecTaskItem item) {
         execTaskMapper.insertSelective(task);
         execTaskItemMapper.insertSelective(item);
+    }
+
+    /**
+     * 单任务详情数据入库接口
+     *
+     * @param item
+     */
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
+    public void insertSqlExecTaskAndDetail(SqlExecTask task, SqlExecTaskItem item) {
+        sqlExecTaskMapper.insertSelective(task);
+        sqlExecTaskItemMapper.insertSelective(item);
     }
 
     /**

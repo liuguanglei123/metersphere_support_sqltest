@@ -40,6 +40,10 @@ public interface NoticeConstants {
         @Schema(description = "message.schedule_task")
         String SCHEDULE_TASK = "SCHEDULE_TASK";
 
+        //SQL测试模块的任务
+        @Schema(description = "message.sql_definition_task")
+        String SQL_DEFINITION_TASK = "SQL_DEFINITION_TASK";
+
     }
 
     interface TriggerMode {

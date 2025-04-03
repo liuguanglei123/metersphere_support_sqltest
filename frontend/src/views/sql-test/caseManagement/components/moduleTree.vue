@@ -69,7 +69,7 @@
       >
         <template #title="nodeData">
           <div v-if="nodeData.type === 'SQL'" class="inline-flex w-full cursor-pointer gap-[4px]">
-            <apiMethodName :method="nodeData.attachInfo?.method || nodeData.attachInfo?.protocol" />
+            <sqlMethodName/>
             <div class="one-line-text w-full text-[var(--color-text-1)]">{{ nodeData.name }}</div>
           </div>
           <div v-else :id="nodeData.id" class="inline-flex w-full gap-[8px]">
@@ -125,12 +125,18 @@
   import type { ActionsItem } from '@/components/pure/ms-table-more-action/types';
   import MsTree from '@/components/business/ms-tree/index.vue';
   import type { MsTreeNodeData } from '@/components/business/ms-tree/types';
-  import apiMethodName from '@/views/api-test/components/apiMethodName.vue';
   import popConfirm from '@/views/api-test/components/popConfirm.vue';
+  import SqlMethodName from "@/views/sql-test/components/sqlMethodName.vue";
   import TreeFolderAll from '@/views/sql-test/components/treeFolderAll.vue';
 
-  import {deleteDefinition,deleteModule,getModuleCount,getShareModuleCount,getShareModuleTree,moveModule,sortDefinition,updateDefinition,updateModule} from "@/api/modules/api-test/management";
-  import {addModule, getModuleTree, getModuleTreeOnlyModules} from "@/api/modules/sql-test/caseManagement";
+  // TODO：
+  import { getModuleCount,moveModule,sortDefinition } from "@/api/modules/api-test/management";
+  import {
+    addModule, deleteModule,
+    deleteSqlDefinition,
+    getModuleTree,
+    getModuleTreeOnlyModules, updateDefinition, updateModule
+  } from "@/api/modules/sql-test/caseManagement";
   import { dropPositionMap } from '@/config/common';
   import { useI18n } from '@/hooks/useI18n';
   import useModal from '@/hooks/useModal';
@@ -251,18 +257,14 @@
       label: 'common.rename',
       eventTag: 'rename',
     },
-    {
-      label: 'apiTestManagement.execute',
-      eventTag: 'execute',
-    },
-    {
-      label: 'apiTestManagement.share',
-      eventTag: 'share',
-    },
     // {
-    //   label: 'apiTestManagement.shareModule',
-    //   eventTag: 'shareModule',
-    // }, // TODO:第一版没有文档，不需要分享模块
+    //   label: 'apiTestManagement.execute',
+    //   eventTag: 'execute',
+    // },
+    // {
+    //   label: 'apiTestManagement.share',
+    //   eventTag: 'share',
+    // },
     {
       isDivider: true,
     },
@@ -307,7 +309,7 @@
 
   const getTreeNodeList = (nodes: TreeNode<ModuleTreeNode>[]) => {
     nodes.forEach((node: TreeNode<ModuleTreeNode>) => {
-      if (node.type === 'API') {
+      if (node.type === 'SQL') {
         apiNodes.value.push(node);
       }
       if (node.children) {
@@ -316,6 +318,7 @@
     });
   };
 
+  // TODO：count目前数据不对
   async function initModuleCount(params: ApiDefinitionGetModuleParams) {
     try {
       lastModuleCountParam.value = params;
@@ -456,7 +459,6 @@
   watch(
       () => selectedKeys.value,
       (val) => {
-        console.log(val);
       }
   )
 
@@ -472,10 +474,10 @@
     openModal({
       type: 'error',
       title:
-        node.type === 'API'
+        node.type === 'SQL'
           ? t('apiTestDebug.deleteDebugTipTitle', { name: characterLimit(node.name) })
           : t('apiTestDebug.deleteFolderTipTitle', { name: characterLimit(node.name) }),
-      content: node.type === 'API' ? t('apiTestDebug.deleteDebugTipContent') : t('apiTestDebug.deleteFolderTipContent'),
+      content: node.type === 'SQL' ? t('apiTestDebug.deleteDebugTipContent') : t('apiTestDebug.deleteFolderTipContent'),
       okText: t('apiTestDebug.deleteConfirm'),
       okButtonProps: {
         status: 'danger',
@@ -483,8 +485,8 @@
       maskClosable: false,
       onBeforeOk: async () => {
         try {
-          if (node.type === 'API') {
-            await deleteDefinition(node.id);
+          if (node.type === 'SQL') {
+            await deleteSqlDefinition(node.id);
           } else {
             await deleteModule(node.id);
           }
@@ -524,20 +526,17 @@
         renamePopVisible.value = true;
         document.querySelector(`#renameSpan${node.id}`)?.dispatchEvent(new Event('click'));
         break;
-      case 'execute':
-        emit('execute', node.id);
-        break;
       default:
         break;
     }
   }
 
   function allowDrop(dropNode: MsTreeNodeData, dropPosition: number, dragNode?: MsTreeNodeData | null) {
-    if (dropNode.type === 'API' && dropPosition === 0) {
+    if (dropNode.type === 'SQL' && dropPosition === 0) {
       // API节点不可添加子节点
       return false;
     }
-    if (dropNode.type === 'MODULE' && dragNode?.type === 'API' && dropPosition !== 0) {
+    if (dropNode.type === 'MODULE' && dragNode?.type === 'SQL' && dropPosition !== 0) {
       // API节点不移动到模块的前后位置
       document.querySelector('.arco-tree-node-title-draggable::before')?.setAttribute('style', 'display: none');
       return false;
@@ -575,10 +574,10 @@
           projectId: appStore.currentProjectId,
           moveMode: dropPositionMap[dropPosition],
           moveId: dragNode.id,
-          targetId: dropNode.type === 'MODULE' ? dragNode.id : dropNode.id, // 释放节点是模块，则传入当前拖动的 API 的id；释放节点是 API 节点的话就传入释放节点的 id
-          moduleId: dropNode.type === 'API' ? dropNode.parentId : dropNode.id, // 释放节点是 API，则传入它所属模块id；模块的话直接是模块id
+          targetId: dropNode.type === 'MODULE' ? dragNode.id : dropNode.id, // 释放节点是模块，则传入当前拖动的 SQL 的id；释放节点是 SQL 节点的话就传入释放节点的 id
+          moduleId: dropNode.type === 'SQL' ? dropNode.parentId : dropNode.id, // 释放节点是 SQL，则传入它所属模块id；模块的话直接是模块id
         });
-        emit('updateApiNode', { ...dragNode, moduleId: dropNode.type === 'API' ? dropNode.parentId : dropNode.id });
+        emit('updateApiNode', { ...dragNode, moduleId: dropNode.type === 'SQL' ? dropNode.parentId : dropNode.id });
       }
       Message.success(t('apiTestDebug.moduleMoveSuccess'));
     } catch (error) {

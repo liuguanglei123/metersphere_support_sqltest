@@ -64,13 +64,13 @@
 
   import { useI18n } from '@/hooks/useI18n';
 
-  import type { ReportDetail, ScenarioItemType } from '@/models/apiTest/report';
-  import { ScenarioStepType } from '@/enums/apiEnum';
+  import type { SqlReportDetail, SqlScenarioItemType } from '@/models/sqlTest/report';
+  import { SqlScenarioStepType } from '@/enums/sqlEnum';
 
   import { addFoldField } from '../utils';
 
   const props = defineProps<{
-    reportDetail: ReportDetail;
+    reportDetail: SqlReportDetail;
     activeType: 'tiled' | 'tab'; // 平铺模式|tab模式
     showType: 'API' | 'CASE'; // 接口场景|用例
     keyWords: string;
@@ -80,7 +80,7 @@
 
   const { t } = useI18n();
 
-  const tiledList = ref<ScenarioItemType[]>([]);
+  const tiledList = ref<SqlScenarioItemType[]>([]);
 
   const innerKeyword = defineModel<string>('keywordName', {
     default: '',
@@ -91,12 +91,12 @@
   const showStepDrawer = ref<boolean>(false);
   const activeDetailId = ref<string>('');
   const activeStepIndex = ref<number>(0);
-  const scenarioDetail = ref<ScenarioItemType>();
+  const scenarioDetail = ref<SqlScenarioItemType>();
 
   /**
    * 步骤详情
    */
-  function showDetail(item: ScenarioItemType) {
+  function showDetail(item: SqlScenarioItemType) {
     showStepDrawer.value = true;
     scenarioDetail.value = cloneDeep(item);
     activeDetailId.value = item.stepId;
@@ -104,7 +104,7 @@
   }
 
   const expandedKeys = ref<(string | number)[]>([]);
-  const originTreeData = ref<ScenarioItemType[]>([]);
+  const originTreeData = ref<SqlScenarioItemType[]>([]);
 
   function initStepTree() {
     tiledList.value = cloneDeep(props.reportDetail.children) || [];
@@ -155,21 +155,18 @@
     { deep: true, immediate: true }
   );
   const showApiType = ref<string[]>([
-    ScenarioStepType.API,
-    ScenarioStepType.API_CASE,
-    ScenarioStepType.CUSTOM_REQUEST,
-    ScenarioStepType.SCRIPT,
+    SqlScenarioStepType.SQL,
   ]);
 
   function searchStep() {
     const splitLevel = props.keyWords.split('-');
     const stepTypeStatus = splitLevel[1] || '';
     const stepType =
-      splitLevel[0] === 'CUSTOM_REQUEST' ? ['API', 'API_CASE', 'CUSTOM_REQUEST'] : Object.values(ScenarioStepType);
+      splitLevel[0] === 'CUSTOM_REQUEST' ? ['API', 'API_CASE', 'CUSTOM_REQUEST'] : Object.values(SqlScenarioStepType);
     const nameSearch = innerKeyword.value?.toLowerCase(); // 传入的 name 检索关键字
 
-    const search = (_data: ScenarioItemType[]) => {
-      const result: ScenarioItemType[] = [];
+    const search = (_data: SqlScenarioItemType[]) => {
+      const result: SqlScenarioItemType[] = [];
       _data.forEach((item) => {
         const isStepChildren = item.children && item?.children.length && showApiType.value.includes(item.stepType);
 

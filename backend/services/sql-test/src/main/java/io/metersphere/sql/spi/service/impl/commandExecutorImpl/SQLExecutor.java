@@ -6,6 +6,7 @@ import com.alibaba.druid.sql.SQLUtils;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
 import com.google.common.collect.Lists;
+import io.metersphere.plugin.api.spi.SqlAbstractMsTestElement;
 import io.metersphere.sdk.constants.KafkaTopicConstants;
 import io.metersphere.sdk.util.JSON;
 import io.metersphere.sql.config.AppConfig;
@@ -14,7 +15,9 @@ import io.metersphere.sql.context.Chat2DBContext;
 import io.metersphere.sql.enums.SqlTypeEnum;
 import io.metersphere.sql.excption.BusinessException;
 import io.metersphere.sql.pojo.model.Command;
+import io.metersphere.sql.pojo.model.DiffExecuteResult;
 import io.metersphere.sql.pojo.model.JDBCDataValue;
+import io.metersphere.sql.pojo.request.MsSqlCaseElement;
 import io.metersphere.sql.spi.model.Header;
 import io.metersphere.sql.spi.service.CommandExecutor;
 import io.metersphere.sql.spi.service.ValueProcessor;
@@ -22,6 +25,7 @@ import io.metersphere.sql.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -62,6 +66,13 @@ public class SQLExecutor implements CommandExecutor {
     }
 
     @Override
+    public void sendSqlScenarioRunTaskMessage(SqlAbstractMsTestElement runSql) {
+        // 根据场景执行时，这里的stepId一定是唯一的，一般是执行时间戳+步骤序号，生产和消费的时候都以此为基准
+        // step和reportId的对应关系在sql_scenario_report_step表中
+        kafkaTemplate.send(KafkaTopicConstants.SQL_SCENARIO_RUN_TOPIC, runSql.getStepId(), JSON.toJSONString(runSql));
+    }
+
+    @Override
     public List<ExecuteResult> executeDirect(Command command) {
         if (StringUtils.isBlank(command.getRequest().getBody().getSqlContent())) {
             return Collections.emptyList();
@@ -82,6 +93,36 @@ public class SQLExecutor implements CommandExecutor {
             ExecuteResult executeResult = executeSQL(originalSql, dbType, command);
             result.add(executeResult);
         }
+        return result;
+    }
+
+
+    @Override
+    public List<DiffExecuteResult> executeDirectAndDiff(MsSqlCaseElement command){
+        if (StringUtils.isBlank(command.getBody().getSqlContent())) {
+            return Collections.emptyList();
+        }
+        // parse sql
+        String type = Chat2DBContext.getConnectInfo().getDbProtocol();
+        DbType dbType = JdbcUtils.parse2DruidDbType(type);
+        List<Pair<String,String>> sqlList = SqlUtils.parseToPair(command.getBody().getSqlContent(), dbType);
+
+        if (sqlList.isEmpty()) {
+            throw new BusinessException("dataSource.sqlAnalysisError");
+        }
+        List<DiffExecuteResult> result = new ArrayList<>();
+        // Execute SQL
+        for(int i=0;i<sqlList.size();i++){
+            // TODO：这里需要校验一下MsSqlCaseElement对象中responseDefinition的size是否和sql数量对齐，
+            //  防止sql脚本更新了但是responseDefinition未更新导致的数量不一致问题
+            ExecuteResult executeResult = executeSQL(sqlList.get(i).getRight(), dbType, command);
+            DiffExecuteResult diffExecuteResult = DiffExecuteResult.diffOther(command.getResponseDefinition().getData().get(i), executeResult);
+
+            diffExecuteResult.setStepId(command.getStepId());
+            diffExecuteResult.setReportId(command.getReportId());
+            result.add(diffExecuteResult);
+        }
+
         return result;
     }
 
@@ -126,7 +167,40 @@ public class SQLExecutor implements CommandExecutor {
         SqlTypeEnum sqlType = getSqlType(dbType, originalSql);
         ExecuteResult executeResult = null;
 
-        // 如果是查询操作且原始SQL未包含分页限制，则尝试添加分页逻辑
+        // TODO：这里的分页操作待验证
+        //  如果是查询操作且原始SQL未包含分页限制，则尝试添加分页逻辑
+        if (SqlTypeEnum.SELECT.equals(sqlType) && !SqlUtils.hasPageLimit(originalSql, dbType)) {
+            String pageLimit = Chat2DBContext.getSqlBuilder().pageLimit(originalSql, offset, pageNo, pageSize);
+            if (StringUtils.isNotBlank(pageLimit)) {
+                executeResult = execute(pageLimit, 0, count);
+            }
+        }
+
+        if (executeResult == null || !executeResult.getSuccess()) {
+            executeResult = execute(originalSql, offset, count);
+        }
+
+        executeResult.setSqlType(sqlType.getCode());
+        executeResult.setOriginalSql(originalSql);
+
+//        SqlUtils.buildCanEditResult(originalSql, dbType, executeResult);
+        // Add row number
+        addRowNumber(executeResult, pageNo, pageSize);
+        //  Total number of fuzzy rows
+        setPageInfo(executeResult, sqlType, pageNo, pageSize);
+        return executeResult;
+    }
+
+    private ExecuteResult executeSQL(String originalSql, DbType dbType, MsSqlCaseElement param) {
+        Integer count = EasyToolsConstant.MAX_PAGE_SIZE;
+        Integer offset = 0;
+        Integer pageNo = 1;
+        Integer pageSize = count;
+        SqlTypeEnum sqlType = getSqlType(dbType, originalSql);
+        ExecuteResult executeResult = null;
+
+        // TODO：这里的分页操作待验证
+        //  如果是查询操作且原始SQL未包含分页限制，则尝试添加分页逻辑
         if (SqlTypeEnum.SELECT.equals(sqlType) && !SqlUtils.hasPageLimit(originalSql, dbType)) {
             String pageLimit = Chat2DBContext.getSqlBuilder().pageLimit(originalSql, offset, pageNo, pageSize);
             if (StringUtils.isNotBlank(pageLimit)) {

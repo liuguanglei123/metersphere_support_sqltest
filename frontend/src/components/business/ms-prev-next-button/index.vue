@@ -92,6 +92,7 @@
   );
 
   async function initDetail(id?: string) {
+    console.log("initDetail");
     try {
       innerLoading.value = true;
       emit('loadingDetail');

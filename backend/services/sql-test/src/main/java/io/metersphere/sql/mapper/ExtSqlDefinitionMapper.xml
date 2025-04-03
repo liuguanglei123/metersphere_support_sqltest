@@ -19,15 +19,6 @@
         <include refid="queryWhereCondition"/>
     </select>
 
-    <select id="selectNotInTrashCaseIdsByApiIds" resultType="io.metersphere.api.domain.ApiTestCase">
-        select atc.id, atc.api_definition_id
-        FROM api_test_case atc
-        WHERE atc.deleted = 0 and atc.api_definition_id IN
-        <foreach collection="apiIds" item="value" separator="," open="(" close=")">
-            #{value}
-        </foreach>
-    </select>
-
     <sql id="queryWhereCondition">
         <if test="request.keyword != null and request.keyword != ''">
             and (
@@ -257,4 +248,148 @@
             AND ${versionTable}.latest = 1
         </if>
     </sql>
+
+    <select id="getRefIds" resultType="java.lang.String">
+        SELECT
+        ref_id
+        FROM
+        sql_definition
+        where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        and deleted = #{deleted}
+        group by ref_id
+    </select>
+
+    <select id="getIdsByRefId" resultType="java.lang.String">
+        SELECT
+        id
+        FROM
+        sql_definition
+        where ref_id in
+        <foreach collection="refIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        and deleted = #{deleted}
+    </select>
+
+    <update id="batchDeleteByRefId">
+        update sql_definition
+        set deleted = 1,
+        delete_user = #{userId},
+        delete_time = UNIX_TIMESTAMP()*1000
+        where ref_id in
+        <foreach collection="refIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        and deleted = false and project_id = #{projectId}
+    </update>
+
+    <select id="getSqlDefinitionByRefId" resultType="io.metersphere.sql.pojo.dto.definition.SqlDefinitionVersionDTO">
+        SELECT sql_definition.id,
+               sql_definition.`name`,
+               sql_definition.version_id,
+               sql_definition.ref_id,
+               sql_definition.project_id,
+               project_version.name as version_name
+        from sql_definition
+                 LEFT JOIN project_version ON project_version.id = sql_definition.version_id
+        where sql_definition.ref_id = #{refId}
+    </select>
+
+    <update id="batchDeleteById">
+        update sql_definition
+        set deleted = 1,
+        delete_user = #{userId},
+        delete_time = UNIX_TIMESTAMP()*1000
+        where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        and deleted = false and project_id = #{projectId}
+    </update>
+
+    <update id="clearLatestVersion">
+        update sql_definition
+        set latest = 0
+        where ref_id = #{refId}
+          and project_id = #{projectId}
+    </update>
+
+    <update id="updateLatestVersion">
+        update sql_definition
+        set latest = 1
+        where id = #{id}
+          and project_id = #{projectId}
+    </update>
+
+    <update id="deleteSqlToGc">
+        update sql_definition
+        set delete_user = #{userId},delete_time = #{time}, deleted = 1 , module_id = 'root'
+        where ref_id in
+        <foreach collection="ids" item="v" separator="," open="(" close=")">
+            #{v}
+        </foreach>
+    </update>
+
+    <select id="selectAllSql" resultType="io.metersphere.sql.domain.SqlDefinition">
+        select
+        sql_definition.id,
+        sql_definition.name,
+        sql_definition.num,
+        sql_definition.project_id,
+        sql_definition.version_id,
+        sql_definition.pos
+        from sql_definition
+        where sql_definition.deleted = false
+        and sql_definition.project_id = #{projectId}
+        order by sql_definition.pos asc
+    </select>
+
+
+    <select id="getListBySelectModules" resultType="io.metersphere.sql.domain.SqlDefinition">
+        select
+        sql_definition.id,
+        sql_definition.name,
+        sql_definition.method,
+        sql_definition.num,
+        sql_definition.project_id,
+        sql_definition.version_id,
+        sql_definition.protocol,
+        sql_definition.pos
+        from sql_definition
+        where sql_definition.deleted = false
+        and sql_definition.project_id = #{projectId}
+        and sql_definition.module_id in
+        <foreach collection="moduleIds" item="moduleId" open="(" separator="," close=")">
+            #{moduleId}
+        </foreach>
+    </select>
+
+    <select id="getListBySelectIds" resultType="io.metersphere.sql.domain.SqlDefinition">
+        select
+        sql_definition.id,
+        sql_definition.name,
+        sql_definition.num,
+        sql_definition.project_id,
+        sql_definition.version_id,
+        sql_definition.pos
+        from sql_definition
+        where sql_definition.deleted = false
+        and sql_definition.project_id = #{projectId}
+        and sql_definition.id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="getSqlDefinitionExecuteInfo" resultType="io.metersphere.sql.pojo.dto.SqlDefinitionExecuteInfo">
+        select id as resource_id, module_id, num
+        from sql_definition
+        where id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
 </mapper>

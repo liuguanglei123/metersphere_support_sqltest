@@ -22,8 +22,6 @@
               {{
                 props.detail.environmentName
                   ? props.detail.environmentName
-                  : props.showType === 'CASE'
-                  ? t('report.detail.api.caseSaveEnv')
                   : t('report.detail.api.scenarioSavedEnv')
               }}
             </div>
@@ -42,7 +40,7 @@
       </a-popover>
 
       <a-popover position="left" content-class="response-popover-content">
-        <span v-if="!props.detail.integrated && props.showType === 'API' && props.detail.waitingTime">
+        <span v-if="!props.detail.integrated && props.showType === 'SQL' && props.detail.waitingTime">
           {{ props.detail.waitingTime ? formatDuration(props.detail.waitingTime).split('-')[0] : '-' }}
           <span>{{ props.detail.waitingTime ? formatDuration(props.detail.waitingTime).split('-')[1] : 'ms' }}</span>
           <a-divider direction="vertical" :margin="4" class="!mx-2"></a-divider>
@@ -84,13 +82,13 @@
   import { useI18n } from '@/hooks/useI18n';
   import { formatDuration } from '@/utils';
 
-  import type { ReportDetail } from '@/models/apiTest/report';
+  import type { SqlReportDetail } from '@/models/sqlTest/report';
 
   const { t } = useI18n();
   const route = useRoute();
   const props = defineProps<{
-    detail: ReportDetail;
-    showType: 'API' | 'CASE';
+    detail: SqlReportDetail;
+    showType: 'SQL';
   }>();
 </script>
 

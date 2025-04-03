@@ -2,20 +2,17 @@ import { cloneDeep } from 'lodash-es';
 
 import { EQUAL } from '@/components/pure/ms-advance-filter';
 import { LanguageEnum } from '@/components/pure/ms-code-editor/types';
-import { RequestParam } from '@/views/api-test/components/requestComposition/index.vue';
 import { SqlRequestParam } from '@/views/sql-test/components/sqlComposition/index.vue';
 
 import { useI18n } from '@/hooks/useI18n';
 
 import {
   EnableKeyValueParam,
-  ExecuteBody,
   ExecuteRequestCommonParam,
   ExecuteRequestFormBodyFormValue,
   KeyValueParam,
   RequestTaskResult,
   ResponseAssertionItem,
-  ResponseDefinition,
 } from '@/models/apiTest/common';
 import type { MockParams } from '@/models/apiTest/mock';
 import {IManageResultData, SqlExecuteBody, SqlRequestTaskResult, SqlResponseDefinition} from '@/models/sqlTest/common';
@@ -45,6 +42,11 @@ import type { ExpressionConfig } from './fastExtraction/moreSetting.vue';
 
 const { t } = useI18n();
 
+
+// 请求 body 参数表格默认行的值
+export const defaultBodyParams: SqlExecuteBody = {
+  sqlContent: 'default content!',
+};
 // 请求 body 参数表格默认行的值
 export const defaultBodyParamsItem: ExecuteRequestFormBodyFormValue = {
   key: '',
@@ -102,10 +104,14 @@ export const defaultSqlResponseItem: SqlResponseDefinition = {
 };
 
 // 请求的默认 body 参数
+// export const defaultSqlBodyParams: SqlExecuteBody = {
+//   sqlContent: '-- 请在此输入sql内容,eg:select * from t1 limit 3;'
+// };
+// 请求的默认 body 参数
 export const defaultSqlBodyParams: SqlExecuteBody = {
-  sqlContent: 'select * from t1 limit 3;\n' +
-      'select * from t2 limit 5;\n' +
-      'select * from t3 limit 100;',
+  sqlContent: "select * from t1 limit 3;\n" +
+      "select * from t2 limit 10;\n" +
+      "update t3 set name=1;"
 };
 
 // 默认的响应内容结构
@@ -140,22 +146,22 @@ export const defaultResponse: RequestTaskResult = {
 };
 
 // TODO：默认的响应内容结构
-export const defaultSqlResponseData: IManageResultData[] = [{
-    sql: undefined,
-    originalSql: 'select * from t1 limit 10',
-    description: '执行成功',
-    message: undefined,
-    success: true,
-    updateCount: undefined,
-    sqlType: 'SELECT',
-    hasNextPage: false,
-    pageNo: 1,
-    pageSize: 200,
-    fuzzyTotal: '10',
-    duration: 145,
-    canEdit: true,
-    tableName: 't1',
-  }];
+// export const defaultSqlResponseData: IManageResultData[] = [{
+//     sql: undefined,
+//     originalSql: 'select * from t1 limit 10',
+//     description: '执行成功',
+//     message: undefined,
+//     success: true,
+//     updateCount: undefined,
+//     sqlType: 'SELECT',
+//     hasNextPage: false,
+//     pageNo: 1,
+//     pageSize: 200,
+//     fuzzyTotal: '10',
+//     duration: 145,
+//     canEdit: true,
+//     tableName: 't1',
+//   }];
 
 // TODO：默认的响应内容结构
 export const defaultSqlResponse: SqlRequestTaskResult = {
@@ -163,7 +169,7 @@ export const defaultSqlResponse: SqlRequestTaskResult = {
   errorCode: null,
   errorMessage: null,
   console:'',
-  data: defaultSqlResponseData,
+  data: [],
 };
 
 // 默认提取参数的 key-value 表格行的值
@@ -440,6 +446,25 @@ export const matchRuleOptions = [
 ];
 // mock 参数为文件类型的匹配规则选项
 export const mockFileMatchRules = ['EQUALS', 'NOT_EQUALS', 'IS_EMPTY', 'IS_NOT_EMPTY'];
+
+export const sqlStatusOptions = [
+  {
+    name: t('apiTestManagement.processing'),
+    value: RequestDefinitionStatus.PROCESSING,
+  },
+  {
+    name: t('apiTestManagement.done'),
+    value: RequestDefinitionStatus.DONE,
+  },
+  {
+    name: t('apiTestManagement.deprecate'),
+    value: RequestDefinitionStatus.DEPRECATED,
+  },
+  {
+    name: t('apiTestManagement.debugging'),
+    value: RequestDefinitionStatus.DEBUGGING,
+  },
+];
 
 // 执行结果筛选下拉
 export const lastReportStatusListOptions = computed(() => {

@@ -3,17 +3,21 @@ package io.metersphere.sdk.util;
 import io.metersphere.sdk.dto.SocketMsgDTO;
 import jakarta.websocket.RemoteEndpoint;
 import jakarta.websocket.Session;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 public class WebSocketUtils {
     public static final Map<String, Session> ONLINE_USER_SESSIONS = new ConcurrentHashMap<>();
 
     // 单用户推送
     public static void sendMessage(Session session, SocketMsgDTO message) {
+        log.info("message content is ");
+        log.info(JSON.toJSONString(message));
         if (session == null) {
             return;
         }

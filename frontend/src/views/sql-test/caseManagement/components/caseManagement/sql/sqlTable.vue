@@ -10,7 +10,7 @@
       @keyword-search="loadSqlList(false)"
     >
       <template #left>
-        <div>filter is developmenting.</div>
+        <div>搜索条件暂不可用</div>
       </template>
       <template #right>
         <ShareButton v-if="hasAnyPermission(['PROJECT_API_DEFINITION:READ+SHARE'])" ref="shareButtonRef" />
@@ -157,7 +157,6 @@
     class?: string;
     activeModule: string;
     offspringIds: string[];
-    selectedProtocols: string[]; // 查看的协议类型
     readOnly?: boolean; // 是否是只读模式
     refreshTimeStamp?: number;
     moduleTreeData?: ModuleTreeNode[];
@@ -386,7 +385,6 @@
       moduleIds = [props.activeModule];
       const getAllChildren = await tableStore.getSubShow(TableKeyEnum.SQL_TEST);
       if (getAllChildren) {
-        console.log(props.offspringIds);
         moduleIds = [props.activeModule, ...props.offspringIds];
       }
     }
@@ -414,14 +412,12 @@
       viewId: viewId.value,
       combineSearch: advanceFilter,
     };
-    console.log(params)
     // TODO：
     // if (!hasRefreshTree && typeof refreshModuleTreeCount === 'function' && !isAdvancedSearchMode.value) {
     //   refreshModuleTreeCount({
     //     keyword: keyword.value,
     //     filter: filterParams,
     //     moduleIds: [],
-    //     protocols: props.selectedProtocols,
     //     projectId: appStore.currentProjectId,
     //   });
     // }

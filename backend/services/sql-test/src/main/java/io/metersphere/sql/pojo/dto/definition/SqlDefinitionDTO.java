@@ -2,6 +2,7 @@ package io.metersphere.sql.pojo.dto.definition;
 
 import io.metersphere.api.domain.ApiDefinition;
 import io.metersphere.plugin.api.spi.AbstractMsTestElement;
+import io.metersphere.sdk.dto.result.ListResult;
 import io.metersphere.sql.pojo.vo.ExecuteResultVO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -20,7 +21,7 @@ public class SqlDefinitionDTO extends ApiDefinition{
     private AbstractMsTestElement request;
 
     @Schema(description = "响应内容")
-    private List<ExecuteResultVO> response;
+    private ListResult<ExecuteResultVO> response;
 
     @Schema(description = "创建人名称")
     private String createUserName;

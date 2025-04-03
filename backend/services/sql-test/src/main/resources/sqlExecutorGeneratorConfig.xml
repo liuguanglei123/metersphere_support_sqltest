@@ -79,7 +79,25 @@
             <columnOverride column="tags" javaType="java.util.List&lt;String&gt;" jdbcType="VARCHAR" typeHandler="io.metersphere.handler.ListTypeHandler" />
         </table>
         <table tableName="sql_definition_module"/>
-
+        <table tableName="sql_scenario"/>
+        <table tableName="sql_scenario">
+            <columnOverride column="tags" javaType="java.util.List&lt;String&gt;" jdbcType="VARCHAR" typeHandler="io.metersphere.handler.ListTypeHandler" />
+        </table>
+        <table tableName="sql_scenario_blob"/>
+        <table tableName="sql_scenario_module"/>
+        <table tableName="sql_scenario_csv"/>
+        <table tableName="sql_scenario_csv_step"/>
+        <table tableName="sql_scenario_step"/>
+        <table tableName="sql_scenario_step_blob"/>
+        <table tableName="sql_exec_task"/>
+        <table tableName="sql_exec_task_item"/>
+        <table tableName="sql_scenario_report"/>
+        <table tableName="sql_scenario_record"/>
+        <table tableName="sql_scenario_report_detail"/>
+        <table tableName="sql_scenario_report_detail_blob"/>
+        <table tableName="sql_report_relate_task"/>
+        <table tableName="sql_report_step"/>
+        <table tableName="sql_scenario_report_step"/>
 
 
 

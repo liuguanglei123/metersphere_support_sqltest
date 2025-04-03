@@ -15,7 +15,7 @@ public interface EasyToolsConstant {
     /**
      * Maximum paging size
      */
-    int MAX_PAGE_SIZE = 1000;
+    int MAX_PAGE_SIZE = 10000;
 
     /**
      * serializedid

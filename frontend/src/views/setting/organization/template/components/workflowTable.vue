@@ -299,7 +299,6 @@
           currentState: item.statusDefinitions.join().includes('END'),
         };
       });
-      console.log(dataList.value);
     } catch (error) {
       console.log(error);
     } finally {

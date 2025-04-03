@@ -24,6 +24,7 @@ import {
   ResponseBodyXPathAssertionFormat,
   ScenarioExecuteStatus,
 } from '@/enums/apiEnum';
+import {SqlScenarioExecuteStatus} from "@/enums/sqlEnum";
 
 // 获取插件表单选项参数
 export interface SqlGetPluginOptionsParams {
@@ -417,19 +418,6 @@ export interface SqlResponseResult {
   imageUrl?: string; // 返回为图片时的图片地址
 }
 
-export interface SqlRequestResult {
-  body: string;
-  headers: string;
-  url: string;
-  method: RequestMethods | string;
-  responseResult: SqlResponseResult;
-  isSuccessful?: boolean;
-  console?: string;
-  status?: ScenarioExecuteStatus;
-  fakeErrorCode?: string;
-  [key: string]: any;
-}
-
 export interface ITableHeaderItem {
   dataType: DataType;
   name: string;
@@ -468,6 +456,19 @@ export interface SqlRequestTaskResult {
   success: boolean;
   errorCode: string | null;
   errorMessage: string | null;
+}
+
+export interface SqlRequestResult {
+  data: IManageResultData[],
+  console: string;
+  success: boolean;
+  errorCode: string | null;
+  errorMessage: string | null;
+  responseResult: SqlRequestTaskResult;
+  isSuccessful?: boolean;
+  status?: SqlScenarioExecuteStatus;
+  fakeErrorCode?: string;
+  [key: string]: any;
 }
 
 // api响应定义-body
@@ -538,3 +539,16 @@ export interface SqlCurlParseResult {
   queryParams: Record<string, any>;
 }
 
+// 环境列表项
+export interface SqlEnvironmentItem {
+  id: string;
+  name: string;
+  projectId: string;
+  createUser: string;
+  updateUser: string;
+  createTime: number;
+  updateTime: number;
+  mock: boolean;
+  description: string;
+  pos: number;
+}

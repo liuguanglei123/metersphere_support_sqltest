@@ -7,8 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Results of the
@@ -114,4 +114,5 @@ public class ExecuteResult implements Serializable {
      * Extra information that can be used by the plugin
      */
     private Map<String,Object> extra;
+
 }

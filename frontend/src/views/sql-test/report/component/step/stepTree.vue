@@ -24,7 +24,7 @@
         disabled-title-tooltip
         block-node
         hide-switcher
-        @select="(selectedKeys, node) => handleStepSelect(selectedKeys, node as ScenarioItemType)"
+        @select="(selectedKeys, node) => handleStepSelect(selectedKeys, node as SqlScenarioItemType)"
         @expand="handleStepExpand"
         @more-actions-close="() => setFocusNodeKey('')"
       >
@@ -194,11 +194,11 @@
   import { useI18n } from '@/hooks/useI18n';
   import { findNodeByKey, formatDuration, mapTree } from '@/utils';
 
-  import type { ScenarioItemType } from '@/models/apiTest/report';
+  import { SqlScenarioItemType } from "@/models/sqlTest/report";
   import { ScenarioStepType } from '@/enums/apiEnum';
 
   const StepDetailContent = defineAsyncComponent(
-    () => import('@/views/api-test/components/requestComposition/response/result/index.vue')
+    () => import('@/views/sql-test/components/sqlComposition/response/result/index.vue')
   );
   const stepStatus = defineAsyncComponent(() => import('./stepStatus.vue'));
   const ConditionStatus = defineAsyncComponent(() => import('@/views/api-test/report/component/conditionStatus.vue'));
@@ -222,7 +222,7 @@
 
   const emit = defineEmits(['expand', 'detail']);
 
-  const steps = defineModel<ScenarioItemType[]>('steps', {
+  const steps = defineModel<SqlScenarioItemType[]>('steps', {
     required: true,
   });
   const innerExpandedKeys = defineModel<(string | number)[]>('expandedKeys', {
@@ -240,7 +240,7 @@
    * 处理步骤展开折叠
    */
   function handleStepExpand(data: MsTreeExpandedData) {
-    const realStep = findNodeByKey<ScenarioItemType>(steps.value, data.node?.stepId, 'stepId');
+    const realStep = findNodeByKey<SqlScenarioItemType>(steps.value, data.node?.stepId, 'stepId');
     const isNotAllowExpand =
       data.node?.children && data.node?.children.length && showApiType.value.includes(data.node?.stepType);
     if (isNotAllowExpand && data.node && data.node.children?.length) {
@@ -256,7 +256,7 @@
   const selectedKeys = ref<(string | number)[]>([]);
   const focusStepKey = ref<string>('');
 
-  function handleStepSelect(_selectedKeys: Array<string | number>, step: ScenarioItemType) {
+  function handleStepSelect(_selectedKeys: Array<string | number>, step: SqlScenarioItemType) {
     const offspringIds: string[] = [];
     mapTree(step.children || [], (e) => {
       offspringIds.push(e.id);
@@ -269,8 +269,8 @@
     focusStepKey.value = id || '';
   }
 
-  function expandHandler(item: ScenarioItemType) {
-    const realStep = findNodeByKey<ScenarioItemType>(steps.value, item.stepId, 'stepId');
+  function expandHandler(item: SqlScenarioItemType) {
+    const realStep = findNodeByKey<SqlScenarioItemType>(steps.value, item.stepId, 'stepId');
     if (realStep) {
       const isNotAllowExpand =
         realStep.children && realStep?.children.length && showApiType.value.includes(realStep?.stepType);
@@ -294,14 +294,14 @@
     ScenarioStepType.CONSTANT_TIMER,
     ScenarioStepType.SCRIPT,
   ]);
-  function getShowExpand(item: ScenarioItemType) {
+  function getShowExpand(item: SqlScenarioItemType) {
     if (props.showType === 'API') {
       return showApiType.value.includes(item.stepType) && props.activeType === 'tab';
     }
     return props.activeType === 'tab';
   }
   const activeItem = ref();
-  function showDetail(event: Event, item: ScenarioItemType) {
+  function showDetail(event: Event, item: SqlScenarioItemType) {
     if (props.activeType === 'tab') {
       return;
     }
@@ -332,21 +332,21 @@
     return '';
   }
 
-  function showResContent(item: ScenarioItemType) {
+  function showResContent(item: SqlScenarioItemType) {
     if (props.showType === 'API') {
       return showApiType.value.includes(item.stepType) && props.activeType === 'tab' && !item.fold;
     }
     return props.activeType === 'tab' && !item.fold;
   }
 
-  function showStatus(item: ScenarioItemType) {
+  function showStatus(item: SqlScenarioItemType) {
     if (showApiType.value.includes(item.stepType) && item.status && item.status !== 'PENDING') {
       return true;
     }
     return item.children && item.children.length > 0 && item.status && item.status !== 'PENDING';
   }
 
-  function handleStop(event: Event, step: ScenarioItemType) {
+  function handleStop(event: Event, step: SqlScenarioItemType) {
     if (step.children && step.children.length && showApiType.value.includes(step.stepType)) {
       event.stopPropagation();
     }

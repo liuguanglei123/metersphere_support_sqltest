@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.metersphere.sql.mapper.ExtSqlScenarioModuleMapper">
+
+    <select id="selectBaseByRequest" resultType="io.metersphere.system.dto.sdk.BaseTreeNode">
+        SELECT m.id,
+        m.parent_id AS parentId,
+        m.name,
+        m.pos,
+        m.project_id,
+        'MODULE' AS type
+        FROM sql_scenario_module m
+        <include refid="module_request"/>
+        ORDER BY pos
+    </select>
+
+    <select id="selectIdAndParentIdByRequest" resultType="io.metersphere.system.dto.sdk.BaseTreeNode">
+        SELECT m.id,
+        m.parent_id AS parentId
+        FROM sql_scenario_module m
+        <include refid="module_request"/>
+        ORDER BY pos
+    </select>
+
+    <select id="getMaxPosByParentId" resultType="java.lang.Long">
+        SELECT max(pos)
+        FROM sql_scenario_module
+        WHERE parent_id = #{0}
+    </select>
+
+    <sql id="module_request">
+        <where>
+            <if test="request.projectId != null and request.projectId != ''">
+                AND m.project_id = #{request.projectId}
+            </if>
+            <if test="request.keyword != null and request.keyword != ''">
+                AND m.name like CONCAT('%', #{request.keyword},'%')
+            </if>
+            <if test="request.moduleIds != null and request.moduleIds.size() != 0">
+                AND m.id IN
+                <foreach collection="request.moduleIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+
+        </where>
+    </sql>
+</mapper>

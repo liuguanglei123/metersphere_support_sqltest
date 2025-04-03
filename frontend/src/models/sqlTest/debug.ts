@@ -5,15 +5,11 @@ import { SqlExecuteApiRequestFullParams, SqlExecutePluginRequestParams } from '.
 // 保存接口调试入参
 export interface SqlSaveDebugParams {
   name: string;
-  protocol: string;
-  method: RequestMethods | string;
-  path: string;
   projectId: string;
   moduleId: string;
-  request: SqlExecuteApiRequestFullParams | SqlExecutePluginRequestParams;
-  uploadFileIds: string[];
-  linkFileIds: string[];
+  request: SqlExecuteApiRequestFullParams;
 }
+
 // 更新接口调试入参
 export interface SqlUpdateDebugParams extends Partial<SqlSaveDebugParams> {
   id: string;
@@ -46,9 +42,6 @@ export interface SqlDebugDetailRequest {
 export interface SqlDebugDetail {
   id: string;
   name: string;
-  protocol: string;
-  method: RequestMethods | string;
-  path: string;
   projectId: string;
   moduleId: string;
   createTime: number;

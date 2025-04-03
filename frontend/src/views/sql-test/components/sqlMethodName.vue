@@ -1,30 +1,27 @@
 <template>
-  <div v-if="props.method">
-    <MsTag
-      v-if="props.isTag"
-      :self-style="{
-        border: `1px solid ${props.tagBackgroundColor || methodColor}`,
-        color: props.tagTextColor || methodColor,
-        backgroundColor: props.tagBackgroundColor || 'white',
-        display: 'flex',
-      }"
-      :size="props.tagSize"
-    >
-      {{ props.method }}
-    </MsTag>
-    <div v-else class="font-medium" :style="{ color: methodColor }">{{ props.method }}</div>
-  </div>
-  <div v-else>-</div>
+  <MsTag
+    v-if="props.isTag"
+    :self-style="{
+      border: `1px solid ${props.tagBackgroundColor || methodColor}`,
+      color: props.tagTextColor || methodColor,
+      backgroundColor: props.tagBackgroundColor || 'white',
+      display: 'flex',
+    }"
+    :size="props.tagSize"
+  >
+    {{ props.method }}
+  </MsTag>
+  <div v-else class="font-medium" :style="{ color: methodColor }">SQL</div>
 </template>
 
 <script setup lang="ts">
   import MsTag, { Size } from '@/components/pure/ms-tag/ms-tag.vue';
 
-  import { SQLRequestMethods } from '@/enums/apiEnum';
+  import { SqlRequestMethods } from '@/enums/sqlEnum';
 
   const props = withDefaults(
     defineProps<{
-      method: SQLRequestMethods | string;
+      method: SqlRequestMethods | string;
       isTag?: boolean;
       tagSize?: Size;
       tagBackgroundColor?: string;
@@ -39,16 +36,16 @@
   const colorMaps = [
     {
       color: 'rgb(var(--success-7))',
-      includes: [SQLRequestMethods.SQL],
+      includes: [SqlRequestMethods.DDL],
     },
   ];
 
   const methodColor = computed(() => {
     if (props.method) {
-      const colorMap = colorMaps.find((item) => item.includes.includes(props.method as SQLRequestMethods));
+      const colorMap = colorMaps.find((item) => item.includes.includes(props.method as SqlRequestMethods));
       return colorMap?.color || 'rgb(var(--link-7))'; // 方法映射内找不到对应的 key 说明是插件，所有的插件协议颜色都是一样的
     }
-    return 'rgb(var(--link-7))';
+    return 'rgb(var(--success-7))';
   });
 </script>
 

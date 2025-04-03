@@ -1,8 +1,8 @@
 package io.metersphere.sql.service.common;
 
+import io.metersphere.sdk.dto.result.ListResult;
 import io.metersphere.sql.pojo.model.ExecuteResult;
 import io.metersphere.sql.pojo.params.DlExecuteParam;
-import io.metersphere.sql.wrapper.result.ListResult;
 
 /**
  * Data source management services
@@ -27,5 +27,5 @@ public interface DlTemplateService {
      * @param param
      * @return
      */
-    ListResult<ExecuteResult> executeDirect(DlExecuteParam param);
+    ListResult<? extends ExecuteResult> executeDirect(DlExecuteParam param);
 }

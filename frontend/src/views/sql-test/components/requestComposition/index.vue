@@ -519,7 +519,7 @@
     ExecuteApiRequestFullParams,
     ExecuteConditionConfig,
     ExecuteRequestParams,
-    PluginConfig,
+    PluginConfig, RequestResult,
     RequestTaskResult,
   } from '@/models/apiTest/common';
   import { AddApiCaseParams } from '@/models/apiTest/management';
@@ -577,7 +577,7 @@
     };
   }
   export type RequestParam = ExecuteApiRequestFullParams & {
-    responseDefinition?: ResponseItem[];
+    responseDefinition?: RequestResult[];
     response?: RequestTaskResult;
   } & RequestCustomAttr &
     TabItem;

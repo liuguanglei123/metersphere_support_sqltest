@@ -1,0 +1,22 @@
+CREATE TABLE `sql_scenario_step` (
+    `id` varchar(50) NOT NULL COMMENT '步骤id',
+    `scenario_id` varchar(50) NOT NULL COMMENT '场景id',
+    `name` varchar(255) DEFAULT NULL COMMENT '步骤名称',
+    `sort` bigint NOT NULL COMMENT '序号',
+    `enable` bit(1) NOT NULL DEFAULT b'1' COMMENT '启用/禁用',
+    `resource_id` varchar(50) DEFAULT NULL COMMENT '资源id',
+    `resource_num` varchar(50) DEFAULT NULL COMMENT '资源编号',
+    `step_type` varchar(50) DEFAULT NULL COMMENT '步骤类型/API/CASE等',
+    `project_id` varchar(50) DEFAULT NULL COMMENT '项目fk',
+    `parent_id` varchar(50) DEFAULT 'NONE' COMMENT '父级fk',
+    `version_id` varchar(50) DEFAULT NULL COMMENT '版本号',
+    `ref_type` varchar(20) DEFAULT NULL COMMENT '引用/复制/自定义',
+    `origin_project_id` varchar(50) DEFAULT NULL COMMENT '记录跨项目复制的步骤的原项目ID',
+    `config` varchar(500) DEFAULT NULL COMMENT '循环等组件基础数据',
+    PRIMARY KEY (`id`),
+    KEY `idx_project_id` (`project_id`),
+    KEY `idx_sort` (`sort`),
+    KEY `idx_resource_id` (`resource_id`),
+    KEY `idx_enable` (`enable`),
+    KEY `idx_resource_num` (`resource_num`)
+) COMMENT='场景步骤'

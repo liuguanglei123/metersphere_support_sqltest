@@ -6,6 +6,7 @@ export enum CacheTabTypeEnum {
   CASE_MANAGEMENT_TABLE_FILTER = 'CASE_MANAGEMENT_TABLE_FILTER', // 功能用例-列表
   SQL_SCENARIO_TABLE = 'SQL_SCENARIO_TABLE', // 接口测试-场景-场景列表
 
+
 }
 
 export default {};

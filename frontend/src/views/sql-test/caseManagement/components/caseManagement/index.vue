@@ -1,17 +1,25 @@
 <template>
   <div class="flex gap-[8px] px-[16px] pt-[16px]">
     <MsEditableTab
-        v-model:active-tab="activeSqlTab"
-        v-model:tabs="sqlTabs"
-        class="flex-1 overflow-hidden"
-        :show-add="currentTab === 'sql' && hasAnyPermission(['PROJECT_API_DEFINITION:READ+ADD'])"
-        @add="newTab"
-        @close="handleTabClose"
+      v-model:active-tab="activeSqlTab"
+      v-model:tabs="sqlTabs"
+      class="flex-1 overflow-hidden"
+      :show-add="currentTab === 'sql' && hasAnyPermission(['PROJECT_API_DEFINITION:READ+ADD'])"
+      @add="newTab"
+      @close="handleTabClose"
     >
       <!-- TODO：这里ms使用GET POST等字样在tab标题处展示接口的请求类型，对于SQL测试可以参考这一思路，使用DQL DDL等关键字表示测试用例的语句类型 -->
-<!--      <template>-->
-<!--        <apiMethodName-->
-<!--      </template>-->
+      <template #label="{ tab }">
+        <sqlMethodName
+          v-if="tab.id !== 'all' && tab.type === 'sql'"
+          class="mr-[4px]"
+        />
+        <a-tooltip :content="tab.name || tab.label" :mouse-enter-delay="500">
+          <div class="one-line-text max-w-[144px]">
+            {{ tab.name || tab.label }}
+          </div>
+        </a-tooltip>
+      </template>
     </MsEditableTab>
     <MsSqlEnvironmentSelect
         ref="environmentSelectRef"
@@ -68,6 +76,11 @@
   function newTab(sqlInfo?: ModuleTreeNode | string, isCopy?: boolean, isExecute?: boolean) {
     if (sqlInfo) {
       // TODO：从目录树中打开新的case
+      sqlRef.value?.openSqlTab({
+        sqlInfo,
+        isCopy,
+        isExecute,
+      });
     } else {
       sqlRef.value?.addSqlTab();
     }
